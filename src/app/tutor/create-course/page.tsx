@@ -216,7 +216,7 @@ export default function CreateCoursePage() {
           <h2 className="text-2xl font-bold mb-6">Course Content</h2>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <p className="text-sm text-blue-800">
-              📝 After creating your course, you&apos;ll be able to add lessons,
+              📝 After creating your course, you'll be able to add lessons,
               videos, PDFs, and quizzes from the course management page.
             </p>
           </div>

@@ -200,7 +200,7 @@ export default function CourseDetailsPage() {
           <div className="bg-white rounded-lg max-w-md w-full p-8">
             <h2 className="text-2xl font-bold mb-4">Enroll in Course</h2>
             <p className="text-gray-600 mb-6">
-              You&apos;re about to enroll in &quot;{course.title}&quot; for ${course.price}
+              You're about to enroll in "{course.title}" for ${course.price}
             </p>
             <div className="space-y-4">
               <Link

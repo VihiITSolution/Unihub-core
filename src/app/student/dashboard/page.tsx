@@ -79,7 +79,7 @@ export default function StudentDashboard() {
         ) : enrolledCourses.length === 0 ? (
           <div className="card text-center py-12">
             <p className="text-gray-600 mb-4">
-              You haven&apos;t enrolled in any courses yet
+              You haven't enrolled in any courses yet
             </p>
             <Link href="/courses" className="btn-primary">
               Browse Courses
