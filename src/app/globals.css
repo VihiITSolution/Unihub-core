@@ -12,6 +12,24 @@
   html {
     scroll-behavior: smooth;
   }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
 }
 
 @layer components {
@@ -26,7 +44,7 @@
   }
 
   .btn-primary {
-    @apply btn bg-primary-600 hover:bg-primary-700 text-white shadow-sm hover:shadow-md focus:ring-primary-500 px-6 py-3;
+    @apply btn bg-navy-900 hover:bg-navy-800 text-white shadow-sm hover:shadow-md focus:ring-ocean-400 px-6 py-3;
   }
 
   .btn-secondary {
@@ -34,7 +52,11 @@
   }
 
   .btn-outline {
-    @apply btn border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500 px-6 py-3;
+    @apply btn border-2 border-ocean-400 text-ocean-600 hover:bg-ocean-50 focus:ring-ocean-400 px-6 py-3;
+  }
+
+  .btn-gradient {
+    @apply btn bg-gradient-to-r from-ocean-400 to-ocean-600 hover:from-ocean-500 hover:to-ocean-700 text-white shadow-md hover:shadow-lg px-6 py-3;
   }
 
   .btn-sm {
@@ -54,9 +76,18 @@
     @apply card hover:-translate-y-1;
   }
 
+  /* Glass Card */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-soft;
+  }
+
+  .glass-card-dark {
+    @apply bg-navy-900/80 backdrop-blur-lg rounded-xl border border-white/10 shadow-soft;
+  }
+
   /* Input Fields */
   .input {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white;
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-400 focus:border-transparent transition-all duration-200 bg-white;
   }
 
   .input-error {
@@ -69,7 +100,7 @@
   }
 
   .badge-primary {
-    @apply badge bg-primary-100 text-primary-800;
+    @apply badge bg-ocean-100 text-ocean-800;
   }
 
   .badge-success {
@@ -77,7 +108,7 @@
   }
 
   .badge-warning {
-    @apply badge bg-yellow-100 text-yellow-800;
+    @apply badge bg-amber-100 text-amber-800;
   }
 
   .badge-danger {
@@ -86,15 +117,48 @@
 
   /* Gradients */
   .gradient-primary {
-    @apply bg-gradient-to-r from-primary-600 to-primary-800;
+    @apply bg-gradient-to-r from-navy-900 to-navy-800;
   }
 
   .gradient-secondary {
-    @apply bg-gradient-to-r from-secondary-500 to-purple-600;
+    @apply bg-gradient-to-r from-ocean-400 to-ocean-600;
   }
 
   .gradient-hero {
-    @apply bg-gradient-to-br from-primary-50 via-blue-50 to-indigo-100;
+    @apply bg-gradient-to-br from-navy-50 via-ocean-50 to-amber-50;
+  }
+
+  .gradient-accent {
+    @apply bg-gradient-to-r from-amber-400 to-amber-600;
+  }
+
+  .gradient-navbar {
+    @apply bg-gradient-to-r from-navy-900 via-navy-800 to-navy-900;
+  }
+
+  /* Sidebar Styles */
+  .sidebar {
+    @apply fixed left-0 top-0 h-screen bg-navy-900 text-white z-40 transition-all duration-300 ease-in-out;
+  }
+
+  .sidebar-expanded {
+    @apply w-64;
+  }
+
+  .sidebar-collapsed {
+    @apply w-20;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 mx-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 cursor-pointer;
+  }
+
+  .sidebar-item-active {
+    @apply bg-gradient-to-r from-ocean-500/30 to-ocean-600/20 text-white border-l-4 border-ocean-400;
+  }
+
+  .sidebar-item-icon {
+    @apply w-6 h-6 flex-shrink-0;
   }
 
   /* Section */
@@ -132,6 +196,51 @@
   .hover-lift {
     @apply transition-all duration-300 hover:-translate-y-2;
   }
+
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-glow;
+  }
+
+  .hover-glow-amber {
+    @apply transition-all duration-300 hover:shadow-glow-amber;
+  }
+
+  /* Notification Badge */
+  .notification-badge {
+    @apply absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse-glow;
+  }
+
+  /* Avatar */
+  .avatar {
+    @apply w-10 h-10 rounded-full bg-gradient-to-br from-ocean-400 to-ocean-600 flex items-center justify-center text-white font-semibold;
+  }
+
+  .avatar-lg {
+    @apply w-12 h-12 text-lg;
+  }
+
+  .avatar-sm {
+    @apply w-8 h-8 text-sm;
+  }
+
+  /* Divider with gradient */
+  .divider-gradient {
+    @apply h-px bg-gradient-to-r from-transparent via-ocean-400 to-transparent;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    @apply absolute left-full ml-3 px-3 py-2 bg-navy-800 text-white text-sm rounded-lg opacity-0 invisible transition-all duration-200 whitespace-nowrap z-50;
+  }
+
+  .tooltip::before {
+    content: '';
+    @apply absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-navy-800;
+  }
+
+  .group:hover .tooltip {
+    @apply opacity-100 visible;
+  }
 }
 
 @layer utilities {
@@ -147,12 +256,48 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  .glass {
+    @apply bg-white/70 backdrop-blur-md;
+  }
+
+  .glass-dark {
+    @apply bg-navy-900/70 backdrop-blur-md;
+  }
+
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-ocean-400 to-ocean-600;
+  }
+
+  .text-gradient-amber {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600;
+  }
 }
 
 .input-field {
-  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-400 focus:border-transparent;
 }
 
 .label-text {
   @apply block text-sm font-medium text-gray-700 mb-2;
 }
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden;
+}
+
+/* Content area when sidebar is present */
+.content-with-sidebar {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.content-with-sidebar-expanded {
+  @apply lg:ml-64;
+}
+
+.content-with-sidebar-collapsed {
+  @apply lg:ml-20;
+}
+

@@ -1,17 +1,63 @@
 // User types
+export type UserRole = 'student' | 'tutor' | 'vendor' | 'admin';
+
+export interface StudentProfile {
+  id: number;
+  userId: number;
+  universityName: string;
+  department: string;
+  degreeOrCourse: string;
+  studyingArea?: string;
+  currentYear: number;
+  currentSemester: number;
+  studentIdNumber?: string;
+  currentAddress?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  isProfileComplete: boolean;
+}
+
+export interface TutorProfile {
+  id: number;
+  userId: number;
+  qualifications?: string;
+  expertiseAreas: string[];
+  bio?: string;
+  yearsOfExperience: number;
+  isApproved: boolean;
+  approvalStatus: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  totalCourses: number;
+  totalStudents: number;
+  averageRating: number;
+  isProfileComplete: boolean;
+}
+
 export interface User {
   id: string;
   email: string;
-  name: string;
-  role: 'student' | 'tutor' | 'seller' | 'admin';
-  avatar?: string;
+  firstName: string;
+  lastName: string;
+  roles: UserRole[];
+  primaryRole: UserRole;
+  phoneNumber?: string;
+  bio?: string;
+  profileImage?: string;
+  isVerified: boolean;
+  isActive: boolean;
+  isStudentProfileComplete: boolean;
+  isTutorProfileComplete: boolean;
+  studentProfile?: StudentProfile;
+  tutorProfile?: TutorProfile;
   createdAt: string;
+  lastLogin?: string;
 }
 
 export interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 // Course types
