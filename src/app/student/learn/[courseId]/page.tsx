@@ -1,86 +1,98 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Course, CourseContent } from "@/types";
 
 export default function LearnPage() {
   const params = useParams();
-  const courseId = params.courseId as string;
+  const router = useRouter();
+  const { user, token, isAuthenticated } = useAuth();
+  const courseId = params?.courseId as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
-  const [currentContent, setCurrentContent] = useState<CourseContent | null>(null);
+  const [currentContent, setCurrentContent] = useState<CourseContent | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadCourseContent();
-  }, [courseId]);
+    if (!isAuthenticated) {
+      router.push("/auth/login");
+      return;
+    }
+
+    if (courseId) {
+      loadCourseContent();
+    }
+  }, [courseId, isAuthenticated]);
 
   const loadCourseContent = async () => {
+    if (!courseId) {
+      setError("Course ID is missing");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      // Mock data
-      const mockCourse: Course = {
-        id: courseId,
-        title: "Web Development Bootcamp",
-        description: "Complete guide to modern web development",
-        thumbnail: "",
-        price: 99.99,
-        tutorId: "tutor1",
-        tutorName: "John Doe",
-        category: "Web Development",
-        level: "beginner",
-        duration: 1200,
-        enrolledCount: 150,
-        rating: 4.5,
-        reviewCount: 45,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      setError(null);
 
-      const mockContents: CourseContent[] = [
-        {
-          id: "1",
-          courseId,
-          title: "Introduction to Web Development",
-          type: "video",
-          url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-          duration: 30,
-          order: 1,
-        },
-        {
-          id: "2",
-          courseId,
-          title: "HTML Basics",
-          type: "video",
-          url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-          duration: 45,
-          order: 2,
-        },
-        {
-          id: "3",
-          courseId,
-          title: "Course Resources",
-          type: "pdf",
-          url: "/sample.pdf",
-          order: 3,
-        },
-        {
-          id: "4",
-          courseId,
-          title: "CSS Fundamentals",
-          type: "video",
-          url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-          duration: 60,
-          order: 4,
-        },
-      ];
+      // Fetch real course data
+      const courseResponse = await fetch(
+        `http://localhost:5000/api/courses/${courseId}`
+      );
 
-      setCourse(mockCourse);
-      setContents(mockContents);
-      setCurrentContent(mockContents[0]);
+      if (!courseResponse.ok) {
+        throw new Error(`Failed to fetch course: ${courseResponse.status}`);
+      }
+
+      const courseData = await courseResponse.json();
+
+      if (courseData.success && courseData.data) {
+        const courseInfo = courseData.data.course;
+        setCourse(courseInfo);
+
+        // Check if user is the course owner (tutor who created it)
+        const isCourseOwner = user?.id === courseInfo.tutorId;
+
+        // For now, allow access if user is course owner
+        // Later you can add enrollment check here
+        if (!isCourseOwner && user?.role !== "admin") {
+          // TODO: Add enrollment check
+          // const isEnrolled = await checkEnrollment(courseId, user.id);
+          // if (!isEnrolled) {
+          //   setError("You must enroll in this course to access it");
+          //   setLoading(false);
+          //   return;
+          // }
+        }
+      } else {
+        setError(courseData.message || "Failed to load course");
+      }
+
+      // Fetch course content
+      const contentResponse = await fetch(
+        `http://localhost:5000/api/courses/${courseId}/content`
+      );
+
+      if (contentResponse.ok) {
+        const contentData = await contentResponse.json();
+        if (contentData.success && contentData.data) {
+          const contents = contentData.data.contents || [];
+          setContents(contents);
+          if (contents.length > 0) {
+            setCurrentContent(contents[0]);
+          }
+        }
+      }
     } catch (error) {
       console.error("Failed to load course content:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to load course"
+      );
     } finally {
       setLoading(false);
     }
@@ -88,6 +100,26 @@ export default function LearnPage() {
 
   const handleContentSelect = (content: CourseContent) => {
     setCurrentContent(content);
+  };
+
+  // Convert YouTube URL to embed format
+  const getEmbedUrl = (url: string) => {
+    if (!url) return "";
+
+    // If it's already an embed URL, return it
+    if (url.includes("/embed/")) return url;
+
+    // Extract video ID from various YouTube URL formats
+    let videoId = "";
+    if (url.includes("youtube.com/watch?v=")) {
+      videoId = url.split("v=")[1]?.split("&")[0];
+    } else if (url.includes("youtu.be/")) {
+      videoId = url.split("youtu.be/")[1]?.split("?")[0];
+    } else if (url.includes("youtube.com/v/")) {
+      videoId = url.split("/v/")[1]?.split("?")[0];
+    }
+
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
   };
 
   if (loading) {
@@ -98,10 +130,28 @@ export default function LearnPage() {
     );
   }
 
-  if (!course || !currentContent) {
+  if (error) {
     return (
       <div className="container-custom py-12">
-        <div className="text-center">Course content not found</div>
+        <div className="text-center">
+          <div className="text-red-600 mb-4">{error}</div>
+          <a href="/student/dashboard" className="btn-primary">
+            Back to Dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="container-custom py-12">
+        <div className="text-center">
+          <div className="mb-4">Course not found</div>
+          <a href="/courses" className="btn-primary">
+            Back to Courses
+          </a>
+        </div>
       </div>
     );
   }
@@ -127,133 +177,203 @@ export default function LearnPage() {
         <div className="p-4">
           <h3 className="font-semibold mb-4 text-gray-700">Course Content</h3>
           <div className="space-y-2">
-            {contents.map((content, index) => (
-              <button
-                key={content.id}
-                onClick={() => handleContentSelect(content)}
-                className={`w-full text-left p-4 rounded-lg transition-colors ${
-                  currentContent.id === content.id
-                    ? "bg-primary-100 border-2 border-primary-500"
-                    : "bg-gray-50 hover:bg-gray-100"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-sm mb-1">
-                      {content.title}
+            {contents.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No materials available yet.</p>
+                <p className="text-sm mt-2">
+                  The instructor hasn't added any content to this course.
+                </p>
+              </div>
+            ) : (
+              contents.map((content, index) => (
+                <button
+                  key={content.id}
+                  onClick={() => handleContentSelect(content)}
+                  className={`w-full text-left p-4 rounded-lg transition-colors ${
+                    currentContent.id === content.id
+                      ? "bg-primary-100 border-2 border-primary-500"
+                      : "bg-gray-50 hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                      {index + 1}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-600">
-                      <span>{content.type === "video" ? "🎥" : "📄"}</span>
-                      <span>{content.type.toUpperCase()}</span>
-                      {content.duration && <span>• {content.duration} min</span>}
+                    <div className="flex-1">
+                      <div className="font-medium text-sm mb-1">
+                        {content.title}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <span>{content.type === "video" ? "🎥" : "📄"}</span>
+                        <span>{content.type.toUpperCase()}</span>
+                        {content.duration && (
+                          <span>• {content.duration} min</span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))
+            )}
           </div>
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="bg-white p-6 border-b">
-          <h1 className="text-2xl font-bold mb-2">{currentContent.title}</h1>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <span>{currentContent.type === "video" ? "🎥 Video" : "📄 PDF"}</span>
-            {currentContent.duration && (
-              <span>⏱️ {currentContent.duration} minutes</span>
-            )}
-          </div>
-        </div>
-
-        <div className="p-6">
-          {/* Video Player */}
-          {currentContent.type === "video" && (
-            <div className="bg-black rounded-lg overflow-hidden mb-6">
-              <div className="aspect-video">
-                <iframe
-                  src={currentContent.url}
-                  className="w-full h-full"
-                  allowFullScreen
-                  title={currentContent.title}
-                ></iframe>
+        {currentContent ? (
+          <>
+            <div className="bg-white p-6 border-b">
+              <h1 className="text-2xl font-bold mb-2">
+                {currentContent.title}
+              </h1>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span>
+                  {currentContent.type === "video" ? "🎥 Video" : "📄 PDF"}
+                </span>
+                {currentContent.duration && (
+                  <span>⏱️ {currentContent.duration} minutes</span>
+                )}
               </div>
             </div>
-          )}
 
-          {/* PDF Viewer */}
-          {currentContent.type === "pdf" && (
-            <div className="bg-white rounded-lg border-2 border-gray-200 p-8 mb-6">
-              <div className="text-center">
-                <div className="text-6xl mb-4">📄</div>
-                <h3 className="text-xl font-semibold mb-2">PDF Document</h3>
-                <p className="text-gray-600 mb-4">
-                  View or download the course material
+            <div className="p-6">
+              {/* Video Player */}
+              {currentContent.type === "video" && currentContent.url && (
+                <div className="bg-black rounded-lg overflow-hidden mb-6">
+                  <div className="aspect-video">
+                    <iframe
+                      src={getEmbedUrl(currentContent.url)}
+                      className="w-full h-full"
+                      allowFullScreen
+                      title={currentContent.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    ></iframe>
+                  </div>
+                </div>
+              )}
+
+              {/* PDF Viewer */}
+              {currentContent.type === "pdf" && currentContent.url && (
+                <div className="bg-white rounded-lg border-2 border-gray-200 p-8 mb-6">
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">📄</div>
+                    <h3 className="text-xl font-semibold mb-2">PDF Document</h3>
+                    <p className="text-gray-600 mb-4">
+                      View or download the course material
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                      <a
+                        href={
+                          currentContent.url.startsWith("http")
+                            ? currentContent.url
+                            : `http://localhost:5000${currentContent.url}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary"
+                      >
+                        View PDF
+                      </a>
+                      <a
+                        href={
+                          currentContent.url.startsWith("http")
+                            ? currentContent.url
+                            : `http://localhost:5000${currentContent.url}`
+                        }
+                        download
+                        className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 font-semibold"
+                      >
+                        Download PDF
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={() => {
+                    const currentIndex = contents.findIndex(
+                      (c) => c.id === currentContent.id
+                    );
+                    if (currentIndex > 0) {
+                      setCurrentContent(contents[currentIndex - 1]);
+                    }
+                  }}
+                  disabled={contents[0].id === currentContent.id}
+                  className={`px-6 py-2 rounded-lg font-semibold ${
+                    contents[0].id === currentContent.id
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  ← Previous
+                </button>
+
+                <button className="btn-primary">Mark as Complete</button>
+
+                <button
+                  onClick={() => {
+                    const currentIndex = contents.findIndex(
+                      (c) => c.id === currentContent.id
+                    );
+                    if (currentIndex < contents.length - 1) {
+                      setCurrentContent(contents[currentIndex + 1]);
+                    }
+                  }}
+                  disabled={
+                    contents[contents.length - 1].id === currentContent.id
+                  }
+                  className={`px-6 py-2 rounded-lg font-semibold ${
+                    contents[contents.length - 1].id === currentContent.id
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      : "btn-primary"
+                  }`}
+                >
+                  Next →
+                </button>
+              </div>
+
+              {/* Additional Content Section */}
+              <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4">
+                  About this lesson
+                </h3>
+                <p className="text-gray-600">
+                  This lesson covers important concepts that will help you
+                  understand the fundamentals of the topic. Take notes and
+                  practice along with the video to maximize your learning.
                 </p>
-                <button className="btn-primary">Download PDF</button>
               </div>
             </div>
-          )}
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center">
-            <button
-              onClick={() => {
-                const currentIndex = contents.findIndex(
-                  (c) => c.id === currentContent.id
-                );
-                if (currentIndex > 0) {
-                  setCurrentContent(contents[currentIndex - 1]);
-                }
-              }}
-              disabled={contents[0].id === currentContent.id}
-              className={`px-6 py-2 rounded-lg font-semibold ${
-                contents[0].id === currentContent.id
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              ← Previous
-            </button>
-
-            <button className="btn-primary">Mark as Complete</button>
-
-            <button
-              onClick={() => {
-                const currentIndex = contents.findIndex(
-                  (c) => c.id === currentContent.id
-                );
-                if (currentIndex < contents.length - 1) {
-                  setCurrentContent(contents[currentIndex + 1]);
-                }
-              }}
-              disabled={
-                contents[contents.length - 1].id === currentContent.id
-              }
-              className={`px-6 py-2 rounded-lg font-semibold ${
-                contents[contents.length - 1].id === currentContent.id
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "btn-primary"
-              }`}
-            >
-              Next →
-            </button>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center">
+              <svg
+                className="w-24 h-24 mx-auto mb-4 text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                No Content Available
+              </h3>
+              <p className="text-gray-500">
+                This course doesn't have any materials yet. Check back later!
+              </p>
+            </div>
           </div>
-
-          {/* Additional Content Section */}
-          <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">About this lesson</h3>
-            <p className="text-gray-600">
-              This lesson covers important concepts that will help you understand
-              the fundamentals of the topic. Take notes and practice along with
-              the video to maximize your learning.
-            </p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

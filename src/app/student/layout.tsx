@@ -9,9 +9,8 @@ export default function StudentLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ProtectedRoute allowedRoles={["student"]}>
+    <ProtectedRoute allowedRoles={["student", "tutor"]}>
       <DashboardLayout userType="student">{children}</DashboardLayout>
     </ProtectedRoute>
   );
 }
-
