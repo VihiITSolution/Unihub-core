@@ -1,86 +1,85 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Course, CourseContent } from "@/types";
 
 export default function CourseDetailsPage() {
   const params = useParams();
-  const courseId = params.id as string;
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const courseId = params?.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadCourseDetails();
+    if (courseId) {
+      loadCourseDetails();
+    }
   }, [courseId]);
 
   const loadCourseDetails = async () => {
+    if (!courseId) {
+      setError("Course ID is missing");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      // Mock data for now
-      const mockCourse: Course = {
-        id: courseId,
-        title: "Web Development Bootcamp",
-        description:
-          "Complete guide to modern web development. Learn HTML, CSS, JavaScript, React, Node.js, and more. Build real-world projects and launch your career as a web developer.",
-        thumbnail: "",
-        price: 99.99,
-        tutorId: "tutor1",
-        tutorName: "John Doe",
-        tutorAvatar: "",
-        category: "Web Development",
-        level: "beginner",
-        duration: 1200,
-        enrolledCount: 150,
-        rating: 4.5,
-        reviewCount: 45,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      setError(null);
 
-      const mockContents: CourseContent[] = [
-        {
-          id: "1",
-          courseId,
-          title: "Introduction to Web Development",
-          type: "video",
-          url: "",
-          duration: 30,
-          order: 1,
-        },
-        {
-          id: "2",
-          courseId,
-          title: "HTML Basics",
-          type: "video",
-          url: "",
-          duration: 45,
-          order: 2,
-        },
-        {
-          id: "3",
-          courseId,
-          title: "Course Resources",
-          type: "pdf",
-          url: "",
-          order: 3,
-        },
-      ];
+      // Fetch real course data
+      const courseResponse = await fetch(
+        `http://localhost:5000/api/courses/${courseId}`
+      );
 
-      setCourse(mockCourse);
-      setContents(mockContents);
+      if (!courseResponse.ok) {
+        throw new Error(`Failed to fetch course: ${courseResponse.status}`);
+      }
+
+      const courseData = await courseResponse.json();
+
+      if (courseData.success && courseData.data) {
+        setCourse(courseData.data.course);
+      } else {
+        setError(courseData.message || "Failed to load course");
+      }
+
+      // Fetch course content
+      const contentResponse = await fetch(
+        `http://localhost:5000/api/courses/${courseId}/content`
+      );
+
+      if (contentResponse.ok) {
+        const contentData = await contentResponse.json();
+        if (contentData.success && contentData.data) {
+          setContents(contentData.data.contents || []);
+        }
+      }
     } catch (error) {
       console.error("Failed to load course:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to load course"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleEnroll = () => {
-    setShowEnrollModal(true);
+    // Check if user is logged in
+    if (!isAuthenticated) {
+      router.push("/auth/login");
+      return;
+    }
+
+    // Skip payment for now - go directly to player
+    router.push(`/student/learn/${courseId}`);
   };
 
   if (loading) {
@@ -91,10 +90,28 @@ export default function CourseDetailsPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="container-custom py-12">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">{error}</div>
+          <Link href="/courses" className="btn-primary">
+            Back to Courses
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (!course) {
     return (
       <div className="container-custom py-12">
-        <div className="text-center">Course not found</div>
+        <div className="text-center">
+          <div className="mb-4">Course not found</div>
+          <Link href="/courses" className="btn-primary">
+            Back to Courses
+          </Link>
+        </div>
       </div>
     );
   }
@@ -110,11 +127,14 @@ export default function CourseDetailsPage() {
           <div className="flex items-center gap-4 mb-4">
             <div className="flex items-center gap-2">
               <span className="text-yellow-500">⭐</span>
-              <span className="font-semibold">{course.rating}</span>
-              <span className="text-gray-600">({course.reviewCount} reviews)</span>
+              <span className="font-semibold">{course.rating || 0}</span>
+              <span className="text-gray-600">
+                ({course.reviewCount || 0} reviews)
+              </span>
             </div>
             <div className="text-gray-600">
-              {course.enrolledCount} students enrolled
+              {course.enrolledCount || course.enrollmentCount || 0} students
+              enrolled
             </div>
           </div>
 
@@ -126,26 +146,44 @@ export default function CourseDetailsPage() {
               {course.category}
             </span>
             <span className="text-gray-600">
-              ⏱️ {Math.floor(course.duration / 60)} hours
+              ⏱️ {Math.floor((course.duration || 0) / 60)} hours
             </span>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white font-bold">
-              {course.tutorName.charAt(0)}
+              {course.tutor?.firstName
+                ? course.tutor.firstName.charAt(0)
+                : course.tutorName?.charAt(0) || "T"}
             </div>
             <div>
               <p className="text-sm text-gray-600">Instructor</p>
-              <p className="font-semibold">{course.tutorName}</p>
+              <p className="font-semibold">
+                {course.tutor
+                  ? `${course.tutor.firstName} ${course.tutor.lastName}`
+                  : course.tutorName || "Instructor"}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Enrollment Card */}
         <div className="card">
-          <div className="w-full h-48 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-lg mb-4 flex items-center justify-center text-white text-4xl font-bold">
-            {course.title.charAt(0)}
-          </div>
+          {course.thumbnail ? (
+            <img
+              src={
+                course.thumbnail.startsWith("http")
+                  ? course.thumbnail
+                  : `http://localhost:5000${course.thumbnail}`
+              }
+              alt={course.title}
+              className="w-full h-48 object-cover rounded-lg mb-4"
+            />
+          ) : (
+            <div className="w-full h-48 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-lg mb-4 flex items-center justify-center text-white text-4xl font-bold">
+              {course.title.charAt(0)}
+            </div>
+          )}
           <div className="text-3xl font-bold text-primary-600 mb-4">
             ${course.price}
           </div>
@@ -174,7 +212,10 @@ export default function CourseDetailsPage() {
         <h2 className="text-3xl font-bold mb-6">Course Content</h2>
         <div className="space-y-4">
           {contents.map((content, index) => (
-            <div key={content.id} className="card flex items-center justify-between">
+            <div
+              key={content.id}
+              className="card flex items-center justify-between"
+            >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-semibold">
                   {index + 1}
@@ -188,37 +229,13 @@ export default function CourseDetailsPage() {
                   </div>
                 </div>
               </div>
-              <button className="text-primary-600 hover:underline">Preview</button>
+              <button className="text-primary-600 hover:underline">
+                Preview
+              </button>
             </div>
           ))}
         </div>
       </div>
-
-      {/* Enrollment Modal */}
-      {showEnrollModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-8">
-            <h2 className="text-2xl font-bold mb-4">Enroll in Course</h2>
-            <p className="text-gray-600 mb-6">
-              You're about to enroll in "{course.title}" for ${course.price}
-            </p>
-            <div className="space-y-4">
-              <Link
-                href="/auth/login"
-                className="block btn-primary text-center w-full"
-              >
-                Login to Enroll
-              </Link>
-              <button
-                onClick={() => setShowEnrollModal(false)}
-                className="w-full py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

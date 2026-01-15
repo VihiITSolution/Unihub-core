@@ -1,11 +1,11 @@
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from "@/lib/api-client";
 import type {
   ApiResponse,
   PaginatedResponse,
   Course,
   CourseContent,
   Enrollment,
-} from '@/types';
+} from "@/types";
 
 export interface CourseFilters {
   category?: string;
@@ -23,12 +23,14 @@ export interface CreateCourseData {
   thumbnail: string;
   price: number;
   category: string;
-  level: 'beginner' | 'intermediate' | 'advanced';
+  level: "beginner" | "intermediate" | "advanced";
   duration: number;
 }
 
 export const courseService = {
-  async getCourses(filters?: CourseFilters): Promise<PaginatedResponse<Course>> {
+  async getCourses(
+    filters?: CourseFilters
+  ): Promise<PaginatedResponse<Course>> {
     const queryParams = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -37,7 +39,7 @@ export const courseService = {
         }
       });
     }
-    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
     return apiClient.get<PaginatedResponse<Course>>(`/courses${query}`);
   },
 
@@ -59,7 +61,7 @@ export const courseService = {
     data: CreateCourseData,
     token: string
   ): Promise<ApiResponse<Course>> {
-    return apiClient.post<ApiResponse<Course>>('/courses', data, { token });
+    return apiClient.post<ApiResponse<Course>>("/courses", data, { token });
   },
 
   async updateCourse(
@@ -67,7 +69,9 @@ export const courseService = {
     data: Partial<CreateCourseData>,
     token: string
   ): Promise<ApiResponse<Course>> {
-    return apiClient.put<ApiResponse<Course>>(`/courses/${id}`, data, { token });
+    return apiClient.put<ApiResponse<Course>>(`/courses/${id}`, data, {
+      token,
+    });
   },
 
   async deleteCourse(id: string, token: string): Promise<ApiResponse<null>> {
@@ -86,10 +90,12 @@ export const courseService = {
   },
 
   async getEnrollments(token: string): Promise<ApiResponse<Enrollment[]>> {
-    return apiClient.get<ApiResponse<Enrollment[]>>('/enrollments', { token });
+    return apiClient.get<ApiResponse<Enrollment[]>>("/enrollments", { token });
   },
 
   async getTutorCourses(token: string): Promise<ApiResponse<Course[]>> {
-    return apiClient.get<ApiResponse<Course[]>>('/tutor/courses', { token });
+    return apiClient.get<ApiResponse<Course[]>>("/courses/my-courses", {
+      token,
+    });
   },
 };
