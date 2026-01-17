@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import type { Course, CourseContent } from "@/types";
 
 export default function CourseDetailsPage() {
@@ -35,7 +36,7 @@ export default function CourseDetailsPage() {
 
       // Fetch real course data
       const courseResponse = await fetch(
-        `http://localhost:5000/api/courses/${courseId}`
+        `${API_BASE_URL}/courses/${courseId}`
       );
 
       if (!courseResponse.ok) {
@@ -52,7 +53,7 @@ export default function CourseDetailsPage() {
 
       // Fetch course content
       const contentResponse = await fetch(
-        `http://localhost:5000/api/courses/${courseId}/content`
+        `${API_BASE_URL}/courses/${courseId}/content`
       );
 
       if (contentResponse.ok) {
@@ -174,7 +175,7 @@ export default function CourseDetailsPage() {
               src={
                 course.thumbnail.startsWith("http")
                   ? course.thumbnail
-                  : `http://localhost:5000${course.thumbnail}`
+                  : `${BACKEND_URL}${course.thumbnail}`
               }
               alt={course.title}
               className="w-full h-48 object-cover rounded-lg mb-4"
