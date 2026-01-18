@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
 
 interface CourseMaterial {
@@ -154,7 +155,7 @@ export default function EditCoursePage() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/courses/${courseId}/content`,
+        `${API_BASE_URL}/courses/${courseId}/content`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -254,7 +255,7 @@ export default function EditCoursePage() {
 
         materialFormData.append("video", material.file);
 
-        await fetch(`http://localhost:5000/api/courses/${courseId}/content`, {
+        await fetch(`${API_BASE_URL}/courses/${courseId}/content`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -297,7 +298,7 @@ export default function EditCoursePage() {
 
       // Use fetch directly for multipart/form-data
       const response = await fetch(
-        `http://localhost:5000/api/courses/${courseId}`,
+        `${API_BASE_URL}/courses/${courseId}`,
         {
           method: "PUT",
           headers: {
@@ -544,7 +545,7 @@ export default function EditCoursePage() {
                         thumbnailPreview ||
                         (currentThumbnail?.startsWith("http")
                           ? currentThumbnail
-                          : `http://localhost:5000${currentThumbnail}`)
+                          : `${BACKEND_URL}${currentThumbnail}`)
                       }
                       alt="Course thumbnail"
                       className="max-w-md h-auto rounded-lg border border-gray-200"
