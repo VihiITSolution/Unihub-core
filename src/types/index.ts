@@ -169,3 +169,97 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   };
 }
+
+// Live Session types
+export type LiveSessionStatus = "scheduled" | "cancelled" | "live" | "ended" | "recorded";
+export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
+export type InvitationStatus = "pending" | "accepted" | "declined";
+
+export interface LiveSession {
+  id: string;
+  tutorId: string;
+  courseId?: string;
+  title: string;
+  description?: string;
+  scheduledStartTime: string;
+  scheduledEndTime: string;
+  actualStartTime?: string;
+  actualEndTime?: string;
+  isFree: boolean;
+  price: number;
+  platformCommissionRate: number;
+  maxAttendees?: number;
+  youtubeVideoId?: string;
+  youtubeBroadcastId?: string;
+  youtubeStreamKey?: string;
+  streamUrl?: string;
+  embedUrl?: string;
+  status: LiveSessionStatus;
+  totalRevenue: number;
+  platformCommission: number;
+  totalAttendees: number;
+  allowRecording: boolean;
+  recordingUrl?: string;
+  enableChat: boolean;
+  privacyStatus: "public" | "unlisted" | "private";
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+  tutor?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    profileImage?: string;
+  };
+  course?: Course;
+}
+
+export interface SessionEnrollment {
+  id: string;
+  sessionId: string;
+  studentId: string;
+  amountPaid: number;
+  paymentStatus: PaymentStatus;
+  paymentId?: string;
+  joinedAt?: string;
+  leftAt?: string;
+  attendanceDuration: number;
+  invitedBy?: string;
+  invitationStatus?: InvitationStatus;
+  createdAt: string;
+  updatedAt: string;
+  session?: LiveSession;
+  student?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    profileImage?: string;
+  };
+}
+
+export interface CreateLiveSessionData {
+  title: string;
+  description?: string;
+  courseId?: string;
+  scheduledStartTime: string;
+  scheduledEndTime: string;
+  isFree: boolean;
+  price?: number;
+  platformCommissionRate?: number;
+  maxAttendees?: number;
+  allowRecording?: boolean;
+  enableChat?: boolean;
+  privacyStatus?: "public" | "unlisted" | "private";
+  tags?: string[];
+}
+
+export interface LiveSessionFilters {
+  upcoming?: boolean;
+  tutorId?: string;
+  isFree?: boolean;
+  status?: LiveSessionStatus;
+  page?: number;
+  limit?: number;
+}
