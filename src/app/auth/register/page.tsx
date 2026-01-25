@@ -39,11 +39,10 @@ interface FormData {
   confirmPassword: string;
   phoneNumber: string;
   
-  // Role Selection
-  roles: UserRole[];
-  primaryRole: UserRole;
+  // Account Type Selection
+  accountType: 'student' | 'vendor';
   
-  // Student Profile
+  // Student Profile (only for students)
   universityName: string;
   department: string;
   degreeOrCourse: string;
@@ -61,8 +60,7 @@ const initialFormData: FormData = {
   password: "",
   confirmPassword: "",
   phoneNumber: "",
-  roles: ["student"],
-  primaryRole: "student",
+  accountType: "student",
   universityName: "",
   department: "",
   degreeOrCourse: "",
@@ -94,22 +92,9 @@ export default function RegisterPage() {
     setError(null);
   };
 
-  const handleRoleToggle = (role: UserRole) => {
-    setFormData((prev) => {
-      const roles = prev.roles.includes(role)
-        ? prev.roles.filter((r) => r !== role)
-        : [...prev.roles, role];
-      
-      // Ensure at least one role is selected
-      if (roles.length === 0) {
-        return prev;
-      }
-      
-      // Update primary role if current primary is being removed
-      const primaryRole = roles.includes(prev.primaryRole) ? prev.primaryRole : roles[0];
-      
-      return { ...prev, roles, primaryRole };
-    });
+  const handleAccountTypeSelect = (accountType: 'student' | 'vendor') => {
+    setFormData((prev) => ({ ...prev, accountType }));
+    setError(null);
   };
 
   const validateStep1 = () => {
@@ -133,15 +118,12 @@ export default function RegisterPage() {
   };
 
   const validateStep2 = () => {
-    if (formData.roles.length === 0) {
-      setError("Please select at least one role");
-      return false;
-    }
+    // Account type always has a value (student or vendor)
     return true;
   };
 
   const validateStep3 = () => {
-    if (formData.roles.includes("student")) {
+    if (formData.accountType === "student") {
       if (!formData.universityName) {
         setError("Please select your university");
         return false;
@@ -190,10 +172,10 @@ export default function RegisterPage() {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        roles: formData.roles,
-        primaryRole: formData.primaryRole,
+        roles: [formData.accountType === 'student' ? 'student' : 'student'], // Everyone starts as student in DB
+        primaryRole: 'student' as UserRole,
         phoneNumber: formData.phoneNumber || undefined,
-        studentProfile: formData.roles.includes("student")
+        studentProfile: formData.accountType === "student"
           ? {
               universityName: formData.universityName,
               department: formData.department,
@@ -211,10 +193,15 @@ export default function RegisterPage() {
       const result = await register(registerData);
 
       if (result.success) {
-        // Get redirect path based on role
-        const redirectPath = sessionStorage.getItem('redirectAfterLogin') || dashboardPath;
-        sessionStorage.removeItem('redirectAfterLogin');
-        router.push(redirectPath);
+        // If vendor account, redirect to vendor profile completion
+        if (formData.accountType === 'vendor') {
+          router.push('/student/become-vendor');
+        } else {
+          // Student - go to dashboard
+          const redirectPath = sessionStorage.getItem('redirectAfterLogin') || dashboardPath;
+          sessionStorage.removeItem('redirectAfterLogin');
+          router.push(redirectPath);
+        }
       } else {
         setError(result.error || "Registration failed. Please try again.");
       }
@@ -278,21 +265,23 @@ export default function RegisterPage() {
         {/* Step Labels */}
         <div className="flex justify-between text-xs text-gray-400 mb-6 px-2">
           <span className={step >= 1 ? "text-ocean-400" : ""}>Account</span>
-          <span className={step >= 2 ? "text-ocean-400" : ""}>Role</span>
-          <span className={step >= 3 ? "text-ocean-400" : ""}>Profile</span>
+          <span className={step >= 2 ? "text-ocean-400" : ""}>Type</span>
+          <span className={step >= 3 ? "text-ocean-400" : ""}>Confirm</span>
         </div>
 
         {/* Card */}
         <div className="bg-navy-900/50 backdrop-blur-lg rounded-2xl p-8 border border-navy-800 shadow-2xl">
           <h2 className="text-2xl font-bold text-white mb-2">
             {step === 1 && "Create Your Account"}
-            {step === 2 && "Choose Your Role"}
-            {step === 3 && "Complete Your Profile"}
+            {step === 2 && "Choose Account Type"}
+            {step === 3 && formData.accountType === 'student' && "Complete Student Profile"}
+            {step === 3 && formData.accountType === 'vendor' && "Review & Create Account"}
           </h2>
           <p className="text-gray-400 mb-6">
             {step === 1 && "Enter your basic information to get started"}
-            {step === 2 && "Select how you want to use UniHub"}
-            {step === 3 && "Tell us more about yourself"}
+            {step === 2 && "Select whether you're a student or vendor"}
+            {step === 3 && formData.accountType === 'student' && "Tell us about your university studies"}
+            {step === 3 && formData.accountType === 'vendor' && "You'll set up your shop after registration"}
           </p>
 
           {error && (
@@ -407,88 +396,84 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {/* Step 2: Role Selection */}
+            {/* Step 2: Account Type Selection */}
             {step === 2 && (
               <div className="space-y-4">
+                <p className="text-gray-400 text-sm mb-4">
+                  Choose your account type. You can access marketplace features regardless of your choice.
+                </p>
                 <div className="space-y-3">
-                  {/* Student Role */}
+                  {/* Student Account */}
                   <button
                     type="button"
-                    onClick={() => handleRoleToggle("student")}
-                    className={`w-full p-4 rounded-xl border-2 transition-all flex items-start gap-4 ${
-                      formData.roles.includes("student")
+                    onClick={() => handleAccountTypeSelect("student")}
+                    className={`w-full p-6 rounded-xl border-2 transition-all flex items-start gap-4 ${
+                      formData.accountType === "student"
                         ? "border-ocean-500 bg-ocean-500/10"
                         : "border-navy-700 bg-navy-800 hover:border-navy-600"
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-md flex items-center justify-center ${
-                      formData.roles.includes("student") ? "bg-ocean-500" : "bg-navy-700"
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
+                      formData.accountType === "student" ? "bg-ocean-500" : "bg-navy-700"
                     }`}>
-                      {formData.roles.includes("student") && (
+                      {formData.accountType === "student" && (
                         <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       )}
                     </div>
                     <div className="text-left">
-                      <h3 className="text-white font-semibold">🎓 Student</h3>
-                      <p className="text-gray-400 text-sm">Browse and enroll in Kuppi sessions, learn from your peers</p>
+                      <h3 className="text-white font-semibold text-lg mb-1">🎓 Student</h3>
+                      <p className="text-gray-400 text-sm">
+                        I'm a university student looking to learn, attend Kuppi sessions, and shop on the marketplace
+                      </p>
+                      <ul className="mt-2 space-y-1 text-xs text-gray-500">
+                        <li>• Enroll in courses and sessions</li>
+                        <li>• Buy and sell on marketplace</li>
+                        <li>• Can become a tutor later (with approval)</li>
+                      </ul>
                     </div>
                   </button>
 
-                  {/* Tutor Role */}
+                  {/* Vendor Account */}
                   <button
                     type="button"
-                    onClick={() => handleRoleToggle("tutor")}
-                    className={`w-full p-4 rounded-xl border-2 transition-all flex items-start gap-4 ${
-                      formData.roles.includes("tutor")
+                    onClick={() => handleAccountTypeSelect("vendor")}
+                    className={`w-full p-6 rounded-xl border-2 transition-all flex items-start gap-4 ${
+                      formData.accountType === "vendor"
                         ? "border-amber-500 bg-amber-500/10"
                         : "border-navy-700 bg-navy-800 hover:border-navy-600"
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-md flex items-center justify-center ${
-                      formData.roles.includes("tutor") ? "bg-amber-500" : "bg-navy-700"
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
+                      formData.accountType === "vendor" ? "bg-amber-500" : "bg-navy-700"
                     }`}>
-                      {formData.roles.includes("tutor") && (
+                      {formData.accountType === "vendor" && (
                         <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       )}
                     </div>
                     <div className="text-left">
-                      <h3 className="text-white font-semibold">📚 Tutor</h3>
-                      <p className="text-gray-400 text-sm">Create and host Kuppi sessions, earn money by teaching</p>
-                      <p className="text-amber-400 text-xs mt-1">Requires admin approval</p>
+                      <h3 className="text-white font-semibold text-lg mb-1">🏪 Vendor</h3>
+                      <p className="text-gray-400 text-sm">
+                        I want to sell products on the UniHub marketplace (I'm not a student)
+                      </p>
+                      <ul className="mt-2 space-y-1 text-xs text-gray-500">
+                        <li>• Create and manage shop listings</li>
+                        <li>• Manage orders and inventory</li>
+                        <li>• Access vendor dashboard and analytics</li>
+                      </ul>
                     </div>
                   </button>
                 </div>
-
-                {formData.roles.length > 1 && (
-                  <div className="mt-6">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Primary Role (for dashboard)
-                    </label>
-                    <select
-                      name="primaryRole"
-                      value={formData.primaryRole}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-navy-800 border border-navy-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
-                    >
-                      {formData.roles.map((role) => (
-                        <option key={role} value={role}>
-                          {role.charAt(0).toUpperCase() + role.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
               </div>
             )}
 
             {/* Step 3: Profile Details */}
             {step === 3 && (
               <div className="space-y-4">
-                {formData.roles.includes("student") && (
+                {formData.accountType === "student" ? (
                   <>
                     <div>
                       <label htmlFor="universityName" className="block text-sm font-medium text-gray-300 mb-1">
@@ -623,6 +608,28 @@ export default function RegisterPage() {
                         className="w-full px-4 py-3 bg-navy-800 border border-navy-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all resize-none"
                         placeholder="Your current address"
                       />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Vendor Account - Simple message */}
+                    <div className="text-center py-8 px-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                      <div className="text-5xl mb-4">🏪</div>
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        Vendor Account Setup
+                      </h3>
+                      <p className="text-gray-400 mb-4">
+                        After creating your account, you'll be redirected to complete your vendor shop profile with business details, contact information, and payment settings.
+                      </p>
+                      <div className="text-left max-w-sm mx-auto bg-navy-800/50 p-4 rounded-lg">
+                        <p className="text-sm font-medium text-gray-300 mb-2">You'll need to provide:</p>
+                        <ul className="text-sm text-gray-400 space-y-1">
+                          <li>• Shop name and description</li>
+                          <li>• Business contact details</li>
+                          <li>• Address information</li>
+                          <li>• Bank account for payments</li>
+                        </ul>
+                      </div>
                     </div>
                   </>
                 )}

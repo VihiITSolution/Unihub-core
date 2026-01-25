@@ -1,45 +1,185 @@
-export default function VendorDashboard() {
+"use client";
+
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { vendorService } from "@/services/vendor.service";
+import { marketplaceService } from "@/services/marketplace.service";
+import Link from "next/link";
+
+interface DashboardStats {
+  totalListings: number;
+  activeListings: number;
+  totalSales: number;
+  totalRevenue: number;
+  pendingOrders: number;
+  averageRating: number;
+}
+
+export default function VendorDashboardPage() {
+  const { user, token } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalListings: 0,
+    activeListings: 0,
+    totalSales: 0,
+    totalRevenue: 0,
+    pendingOrders: 0,
+    averageRating: 0
+  });
+
+  useEffect(() => {
+    if (!user?.isVendorProfileComplete) {
+      router.push("/student/become-vendor");
+      return;
+    }
+    loadDashboardData();
+  }, [user]);
+
+  const loadDashboardData = async () => {
+    if (!token) return;
+
+    try {
+      setLoading(true);
+      
+      // Load vendor stats
+      const vendorStats = await vendorService.getStats(token);
+      
+      // Load listings
+      const listings = await marketplaceService.getMyListings(token);
+      
+      // Load sales
+      const sales = await marketplaceService.getMySales({ status: 'pending' }, token);
+
+      if (vendorStats.success && vendorStats.data) {
+        setStats({
+          totalListings: listings.data?.items?.length || 0,
+          activeListings: listings.data?.items?.filter((item: any) => item.isAvailable).length || 0,
+          totalSales: vendorStats.data.stats.totalSales,
+          totalRevenue: vendorStats.data.stats.totalRevenue,
+          pendingOrders: sales.data?.length || 0,
+          averageRating: vendorStats.data.stats.averageRating
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container-custom py-12 text-center">
+        <div className="animate-pulse">Loading dashboard...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-navy-900">Vendor Dashboard</h1>
-          <p className="text-gray-600">Manage your products and orders</p>
-        </div>
-        <button className="btn-primary">
-          Add New Product
-        </button>
+    <div className="container-custom py-8">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-2">Vendor Dashboard</h1>
+        <p className="text-gray-600">Welcome back! Here's your shop overview.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: "Total Revenue", value: "$0.00", icon: "💰", color: "bg-green-100 text-green-600" },
-          { label: "Total Orders", value: "0", icon: "📦", color: "bg-blue-100 text-blue-600" },
-          { label: "Active Products", value: "0", icon: "🛍️", color: "bg-purple-100 text-purple-600" },
-          { label: "Pending Orders", value: "0", icon: "⏳", color: "bg-orange-100 text-orange-600" },
-        ].map((stat, index) => (
-          <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className={`w-12 h-12 rounded-lg ${stat.color} flex items-center justify-center text-xl mb-4`}>
-              {stat.icon}
-            </div>
-            <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
-            <p className="text-2xl font-bold text-navy-900 mt-1">{stat.value}</p>
+      {/* Stats Grid */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="card bg-gradient-to-br from-blue-50 to-blue-100">
+          <div className="text-sm text-blue-600 font-medium mb-1">Total Listings</div>
+          <div className="text-3xl font-bold text-blue-900">{stats.totalListings}</div>
+          <div className="text-sm text-blue-600 mt-1">
+            {stats.activeListings} active
           </div>
-        ))}
+        </div>
+
+        <div className="card bg-gradient-to-br from-green-50 to-green-100">
+          <div className="text-sm text-green-600 font-medium mb-1">Total Sales</div>
+          <div className="text-3xl font-bold text-green-900">{stats.totalSales}</div>
+          <div className="text-sm text-green-600 mt-1">
+            items sold
+          </div>
+        </div>
+
+        <div className="card bg-gradient-to-br from-purple-50 to-purple-100">
+          <div className="text-sm text-purple-600 font-medium mb-1">Total Revenue</div>
+          <div className="text-3xl font-bold text-purple-900">
+            ${stats.totalRevenue.toFixed(2)}
+          </div>
+          <div className="text-sm text-purple-600 mt-1">
+            all time
+          </div>
+        </div>
+
+        <div className="card bg-gradient-to-br from-orange-50 to-orange-100">
+          <div className="text-sm text-orange-600 font-medium mb-1">Pending Orders</div>
+          <div className="text-3xl font-bold text-orange-900">{stats.pendingOrders}</div>
+          <div className="text-sm text-orange-600 mt-1">
+            need attention
+          </div>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center py-12">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
-          🛍️
+      {/* Quick Actions */}
+      <div className="card mb-8">
+        <h2 className="text-2xl font-semibold mb-6">Quick Actions</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Link
+            href="/vendor/listings/create"
+            className="p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition text-center"
+          >
+            <div className="text-4xl mb-2">📦</div>
+            <div className="font-semibold">Create New Listing</div>
+            <div className="text-sm text-gray-600 mt-1">Add a product to your shop</div>
+          </Link>
+
+          <Link
+            href="/vendor/sales"
+            className="p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition text-center"
+          >
+            <div className="text-4xl mb-2">📋</div>
+            <div className="font-semibold">Manage Orders</div>
+            <div className="text-sm text-gray-600 mt-1">
+              {stats.pendingOrders} pending
+            </div>
+          </Link>
+
+          <Link
+            href="/vendor/shop"
+            className="p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition text-center"
+          >
+            <div className="text-4xl mb-2">⚙️</div>
+            <div className="font-semibold">Shop Settings</div>
+            <div className="text-sm text-gray-600 mt-1">Update your shop info</div>
+          </Link>
         </div>
-        <h3 className="text-lg font-semibold text-navy-900 mb-2">No Products Yet</h3>
-        <p className="text-gray-500 max-w-sm mx-auto mb-6">
-          Start selling your educational resources, equipment, or merchandise on UniHub.
-        </p>
-        <button className="btn-primary">
-          Create First Product
-        </button>
       </div>
+
+      {/* Performance */}
+      {stats.averageRating > 0 && (
+        <div className="card">
+          <h2 className="text-2xl font-semibold mb-6">Performance</h2>
+          <div className="flex items-center gap-8">
+            <div>
+              <div className="text-sm text-gray-600 mb-1">Average Rating</div>
+              <div className="flex items-center gap-2">
+                <span className="text-3xl font-bold">{stats.averageRating.toFixed(1)}</span>
+                <span className="text-yellow-500 text-2xl">⭐</span>
+              </div>
+            </div>
+            <div className="h-12 w-px bg-gray-300"></div>
+            <div>
+              <div className="text-sm text-gray-600 mb-1">Conversion Rate</div>
+              <div className="text-3xl font-bold">
+                {stats.totalListings > 0 
+                  ? ((stats.totalSales / stats.totalListings) * 100).toFixed(1)
+                  : 0}%
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
