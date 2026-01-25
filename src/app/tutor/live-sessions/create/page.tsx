@@ -3,12 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { liveSessionService } from "@/services/live-session.service";
-import { useAuth } from "@/contexts/AuthContext";
 import type { CreateLiveSessionData } from "@/types";
 
 export default function CreateLiveSessionPage() {
   const router = useRouter();
-  const { token } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [streamInfo, setStreamInfo] = useState<{
@@ -36,13 +34,12 @@ export default function CreateLiveSessionPage() {
     setIsLoading(true);
     setError(null);
 
-    if (!token) {
-      setError("Please log in to create a live session");
-      setIsLoading(false);
-      return;
-    }
-
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Please log in to create a live session");
+      }
+
       const response = await liveSessionService.createSession(formData, token);
       
       setStreamInfo({

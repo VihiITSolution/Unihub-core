@@ -1,8 +1,10 @@
 import { apiClient } from '@/lib/api-client';
-import type { ApiResponse, PaginatedResponse, Product, Order } from '@/types';
+import type { ApiResponse, PaginatedResponse, MarketplaceItem, Order } from '@/types';
 
-export interface ProductFilters {
+export interface MarketplaceFilters {
   category?: string;
+  itemType?: string;
+  condition?: string;
   minPrice?: number;
   maxPrice?: number;
   search?: string;
@@ -10,17 +12,37 @@ export interface ProductFilters {
   limit?: number;
 }
 
-export interface CreateProductData {
+export interface CreateListingData {
   title: string;
   description: string;
-  images: string[];
-  price: number;
   category: string;
+  itemType: 'book' | 'notes' | 'equipment' | 'electronics' | 'other';
+  condition?: 'new' | 'like_new' | 'good' | 'fair' | 'poor';
+  price: number;
   stock: number;
+  images?: string[];
+  location?: string;
+  contactInfo?: string;
+}
+
+export interface CreateOrderData {
+  itemId: number;
+  quantity: number;
+  shippingAddress?: string;
+  buyerNotes?: string;
+}
+
+export interface UpdateOrderData {
+  status?: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+  trackingNumber?: string;
+  sellerNotes?: string;
 }
 
 export const marketplaceService = {
-  async getProducts(filters?: ProductFilters): Promise<PaginatedResponse<Product>> {
+  /**
+   * Get all marketplace items with filters
+   */
+  async getItems(filters?: MarketplaceFilters): Promise<PaginatedResponse<MarketplaceItem>> {
     const queryParams = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -30,49 +52,144 @@ export const marketplaceService = {
       });
     }
     const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    return apiClient.get<PaginatedResponse<Product>>(`/products${query}`);
+    
+    const response = await apiClient.get<any>(`/marketplace${query}`);
+    return {
+      success: response.success,
+      data: response.data.items,
+      pagination: response.data.pagination
+    };
   },
 
-  async getProductById(id: string): Promise<ApiResponse<Product>> {
-    return apiClient.get<ApiResponse<Product>>(`/products/${id}`);
+  /**
+   * Get marketplace item by ID
+   */
+  async getItemById(id: number): Promise<ApiResponse<{ item: MarketplaceItem }>> {
+    return apiClient.get<ApiResponse<{ item: MarketplaceItem }>>(`/marketplace/${id}`);
   },
 
-  async createProduct(
-    data: CreateProductData,
+  /**
+   * Create marketplace listing (vendor only)
+   */
+  async createListing(
+    data: CreateListingData,
     token: string
-  ): Promise<ApiResponse<Product>> {
-    return apiClient.post<ApiResponse<Product>>('/products', data, { token });
-  },
-
-  async updateProduct(
-    id: string,
-    data: Partial<CreateProductData>,
-    token: string
-  ): Promise<ApiResponse<Product>> {
-    return apiClient.put<ApiResponse<Product>>(`/products/${id}`, data, { token });
-  },
-
-  async deleteProduct(id: string, token: string): Promise<ApiResponse<null>> {
-    return apiClient.delete<ApiResponse<null>>(`/products/${id}`, { token });
-  },
-
-  async createOrder(
-    productId: string,
-    quantity: number,
-    token: string
-  ): Promise<ApiResponse<Order>> {
-    return apiClient.post<ApiResponse<Order>>(
-      '/orders',
-      { productId, quantity },
+  ): Promise<ApiResponse<{ item: MarketplaceItem }>> {
+    return apiClient.post<ApiResponse<{ item: MarketplaceItem }>>(
+      '/marketplace',
+      data,
       { token }
     );
   },
 
-  async getOrders(token: string): Promise<ApiResponse<Order[]>> {
-    return apiClient.get<ApiResponse<Order[]>>('/orders', { token });
+  /**
+   * Update marketplace listing
+   */
+  async updateListing(
+    id: number,
+    data: Partial<CreateListingData>,
+    token: string
+  ): Promise<ApiResponse<{ item: MarketplaceItem }>> {
+    return apiClient.put<ApiResponse<{ item: MarketplaceItem }>>(
+      `/marketplace/${id}`,
+      data,
+      { token }
+    );
   },
 
-  async getSellerProducts(token: string): Promise<ApiResponse<Product[]>> {
-    return apiClient.get<ApiResponse<Product[]>>('/seller/products', { token });
+  /**
+   * Delete marketplace listing
+   */
+  async deleteListing(id: number, token: string): Promise<ApiResponse<null>> {
+    return apiClient.delete<ApiResponse<null>>(`/marketplace/${id}`, { token });
   },
+
+  /**
+   * Get my listings (vendor only)
+   */
+  async getMyListings(token: string): Promise<ApiResponse<{ items: MarketplaceItem[] }>> {
+    return apiClient.get<ApiResponse<{ items: MarketplaceItem[] }>>(
+      '/marketplace/my-listings',
+      { token }
+    );
+  },
+
+  /**
+   * Create order
+   */
+  async createOrder(
+    data: CreateOrderData,
+    token: string
+  ): Promise<ApiResponse<{ order: Order }>> {
+    return apiClient.post<ApiResponse<{ order: Order }>>(
+      '/marketplace/orders',
+      data,
+      { token }
+    );
+  },
+
+  /**
+   * Get my orders (buyer view)
+   */
+  async getMyOrders(
+    filters?: { status?: string; page?: number; limit?: number },
+    token?: string
+  ): Promise<PaginatedResponse<Order>> {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    
+    const response = await apiClient.get<any>(`/marketplace/orders${query}`, { token });
+    return {
+      success: response.success,
+      data: response.data.orders,
+      pagination: response.data.pagination
+    };
+  },
+
+  /**
+   * Get my sales (seller view)
+   */
+  async getMySales(
+    filters?: { status?: string; page?: number; limit?: number },
+    token?: string
+  ): Promise<PaginatedResponse<Order>> {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    
+    const response = await apiClient.get<any>(`/marketplace/sales${query}`, { token });
+    return {
+      success: response.success,
+      data: response.data.orders,
+      pagination: response.data.pagination
+    };
+  },
+
+  /**
+   * Update order status (seller only)
+   */
+  async updateOrderStatus(
+    orderId: number,
+    data: UpdateOrderData,
+    token: string
+  ): Promise<ApiResponse<{ order: Order }>> {
+    return apiClient.put<ApiResponse<{ order: Order }>>(
+      `/marketplace/orders/${orderId}`,
+      data,
+      { token }
+    );
+  }
 };
