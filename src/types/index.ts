@@ -47,10 +47,38 @@ export interface User {
   isActive: boolean;
   isStudentProfileComplete: boolean;
   isTutorProfileComplete: boolean;
+  isVendorProfileComplete: boolean;
   studentProfile?: StudentProfile;
   tutorProfile?: TutorProfile;
+  vendorProfile?: VendorProfile;
   createdAt: string;
   lastLogin?: string;
+}
+
+export interface VendorProfile {
+  id: number;
+  userId: number;
+  shopName: string;
+  shopDescription?: string;
+  businessType: "individual" | "business";
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  postalCode?: string;
+  taxId?: string;
+  isApproved: boolean;
+  approvalStatus: "pending" | "approved" | "rejected";
+  rejectionReason?: string;
+  isActive: boolean;
+  totalSales: number;
+  totalRevenue: number;
+  averageRating: number;
+  totalReviews: number;
+  isProfileComplete: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuthState {
@@ -110,32 +138,75 @@ export interface Enrollment {
 }
 
 // Marketplace types
-export interface Product {
-  id: string;
+export interface MarketplaceItem {
+  id: number;
+  sellerId: number;
   title: string;
   description: string;
-  images: string[];
-  price: number;
-  sellerId: string;
-  sellerName: string;
   category: string;
+  itemType: "book" | "notes" | "equipment" | "electronics" | "other";
+  condition: "new" | "like_new" | "good" | "fair" | "poor";
+  price: number;
+  images?: string[];
   stock: number;
-  rating: number;
-  reviewCount: number;
+  soldCount: number;
+  location?: string;
+  isAvailable: boolean;
+  viewCount: number;
+  contactInfo?: string;
+  seller?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    profileImage?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Order {
-  id: string;
-  buyerId: string;
-  sellerId: string;
-  productId: string;
+  id: number;
+  orderId: string;
+  buyerId: number;
+  sellerId: number;
+  itemId: number;
   quantity: number;
+  unitPrice: number;
   totalPrice: number;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled" | "refunded";
+  shippingAddress?: string;
+  buyerNotes?: string;
+  sellerNotes?: string;
+  trackingNumber?: string;
+  paymentId?: number;
+  confirmedAt?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
+  cancelledAt?: string;
+  cancellationReason?: string;
+  item?: MarketplaceItem;
+  buyer?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  seller?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   createdAt: string;
   updatedAt: string;
+}
+
+// Legacy Product type for compatibility (maps to MarketplaceItem)
+export interface Product extends Omit<MarketplaceItem, 'itemType' | 'condition' | 'soldCount'> {
+  sellerName?: string;
+  rating?: number;
+  reviewCount?: number;
 }
 
 // Payment types

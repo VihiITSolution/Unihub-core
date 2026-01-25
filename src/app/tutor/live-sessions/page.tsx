@@ -4,27 +4,26 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { liveSessionService } from "@/services/live-session.service";
-import { useAuth } from "@/contexts/AuthContext";
 import type { LiveSession, LiveSessionStatus } from "@/types";
 
 export default function TutorLiveSessionsPage() {
   const router = useRouter();
-  const { token, isAuthenticated, isLoading: authLoading } = useAuth();
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "upcoming" | "live" | "ended">("all");
 
   useEffect(() => {
-    // Wait for auth to be ready before loading sessions
-    if (authLoading) return;
-    if (!isAuthenticated || !token) return;
     loadSessions();
-  }, [filter, authLoading, isAuthenticated, token]);
+  }, [filter]);
 
   const loadSessions = async () => {
-    if (!token) return;
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/auth/login");
+        return;
+      }
 
       const filters: any = {};
       if (filter === "upcoming") {
@@ -34,13 +33,7 @@ export default function TutorLiveSessionsPage() {
       }
 
       const response = await liveSessionService.getSessions(filters, token);
-      // Handle various API response formats
-      const sessionsData = Array.isArray(response) 
-        ? response 
-        : Array.isArray(response?.data) 
-          ? response.data 
-          : [];
-      setSessions(sessionsData);
+      setSessions(response.data || []);
     } catch (err: any) {
       setError(err.message || "Failed to load sessions");
     } finally {
@@ -49,8 +42,9 @@ export default function TutorLiveSessionsPage() {
   };
 
   const handleStartSession = async (id: string) => {
-    if (!token) return;
     try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
       await liveSessionService.startSession(id, token);
       loadSessions();
@@ -60,8 +54,9 @@ export default function TutorLiveSessionsPage() {
   };
 
   const handleEndSession = async (id: string) => {
-    if (!token) return;
     try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
       if (confirm("Are you sure you want to end this session?")) {
         await liveSessionService.endSession(id, token);
@@ -73,8 +68,9 @@ export default function TutorLiveSessionsPage() {
   };
 
   const handleCancelSession = async (id: string) => {
-    if (!token) return;
     try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
       if (confirm("Are you sure you want to cancel this session?")) {
         await liveSessionService.cancelSession(id, token);
@@ -111,7 +107,7 @@ export default function TutorLiveSessionsPage() {
     });
   };
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-96">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

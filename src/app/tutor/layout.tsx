@@ -10,7 +10,7 @@ export default function TutorLayout({
 }) {
   return (
     <ProtectedRoute allowedRoles={["tutor"]}>
-      <DashboardLayout userType="tutor">{children}</DashboardLayout>
+      <DashboardLayout>{children}</DashboardLayout>
     </ProtectedRoute>
   );
 }

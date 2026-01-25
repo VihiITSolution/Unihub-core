@@ -4,26 +4,22 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { liveSessionService } from "@/services/live-session.service";
-import { useAuth } from "@/contexts/AuthContext";
 import type { LiveSession } from "@/types";
 
 export default function StudentLiveSessionsPage() {
   const router = useRouter();
-  const { token, isAuthenticated, isLoading: authLoading } = useAuth();
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "free" | "paid" | "upcoming">("all");
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!isAuthenticated) return;
     loadSessions();
-  }, [filter, authLoading, isAuthenticated, token]);
+  }, [filter]);
 
   const loadSessions = async () => {
     try {
+      const token = localStorage.getItem("token");
       
       const filters: any = {};
       if (filter === "upcoming") {
@@ -35,13 +31,7 @@ export default function StudentLiveSessionsPage() {
       }
 
       const response = await liveSessionService.getSessions(filters, token);
-      // Handle various API response formats
-      const sessionsData = Array.isArray(response) 
-        ? response 
-        : Array.isArray(response?.data) 
-          ? response.data 
-          : [];
-      setSessions(sessionsData);
+      setSessions(response.data || []);
     } catch (err: any) {
       setError(err.message || "Failed to load sessions");
     } finally {
@@ -50,11 +40,12 @@ export default function StudentLiveSessionsPage() {
   };
 
   const handleEnroll = async (sessionId: string, isFree: boolean) => {
-    if (!token) {
-      router.push("/auth/login");
-      return;
-    }
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/auth/login");
+        return;
+      }
 
       if (!isFree) {
         // TODO: Implement payment flow
@@ -95,7 +86,7 @@ export default function StudentLiveSessionsPage() {
     );
   };
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-96">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

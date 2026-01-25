@@ -3,16 +3,19 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  userType?: "student" | "tutor" | "admin";
 }
 
-export default function DashboardLayout({ children, userType = "student" }: DashboardLayoutProps) {
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const { user } = useAuth();
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -29,6 +32,13 @@ export default function DashboardLayout({ children, userType = "student" }: Dash
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  const getPageTitle = () => {
+    if (pathname.includes('/tutor')) return 'Tutor Dashboard';
+    if (pathname.includes('/admin')) return 'Admin Dashboard';
+    if (pathname.includes('/vendor')) return 'Vendor Dashboard';
+    return 'My Learning';
   };
 
   return (
@@ -48,7 +58,6 @@ export default function DashboardLayout({ children, userType = "student" }: Dash
         <Sidebar 
           isOpen={sidebarOpen} 
           onToggle={toggleSidebar}
-          userType={userType}
         />
         
         {/* Main Content */}
@@ -79,7 +88,7 @@ export default function DashboardLayout({ children, userType = "student" }: Dash
               {/* Breadcrumb or Page Title */}
               <div className="hidden lg:block">
                 <h1 className="text-lg font-semibold text-gray-900">
-                  {userType === "tutor" ? "Tutor Dashboard" : userType === "admin" ? "Admin Dashboard" : "My Learning"}
+                  {getPageTitle()}
                 </h1>
               </div>
             </div>
@@ -108,7 +117,7 @@ export default function DashboardLayout({ children, userType = "student" }: Dash
               {/* Profile */}
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-ocean-400 to-ocean-600 flex items-center justify-center text-white text-sm font-medium">
-                  JD
+                  {user?.firstName?.[0] || 'U'}
                 </div>
               </div>
             </div>
