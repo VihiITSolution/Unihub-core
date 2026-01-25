@@ -31,6 +31,7 @@ export default function Header() {
       className={`bg-white sticky top-0 z-50 transition-all duration-300 ${
         isScrolled ? "shadow-lg backdrop-blur-sm bg-white/95" : "shadow-md"
       }`}
+      suppressHydrationWarning
     >
       <nav className="container-custom">
         <div className="flex justify-between items-center h-20">

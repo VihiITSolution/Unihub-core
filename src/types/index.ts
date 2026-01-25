@@ -334,3 +334,86 @@ export interface LiveSessionFilters {
   page?: number;
   limit?: number;
 }
+
+// Boarding Places types
+export type RoomType = "single" | "shared" | "apartment" | "annex";
+export type GenderPreference = "male" | "female" | "any";
+export type BoardingApprovalStatus = "pending" | "approved" | "rejected";
+
+export interface BoardingPlace {
+  id: number;
+  vendorId: number;
+  title: string;
+  description: string;
+  address: string;
+  city: string;
+  district?: string;
+  nearestUniversity?: string;
+  distanceToUniversity?: number;
+  roomType: RoomType;
+  genderPreference: GenderPreference;
+  capacity: number;
+  availableSlots: number;
+  monthlyRent: number;
+  securityDeposit?: number;
+  amenities?: string[];
+  rules?: string;
+  images?: string[];
+  contactPhone: string;
+  contactEmail?: string;
+  isActive: boolean;
+  isPaid: boolean;
+  paidAt?: string;
+  adFee: number;
+  expiresAt?: string;
+  viewCount: number;
+  inquiryCount: number;
+  isApproved: boolean;
+  approvalStatus: BoardingApprovalStatus;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+  vendor?: {
+    id: number;
+    username: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    vendorProfile?: {
+      shopName: string;
+      contactPhone?: string;
+      contactEmail?: string;
+    };
+  };
+}
+
+export interface BoardingPlaceFilters {
+  city?: string;
+  roomType?: RoomType;
+  genderPreference?: GenderPreference;
+  minRent?: number;
+  maxRent?: number;
+  nearestUniversity?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface BoardingPlaceFormData {
+  title: string;
+  description: string;
+  address: string;
+  city: string;
+  district?: string;
+  nearestUniversity?: string;
+  distanceToUniversity?: number;
+  roomType: RoomType;
+  genderPreference: GenderPreference;
+  capacity: number;
+  monthlyRent: number;
+  securityDeposit?: number;
+  amenities?: string[];
+  rules?: string;
+  images?: string[];
+  contactPhone: string;
+  contactEmail?: string;
+}

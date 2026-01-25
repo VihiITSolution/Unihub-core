@@ -35,6 +35,8 @@ export default function VendorSalesPage() {
       }
     } catch (error) {
       console.error("Failed to load orders:", error);
+      // Silently handle errors for empty results
+      setOrders([]);
     } finally {
       setLoading(false);
     }

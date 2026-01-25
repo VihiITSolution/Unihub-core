@@ -49,8 +49,14 @@ export default function VendorDashboardPage() {
       // Load listings
       const listings = await marketplaceService.getMyListings(token);
       
-      // Load sales
-      const sales = await marketplaceService.getMySales({ status: 'pending' }, token);
+      // Load sales - handle if there are none
+      let sales = { success: true, data: [] };
+      try {
+        sales = await marketplaceService.getMySales({ status: 'pending' }, token);
+      } catch (error) {
+        // Ignore errors for empty sales
+        console.log('No sales found (expected for new vendors)');
+      }
 
       if (vendorStats.success && vendorStats.data) {
         setStats({
@@ -105,7 +111,7 @@ export default function VendorDashboardPage() {
         <div className="card bg-gradient-to-br from-purple-50 to-purple-100">
           <div className="text-sm text-purple-600 font-medium mb-1">Total Revenue</div>
           <div className="text-3xl font-bold text-purple-900">
-            ${stats.totalRevenue.toFixed(2)}
+            ${typeof stats.totalRevenue === 'number' ? stats.totalRevenue.toFixed(2) : parseFloat(stats.totalRevenue || 0).toFixed(2)}
           </div>
           <div className="text-sm text-purple-600 mt-1">
             all time

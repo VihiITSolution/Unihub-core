@@ -121,7 +121,7 @@ export default function VendorShopSettingsPage() {
             <input
               type="text"
               name="shopName"
-              value={formData.shopName}
+              value={formData?.shopName || ""}
               onChange={handleChange}
               className="input"
             />
@@ -131,7 +131,7 @@ export default function VendorShopSettingsPage() {
             <label className="block text-sm font-medium mb-2">Shop Description</label>
             <textarea
               name="shopDescription"
-              value={formData.shopDescription}
+              value={formData?.shopDescription || ""}
               onChange={handleChange}
               rows={4}
               className="input"
@@ -142,7 +142,7 @@ export default function VendorShopSettingsPage() {
             <label className="block text-sm font-medium mb-2">Business Type</label>
             <select
               name="businessType"
-              value={formData.businessType}
+              value={formData?.businessType || "individual"}
               onChange={handleChange}
               className="input"
             >
@@ -162,7 +162,7 @@ export default function VendorShopSettingsPage() {
               <input
                 type="email"
                 name="contactEmail"
-                value={formData.contactEmail}
+                value={formData?.contactEmail || ""}
                 onChange={handleChange}
                 className="input"
               />
@@ -173,7 +173,7 @@ export default function VendorShopSettingsPage() {
               <input
                 type="tel"
                 name="contactPhone"
-                value={formData.contactPhone}
+                value={formData?.contactPhone || ""}
                 onChange={handleChange}
                 className="input"
               />
@@ -190,7 +190,7 @@ export default function VendorShopSettingsPage() {
             <input
               type="text"
               name="address"
-              value={formData.address}
+              value={formData?.address || ""}
               onChange={handleChange}
               className="input"
             />
@@ -202,7 +202,7 @@ export default function VendorShopSettingsPage() {
               <input
                 type="text"
                 name="city"
-                value={formData.city}
+                value={formData?.city || ""}
                 onChange={handleChange}
                 className="input"
               />
@@ -213,7 +213,7 @@ export default function VendorShopSettingsPage() {
               <input
                 type="text"
                 name="state"
-                value={formData.state}
+                value={formData?.state || ""}
                 onChange={handleChange}
                 className="input"
               />
@@ -224,7 +224,7 @@ export default function VendorShopSettingsPage() {
               <input
                 type="text"
                 name="postalCode"
-                value={formData.postalCode}
+                value={formData?.postalCode || ""}
                 onChange={handleChange}
                 className="input"
               />
@@ -236,7 +236,7 @@ export default function VendorShopSettingsPage() {
             <input
               type="text"
               name="country"
-              value={formData.country}
+              value={formData?.country || "USA"}
               onChange={handleChange}
               className="input"
             />
@@ -255,7 +255,7 @@ export default function VendorShopSettingsPage() {
             <input
               type="text"
               name="bankAccountName"
-              value={formData.bankAccountName}
+              value={formData?.bankAccountName || ""}
               onChange={handleChange}
               className="input"
             />
@@ -266,7 +266,7 @@ export default function VendorShopSettingsPage() {
             <input
               type="text"
               name="bankAccountNumber"
-              value={formData.bankAccountNumber}
+              value={formData?.bankAccountNumber || ""}
               onChange={handleChange}
               className="input"
             />
@@ -277,7 +277,7 @@ export default function VendorShopSettingsPage() {
             <input
               type="text"
               name="bankName"
-              value={formData.bankName}
+              value={formData?.bankName || ""}
               onChange={handleChange}
               className="input"
             />
