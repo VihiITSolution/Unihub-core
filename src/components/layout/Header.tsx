@@ -20,17 +20,16 @@ export default function Header() {
   }, []);
 
   const navLinks = [
-    { href: "/courses", label: "Courses", icon: "📚" },
-    { href: "/marketplace", label: "Marketplace", icon: "🛍️" },
-    { href: "/tutor/dashboard", label: "Teach", icon: "🎓" },
-    { href: "/student/dashboard", label: "My Learning", icon: "📖" },
+    { href: "/courses", label: "Courses" },
+    { href: "/marketplace", label: "Marketplace" },
+    { href: "/tutor/dashboard", label: "Teach" },
+    { href: "/student/dashboard", label: "My Learning" },
   ];
 
   return (
     <header
-      className={`bg-white sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled ? "shadow-lg backdrop-blur-sm bg-white/95" : "shadow-md"
-      }`}
+      className={`bg-white sticky top-0 z-50 transition-all duration-300 ${isScrolled ? "shadow-lg backdrop-blur-sm bg-white/95" : "shadow-md"
+        }`}
     >
       <nav className="container-custom">
         <div className="flex justify-between items-center h-20">
@@ -91,7 +90,6 @@ export default function Header() {
                 href={link.href}
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all duration-200 font-medium"
               >
-                <span>{link.icon}</span>
                 <span>{link.label}</span>
               </Link>
             ))}
@@ -190,7 +188,6 @@ export default function Header() {
                   className="flex items-center space-x-3 py-3 px-4 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <span className="text-xl">{link.icon}</span>
                   <span className="font-medium">{link.label}</span>
                 </Link>
               ))}
