@@ -2,14 +2,19 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, logout, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,6 +23,20 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    if (isProfileOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isProfileOpen]);
 
   const navLinks = [
     { href: "/courses", label: "Courses" },
@@ -28,8 +47,9 @@ export default function Header() {
 
   return (
     <header
-      className={`bg-white sticky top-0 z-50 transition-all duration-300 ${isScrolled ? "shadow-lg backdrop-blur-sm bg-white/95" : "shadow-md"
-        }`}
+      className={`bg-white sticky top-0 z-50 transition-all duration-300 ${
+        isScrolled ? "shadow-lg backdrop-blur-sm bg-white/95" : "shadow-md"
+      }`}
     >
       <nav className="container-custom">
         <div className="flex justify-between items-center h-20">
@@ -119,7 +139,11 @@ export default function Header() {
                   Login
                 </Button>
               </Link>
-
+              <Link href="/auth/register">
+                <Button variant="primary" size="sm" className="bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0">
+                  Sign Up
+                </Button>
+              </Link>
             </div>
           </div>
 

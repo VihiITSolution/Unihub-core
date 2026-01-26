@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import type { Product } from "@/types";
+import { marketplaceService } from "@/services/marketplace.service";
+import type { MarketplaceItem } from "@/types";
 
 export default function MarketplacePage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<MarketplaceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: "",
     category: "",
+    condition: "",
   });
 
   useEffect(() => {
@@ -19,55 +21,15 @@ export default function MarketplacePage() {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      // Mock data
-      const mockProducts: Product[] = [
-        {
-          id: "1",
-          title: "Programming Laptop Stand",
-          description: "Ergonomic laptop stand for developers",
-          images: [],
-          price: 49.99,
-          sellerId: "seller1",
-          sellerName: "Tech Seller",
-          category: "Electronics",
-          stock: 50,
-          rating: 4.5,
-          reviewCount: 23,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "2",
-          title: "Web Development Books Bundle",
-          description: "Complete set of web development books",
-          images: [],
-          price: 79.99,
-          sellerId: "seller2",
-          sellerName: "Book Store",
-          category: "Books",
-          stock: 30,
-          rating: 4.8,
-          reviewCount: 45,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "3",
-          title: "Mechanical Keyboard",
-          description: "RGB mechanical keyboard for coding",
-          images: [],
-          price: 129.99,
-          sellerId: "seller3",
-          sellerName: "Gaming Gear",
-          category: "Electronics",
-          stock: 20,
-          rating: 4.7,
-          reviewCount: 67,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-      setProducts(mockProducts);
+      const response = await marketplaceService.getItems({
+        search: filters.search || undefined,
+        category: filters.category || undefined,
+        condition: filters.condition || undefined,
+      });
+      
+      if (response.success && response.data) {
+        setProducts(response.data);
+      }
     } catch (error) {
       console.error("Failed to load products:", error);
     } finally {
@@ -75,36 +37,52 @@ export default function MarketplacePage() {
     }
   };
 
-  const categories = ["Electronics", "Books", "Accessories", "Software", "Other"];
+  const categories = ["books", "electronics", "stationery", "accessories", "furniture", "clothing", "sports", "other"];
+  const conditions = ["new", "like-new", "good", "fair", "poor"];
 
   return (
     <div className="container-custom py-8">
-      <h1 className="text-4xl font-bold mb-8">Marketplace</h1>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-2">Marketplace</h1>
+        <p className="text-gray-600">Buy and sell items within the UniHub community</p>
+      </div>
 
       {/* Filters */}
-      <div className="mb-8 grid md:grid-cols-3 gap-4">
+      <div className="mb-8 grid md:grid-cols-4 gap-4">
         <input
           type="text"
           placeholder="Search products..."
-          className="input-field"
+          className="input"
           value={filters.search}
           onChange={(e) => setFilters({ ...filters, search: e.target.value })}
         />
         <select
-          className="input-field"
+          className="input"
           value={filters.category}
           onChange={(e) => setFilters({ ...filters, category: e.target.value })}
         >
           <option value="">All Categories</option>
           {categories.map((cat) => (
             <option key={cat} value={cat}>
-              {cat}
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </option>
+          ))}
+        </select>
+        <select
+          className="input"
+          value={filters.condition}
+          onChange={(e) => setFilters({ ...filters, condition: e.target.value })}
+        >
+          <option value="">All Conditions</option>
+          {conditions.map((cond) => (
+            <option key={cond} value={cond}>
+              {cond.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
             </option>
           ))}
         </select>
         <button
-          className="btn-primary"
-          onClick={() => setFilters({ search: "", category: "" })}
+          className="btn-outline"
+          onClick={() => setFilters({ search: "", category: "", condition: "" })}
         >
           Clear Filters
         </button>
@@ -112,52 +90,79 @@ export default function MarketplacePage() {
 
       {/* Products Grid */}
       {loading ? (
-        <div className="text-center py-12">Loading products...</div>
+        <div className="text-center py-12">
+          <div className="animate-pulse">Loading products...</div>
+        </div>
+      ) : products.length === 0 ? (
+        <div className="card text-center py-12">
+          <div className="text-6xl mb-4">🛍️</div>
+          <h3 className="text-xl font-semibold mb-2">No products found</h3>
+          <p className="text-gray-600">Try adjusting your filters or check back later</p>
+        </div>
       ) : (
         <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map((product) => (
-            <div key={product.id} className="card">
-              <div className="w-full h-48 bg-gradient-to-r from-secondary-400 to-primary-400 rounded-lg mb-4 flex items-center justify-center text-white text-3xl font-bold">
-                {product.title.charAt(0)}
+            <Link key={product.id} href={`/marketplace/${product.id}`}>
+              <div className="card hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
+                <div className="w-full h-48 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg mb-4 flex items-center justify-center text-white text-4xl font-bold">
+                  {product.title.charAt(0)}
+                </div>
+                
+                <div className="flex-1 flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                      {product.category}
+                    </span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                      {product.condition?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-lg font-semibold mb-2 line-clamp-2">
+                    {product.title}
+                  </h3>
+                  
+                  <p className="text-gray-600 mb-3 text-sm line-clamp-2 flex-1">
+                    {product.description}
+                  </p>
+                  
+                  <div className="text-sm text-gray-600 mb-3">
+                    Seller: <span className="font-medium">{product.seller?.vendorProfile?.shopName || product.seller?.name || 'Unknown'}</span>
+                  </div>
+                  
+                  <div className="text-sm mb-4">
+                    {product.stock > 0 ? (
+                      <span className={`font-medium ${product.stock > 10 ? 'text-green-600' : 'text-orange-600'}`}>
+                        {product.stock > 10 ? 'In Stock' : `Only ${product.stock} left`}
+                      </span>
+                    ) : (
+                      <span className="text-red-600 font-medium">Out of Stock</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-4 border-t mt-auto">
+                    <span className="text-2xl font-bold text-primary-600">
+                      ${typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price).toFixed(2)}
+                    </span>
+                    <span className="btn-primary text-sm px-4 py-2">
+                      View Details
+                    </span>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold mb-2 line-clamp-2">
-                {product.title}
-              </h3>
-              <p className="text-gray-600 mb-4 text-sm line-clamp-2">
-                {product.description}
-              </p>
-              <div className="flex items-center gap-2 mb-2 text-sm text-gray-600">
-                <span>⭐ {product.rating}</span>
-                <span>({product.reviewCount})</span>
-              </div>
-              <div className="text-sm text-gray-600 mb-4">
-                {product.stock > 0 ? (
-                  <span className="text-green-600">In Stock ({product.stock})</span>
-                ) : (
-                  <span className="text-red-600">Out of Stock</span>
-                )}
-              </div>
-              <div className="flex justify-between items-center pt-4 border-t">
-                <span className="text-2xl font-bold text-primary-600">
-                  ${product.price}
-                </span>
-                <Link href={`/marketplace/${product.id}`} className="btn-primary text-sm px-3 py-1">
-                  View
-                </Link>
-              </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
 
       {/* Call to Action for Sellers */}
-      <div className="mt-16 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg p-12 text-center">
+      <div className="mt-16 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg p-12 text-center">
         <h2 className="text-3xl font-bold mb-4">Want to Sell on UniHub?</h2>
         <p className="text-xl mb-6">
-          Join our marketplace and reach thousands of students and professionals
+          Join our marketplace and reach thousands of students across universities
         </p>
-        <Link href="/seller/dashboard" className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 inline-block">
-          Become a Seller
+        <Link href="/student/become-vendor" className="bg-white text-amber-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 inline-block transition">
+          Become a Vendor
         </Link>
       </div>
     </div>

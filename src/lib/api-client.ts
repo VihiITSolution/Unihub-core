@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 export interface RequestOptions extends RequestInit {
   token?: string;
@@ -23,8 +23,10 @@ class ApiClient {
       ...(fetchOptions.headers as Record<string, string>),
     };
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    // Auto-add token from localStorage if not provided and we're in browser
+    const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null);
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
     }
 
     try {
