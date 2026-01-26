@@ -63,7 +63,7 @@ export default function LearnPage() {
         // Later you can add enrollment check here
         const userRoles = user?.roles || [];
         const isAdmin = userRoles.includes("admin");
-        
+
         if (!isCourseOwner && !isAdmin) {
           // TODO: Add enrollment check
           // const isEnrolled = await checkEnrollment(courseId, user.id);
@@ -199,11 +199,10 @@ export default function LearnPage() {
                 <button
                   key={content.id}
                   onClick={() => handleContentSelect(content)}
-                  className={`w-full text-left p-4 rounded-lg transition-colors ${
-                    currentContent?.id === content.id
+                  className={`w-full text-left p-4 rounded-lg transition-colors ${currentContent?.id === content.id
                       ? "bg-primary-100 border-2 border-primary-500"
                       : "bg-gray-50 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0">
@@ -316,11 +315,10 @@ export default function LearnPage() {
                     }
                   }}
                   disabled={contents[0].id === currentContent.id}
-                  className={`px-6 py-2 rounded-lg font-semibold ${
-                    contents[0].id === currentContent.id
+                  className={`px-6 py-2 rounded-lg font-semibold ${contents[0].id === currentContent.id
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                    }`}
                 >
                   ← Previous
                 </button>
@@ -339,11 +337,10 @@ export default function LearnPage() {
                   disabled={
                     contents[contents.length - 1].id === currentContent.id
                   }
-                  className={`px-6 py-2 rounded-lg font-semibold ${
-                    contents[contents.length - 1].id === currentContent.id
+                  className={`px-6 py-2 rounded-lg font-semibold ${contents[contents.length - 1].id === currentContent.id
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "btn-primary"
-                  }`}
+                    }`}
                 >
                   Next →
                 </button>

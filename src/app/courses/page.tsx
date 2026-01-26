@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button, Card, Badge, Input, Loading } from "@/components/ui";
 import { courseService } from "@/services/course.service";
 import type { Course } from "@/types";
+import { BACKEND_URL } from "@/lib/constants";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -40,112 +41,35 @@ export default function CoursesPage() {
   const loadCourses = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API call
-      const mockCourses: Course[] = [
-        {
-          id: "1",
-          title: "Complete Web Development Bootcamp 2024",
-          description: "Master HTML, CSS, JavaScript, React, Node.js and more",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 49.99,
-          tutorId: "tutor1",
-          tutorName: "John Doe",
-          category: "Web Development",
-          level: "beginner",
-          duration: 3600,
-          enrolledCount: 12450,
-          rating: 4.8,
-          reviewCount: 2341,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "2",
-          title: "Advanced Python Programming",
-          description: "Deep dive into Python with real-world projects",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 39.99,
-          tutorId: "tutor2",
-          tutorName: "Jane Smith",
-          category: "Data Science",
-          level: "advanced",
-          duration: 2400,
-          enrolledCount: 8934,
-          rating: 4.9,
-          reviewCount: 1567,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "3",
-          title: "UI/UX Design Masterclass",
-          description: "Complete guide to user interface and experience design",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 59.99,
-          tutorId: "tutor3",
-          tutorName: "Mike Johnson",
-          category: "Design",
-          level: "intermediate",
-          duration: 2100,
-          enrolledCount: 6721,
-          rating: 4.7,
-          reviewCount: 892,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "4",
-          title: "Digital Marketing Strategy",
-          description: "Master SEO, social media, and content marketing",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 44.99,
-          tutorId: "tutor4",
-          tutorName: "Sarah Williams",
-          category: "Marketing",
-          level: "beginner",
-          duration: 1800,
-          enrolledCount: 5432,
-          rating: 4.6,
-          reviewCount: 678,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "5",
-          title: "Machine Learning A-Z",
-          description: "Hands-on Python & R in data science",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 89.99,
-          tutorId: "tutor5",
-          tutorName: "David Chen",
-          category: "Data Science",
-          level: "advanced",
-          duration: 4200,
-          enrolledCount: 9876,
-          rating: 4.8,
-          reviewCount: 1923,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "6",
-          title: "Business Analytics & Intelligence",
-          description: "Data-driven decision making for business",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 54.99,
-          tutorId: "tutor6",
-          tutorName: "Emily Davis",
-          category: "Business",
-          level: "intermediate",
-          duration: 1950,
-          enrolledCount: 4321,
-          rating: 4.5,
-          reviewCount: 543,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-      setCourses(mockCourses);
+
+      const filters: any = {};
+      if (selectedCategory !== "all") filters.category = selectedCategory;
+      if (selectedLevel !== "all") filters.level = selectedLevel;
+      if (searchQuery) filters.search = searchQuery;
+
+      // Price range logic (simplified mapping)
+      if (priceRange !== "all") {
+        if (priceRange === "free") {
+          filters.maxPrice = 0;
+        } else if (priceRange === "under50") {
+          filters.maxPrice = 50;
+        } else if (priceRange === "50to100") {
+          filters.minPrice = 50;
+          filters.maxPrice = 100;
+        } else if (priceRange === "over100") {
+          filters.minPrice = 100;
+        }
+      }
+
+      const response = await courseService.getCourses(filters);
+
+      if (response.success && response.data) {
+        setCourses(response.data);
+      } else {
+        // Fallback or error handling
+        console.error("Failed to fetch courses:", (response as any).message);
+        setCourses([]);
+      }
     } catch (error) {
       console.error("Failed to load courses:", error);
     } finally {
@@ -212,11 +136,10 @@ export default function CoursesPage() {
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                        selectedCategory === cat.id
-                          ? "bg-primary-100 text-primary-700 font-medium"
-                          : "hover:bg-gray-100 text-gray-700"
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${selectedCategory === cat.id
+                        ? "bg-primary-100 text-primary-700 font-medium"
+                        : "hover:bg-gray-100 text-gray-700"
+                        }`}
                     >
                       <span>{cat.icon}</span>
                       <span className="text-sm">{cat.name}</span>
@@ -233,11 +156,10 @@ export default function CoursesPage() {
                     <button
                       key={level}
                       onClick={() => setSelectedLevel(level)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        selectedLevel === level
-                          ? "bg-primary-100 text-primary-700 font-medium"
-                          : "hover:bg-gray-100 text-gray-700"
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedLevel === level
+                        ? "bg-primary-100 text-primary-700 font-medium"
+                        : "hover:bg-gray-100 text-gray-700"
+                        }`}
                     >
                       {level === "all"
                         ? "All Levels"
@@ -255,11 +177,10 @@ export default function CoursesPage() {
                     <button
                       key={range.id}
                       onClick={() => setPriceRange(range.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        priceRange === range.id
-                          ? "bg-primary-100 text-primary-700 font-medium"
-                          : "hover:bg-gray-100 text-gray-700"
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${priceRange === range.id
+                        ? "bg-primary-100 text-primary-700 font-medium"
+                        : "hover:bg-gray-100 text-gray-700"
+                        }`}
                     >
                       {range.label}
                     </button>
@@ -325,7 +246,11 @@ export default function CoursesPage() {
                     <Card hover padding="sm" className="h-full group">
                       <div className="relative overflow-hidden rounded-lg mb-4">
                         <img
-                          src={course.thumbnail}
+                          src={
+                            course.thumbnail && course.thumbnail.startsWith("http")
+                              ? course.thumbnail
+                              : `${BACKEND_URL}${course.thumbnail || ''}`
+                          }
                           alt={course.title}
                           className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
                         />
@@ -357,7 +282,7 @@ export default function CoursesPage() {
                         </p>
 
                         <p className="text-sm text-gray-600 mb-3">
-                          By {course.tutorName}
+                          By {course.tutorName || (course.tutor ? `${course.tutor.firstName} ${course.tutor.lastName}` : "Instructor")}
                         </p>
 
                         <div className="flex items-center gap-3 text-sm text-gray-600 mb-4">
@@ -369,7 +294,7 @@ export default function CoursesPage() {
                             >
                               <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
                             </svg>
-                            {course.enrolledCount.toLocaleString()}
+                            {(course.enrolledCount || 0).toLocaleString()}
                           </span>
                           <span className="flex items-center gap-1">
                             <svg

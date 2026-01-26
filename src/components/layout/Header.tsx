@@ -119,11 +119,7 @@ export default function Header() {
                   Login
                 </Button>
               </Link>
-              <Link href="/auth/register">
-                <Button variant="primary" size="sm" className="bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0">
-                  Sign Up
-                </Button>
-              </Link>
+
             </div>
           </div>
 
@@ -199,11 +195,7 @@ export default function Header() {
                   Login
                 </Button>
               </Link>
-              <Link href="/auth/register" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="primary" className="w-full bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0">
-                  Sign Up
-                </Button>
-              </Link>
+
             </div>
           </div>
         )}

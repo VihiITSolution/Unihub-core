@@ -88,13 +88,14 @@ export interface Course {
   isPublished?: boolean;
   createdAt: string;
   updatedAt: string;
+  isEnrolled?: boolean;
 }
 
 export interface CourseContent {
   id: string;
   courseId: string;
   title: string;
-  type: "video" | "pdf" | "quiz";
+  type: "video" | "pdf";
   url?: string;
   duration?: number;
   order: number;

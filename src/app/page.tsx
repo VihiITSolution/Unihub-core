@@ -282,9 +282,11 @@ export default function Home() {
                         </span>
                       )}
                     </div>
-                    <Button variant="primary" size="sm">
-                      Enroll
-                    </Button>
+                    <Link href={`/courses`}>
+                      <Button variant="primary" size="sm">
+                        Enroll
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </Card>
@@ -401,15 +403,7 @@ export default function Home() {
             instructors, and a global community of learners.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/auth/register">
-              <Button
-                variant="secondary"
-                size="lg"
-                className="bg-white text-primary-600 hover:bg-gray-100"
-              >
-                Sign Up Free
-              </Button>
-            </Link>
+
             <Link href="/courses">
               <Button
                 variant="outline"

@@ -5,17 +5,19 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
+import { courseService } from "@/services/course.service";
 import type { Course, CourseContent } from "@/types";
 
 export default function CourseDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token } = useAuth();
   const courseId = params?.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [enrollmentError, setEnrollmentError] = useState<string | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -35,8 +37,14 @@ export default function CourseDetailsPage() {
       setError(null);
 
       // Fetch real course data
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const courseResponse = await fetch(
-        `${API_BASE_URL}/courses/${courseId}`
+        `${API_BASE_URL}/courses/${courseId}`,
+        { headers }
       );
 
       if (!courseResponse.ok) {
@@ -72,15 +80,28 @@ export default function CourseDetailsPage() {
     }
   };
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     // Check if user is logged in
-    if (!isAuthenticated) {
-      router.push("/auth/login");
+    if (!isAuthenticated || !token) {
+      router.push("/auth/login?redirect=/courses/" + courseId);
       return;
     }
 
-    // Skip payment for now - go directly to player
-    router.push(`/student/learn/${courseId}`);
+    try {
+      setEnrollmentError(null);
+      // Call enrollment API
+      const response = await courseService.enrollInCourse(courseId, token);
+
+      if (response.success) {
+        // Redirect to learning player on success
+        router.push(`/student/learn/${courseId}`);
+      } else {
+        setEnrollmentError(response.message || "Enrollment failed. Please try again.");
+      }
+    } catch (err: any) {
+      console.error("Enrollment error:", err);
+      setEnrollmentError(err.message || "Failed to enroll. Please try again later.");
+    }
   };
 
   if (loading) {
@@ -188,9 +209,20 @@ export default function CourseDetailsPage() {
           <div className="text-3xl font-bold text-primary-600 mb-4">
             ${course.price}
           </div>
-          <button onClick={handleEnroll} className="btn-primary w-full mb-4">
-            Enroll Now
-          </button>
+          {enrollmentError && (
+            <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
+              {enrollmentError}
+            </div>
+          )}
+          {course.isEnrolled ? (
+            <button disabled className="btn-primary w-full mb-4 opacity-50 cursor-not-allowed">
+              Already Enrolled
+            </button>
+          ) : (
+            <button onClick={handleEnroll} className="btn-primary w-full mb-4">
+              {isAuthenticated ? "Enroll Now" : "Login to Enroll"}
+            </button>
+          )}
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <span>✓</span>
@@ -224,7 +256,9 @@ export default function CourseDetailsPage() {
                 <div>
                   <h3 className="font-semibold">{content.title}</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>{content.type === "video" ? "🎥" : "📄"}</span>
+                    <span>
+                      {content.type === "video" ? "🎥" : "📄"}
+                    </span>
                     <span>{content.type.toUpperCase()}</span>
                     {content.duration && <span>• {content.duration} min</span>}
                   </div>

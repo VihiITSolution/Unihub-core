@@ -83,8 +83,8 @@ export const courseService = {
     token: string
   ): Promise<ApiResponse<Enrollment>> {
     return apiClient.post<ApiResponse<Enrollment>>(
-      `/courses/${courseId}/enroll`,
-      {},
+      "/enrollments",
+      { courseId: parseInt(courseId) }, // Backend expects courseId as integer in body
       { token }
     );
   },
