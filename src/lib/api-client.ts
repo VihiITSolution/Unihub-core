@@ -1,5 +1,7 @@
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+import { API_BASE_URL, TOKEN_KEY } from './constants';
+
+
 
 export interface RequestOptions extends RequestInit {
   token?: string;
