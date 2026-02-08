@@ -132,6 +132,16 @@ export default function LearnPage() {
     return url;
   };
 
+  // Check if URL is a YouTube URL
+  const isYouTubeUrl = (url: string) => {
+    return url.includes("youtube.com") || url.includes("youtu.be");
+  };
+
+  // Check if URL is a Cloudinary URL
+  const isCloudinaryUrl = (url: string) => {
+    return url.includes("cloudinary.com");
+  };
+
   if (loading) {
     return (
       <div className="container-custom py-12">

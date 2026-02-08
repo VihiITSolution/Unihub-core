@@ -73,7 +73,7 @@ export default function CourseDetailsPage() {
     } catch (error) {
       console.error("Failed to load course:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to load course"
+        error instanceof Error ? error.message : "Failed to load course",
       );
     } finally {
       setLoading(false);
@@ -241,6 +241,20 @@ export default function CourseDetailsPage() {
       </div>
 
       {/* Course Content */}
+
+      {/* Payment Modal */}
+      {course && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onSubmit={handlePaymentSubmit}
+          course={{
+            title: course.title,
+            price: course.price,
+          }}
+          isProcessing={isEnrolling}
+        />
+      )}
       <div className="mb-12">
         <h2 className="text-3xl font-bold mb-6">Course Content</h2>
         <div className="space-y-4">

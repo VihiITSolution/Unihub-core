@@ -10,8 +10,12 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
-  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  login: (
+    credentials: LoginCredentials,
+  ) => Promise<{ success: boolean; error?: string }>;
+  register: (
+    data: RegisterData,
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   hasRole: (role: UserRole) => boolean;
   refreshUser: () => Promise<void>;
@@ -33,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const savedUser = localStorage.getItem(USER_KEY);
 
         if (savedToken && savedUser) {
+          // Set initial state from cache
           setToken(savedToken);
           setUser(JSON.parse(savedUser));
 
@@ -41,16 +46,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const response = await authService.getCurrentUser(savedToken);
             if (response.success && response.data?.user) {
               setUser(response.data.user);
-              localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+              localStorage.setItem(
+                USER_KEY,
+                JSON.stringify(response.data.user),
+              );
+            } else {
+              // Invalid response, clear auth state
+              setUser(null);
+              setToken(null);
+              localStorage.removeItem(TOKEN_KEY);
+              localStorage.removeItem(USER_KEY);
             }
           } catch (error) {
-            // Token might be expired, clear auth state
-            console.warn('Failed to refresh user data:', error);
-            // Don't clear immediately - let the user continue with cached data
+            // Token might be expired, clear auth state immediately
+            console.warn(
+              "Token validation failed, clearing auth state:",
+              error,
+            );
+            setUser(null);
+            setToken(null);
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
           }
         }
       } catch (error) {
-        console.error('Failed to initialize auth:', error);
+        console.error("Failed to initialize auth:", error);
+        // Clear any partial state
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
       } finally {
         setIsLoading(false);
       }
@@ -66,19 +91,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.success && response.data) {
         const { user, token } = response.data;
-        setUser(user);
+
+        // Update state and storage atomically
         setToken(token);
+        setUser(user);
         localStorage.setItem(TOKEN_KEY, token);
         localStorage.setItem(USER_KEY, JSON.stringify(user));
+
+        setIsLoading(false);
         return { success: true };
       }
 
-      return { success: false, error: response.message || 'Login failed' };
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: 'An unexpected error occurred' };
-    } finally {
       setIsLoading(false);
+      return { success: false, error: response.message || "Login failed" };
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setIsLoading(false);
+      const errorMessage = error?.message || "An unexpected error occurred";
+      return { success: false, error: errorMessage };
     }
   }, []);
 
@@ -89,19 +119,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.success && response.data) {
         const { user, token } = response.data;
-        setUser(user);
+
+        // Update state and storage atomically
         setToken(token);
+        setUser(user);
         localStorage.setItem(TOKEN_KEY, token);
         localStorage.setItem(USER_KEY, JSON.stringify(user));
+
+        setIsLoading(false);
         return { success: true };
       }
 
-      return { success: false, error: response.message || 'Registration failed' };
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, error: 'An unexpected error occurred' };
-    } finally {
       setIsLoading(false);
+      return {
+        success: false,
+        error: response.message || "Registration failed",
+      };
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      setIsLoading(false);
+      const errorMessage = error?.message || "An unexpected error occurred";
+      return { success: false, error: errorMessage };
     }
   }, []);
 
@@ -115,9 +153,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(USER_KEY);
   }, [token]);
 
-  const hasRole = useCallback((role: UserRole) => {
-    return user?.roles?.includes(role) ?? false;
-  }, [user]);
+  const hasRole = useCallback(
+    (role: UserRole) => {
+      return user?.roles?.includes(role) ?? false;
+    },
+    [user],
+  );
 
   const refreshUser = useCallback(async () => {
     if (!token) return;
@@ -129,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
       }
     } catch (error) {
-      console.error('Failed to refresh user:', error);
+      console.error("Failed to refresh user:", error);
     }
   }, [token]);
 
@@ -151,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
@@ -163,15 +204,15 @@ export function useDashboardPath() {
   if (!user) return '/auth/login';
 
   switch (user.primaryRole) {
-    case 'student':
-      return '/student/dashboard';
-    case 'tutor':
-      return '/tutor/dashboard';
-    case 'admin':
-      return '/admin/dashboard';
-    case 'vendor':
-      return '/vendor/dashboard';
+    case "student":
+      return "/student/dashboard";
+    case "tutor":
+      return "/tutor/dashboard";
+    case "admin":
+      return "/admin/dashboard";
+    case "vendor":
+      return "/vendor/dashboard";
     default:
-      return '/student/dashboard';
+      return "/student/dashboard";
   }
 }
