@@ -9,145 +9,110 @@ import type { Course } from "@/types";
 export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLevel, setSelectedLevel] = useState("all");
   const [priceRange, setPriceRange] = useState("all");
   const [sortBy, setSortBy] = useState("popular");
   const [searchQuery, setSearchQuery] = useState("");
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12,
+    total: 0,
+    totalPages: 0,
+  });
 
   const categories = [
     { id: "all", name: "All Categories", icon: "📚" },
-    { id: "web-dev", name: "Web Development", icon: "💻" },
-    { id: "data-science", name: "Data Science", icon: "📊" },
-    { id: "business", name: "Business", icon: "💼" },
-    { id: "design", name: "Design", icon: "🎨" },
-    { id: "marketing", name: "Marketing", icon: "📈" },
+    { id: "Engineering", name: "Engineering", icon: "⚙️" },
+    { id: "Medicine", name: "Medicine", icon: "🩺" },
+    { id: "IT & Computing", name: "IT & Computing", icon: "💻" },
+    { id: "Business & Management", name: "Business & Management", icon: "💼" },
+    { id: "Science", name: "Science", icon: "🔬" },
+    { id: "Arts & Humanities", name: "Arts & Humanities", icon: "📚" },
   ];
 
   const levels = ["all", "beginner", "intermediate", "advanced"];
   const priceRanges = [
     { id: "all", label: "All Prices" },
     { id: "free", label: "Free" },
-    { id: "under50", label: "Under $50" },
-    { id: "50to100", label: "$50 - $100" },
-    { id: "over100", label: "Over $100" },
+    { id: "under1000", label: "Under Rs. 1000" },
+    { id: "1000to2000", label: "Rs. 1000 - 2000" },
+    { id: "over2000", label: "Over Rs. 2000" },
   ];
 
   useEffect(() => {
     loadCourses();
-  }, [selectedCategory, selectedLevel, priceRange, sortBy, searchQuery]);
+  }, [
+    selectedCategory,
+    selectedLevel,
+    priceRange,
+    sortBy,
+    searchQuery,
+    pagination.page,
+  ]);
 
   const loadCourses = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API call
-      const mockCourses: Course[] = [
-        {
-          id: "1",
-          title: "Complete Web Development Bootcamp 2024",
-          description: "Master HTML, CSS, JavaScript, React, Node.js and more",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 49.99,
-          tutorId: "tutor1",
-          tutorName: "John Doe",
-          category: "Web Development",
-          level: "beginner",
-          duration: 3600,
-          enrolledCount: 12450,
-          rating: 4.8,
-          reviewCount: 2341,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "2",
-          title: "Advanced Python Programming",
-          description: "Deep dive into Python with real-world projects",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 39.99,
-          tutorId: "tutor2",
-          tutorName: "Jane Smith",
-          category: "Data Science",
-          level: "advanced",
-          duration: 2400,
-          enrolledCount: 8934,
-          rating: 4.9,
-          reviewCount: 1567,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "3",
-          title: "UI/UX Design Masterclass",
-          description: "Complete guide to user interface and experience design",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 59.99,
-          tutorId: "tutor3",
-          tutorName: "Mike Johnson",
-          category: "Design",
-          level: "intermediate",
-          duration: 2100,
-          enrolledCount: 6721,
-          rating: 4.7,
-          reviewCount: 892,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "4",
-          title: "Digital Marketing Strategy",
-          description: "Master SEO, social media, and content marketing",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 44.99,
-          tutorId: "tutor4",
-          tutorName: "Sarah Williams",
-          category: "Marketing",
-          level: "beginner",
-          duration: 1800,
-          enrolledCount: 5432,
-          rating: 4.6,
-          reviewCount: 678,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "5",
-          title: "Machine Learning A-Z",
-          description: "Hands-on Python & R in data science",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 89.99,
-          tutorId: "tutor5",
-          tutorName: "David Chen",
-          category: "Data Science",
-          level: "advanced",
-          duration: 4200,
-          enrolledCount: 9876,
-          rating: 4.8,
-          reviewCount: 1923,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "6",
-          title: "Business Analytics & Intelligence",
-          description: "Data-driven decision making for business",
-          thumbnail: "https://via.placeholder.com/400x250",
-          price: 54.99,
-          tutorId: "tutor6",
-          tutorName: "Emily Davis",
-          category: "Business",
-          level: "intermediate",
-          duration: 1950,
-          enrolledCount: 4321,
-          rating: 4.5,
-          reviewCount: 543,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-      setCourses(mockCourses);
-    } catch (error) {
+      setError(null);
+
+      // Build filters
+      const filters: any = {
+        page: pagination.page,
+        limit: pagination.limit,
+      };
+
+      if (selectedCategory !== "all") {
+        filters.category = selectedCategory;
+      }
+
+      if (selectedLevel !== "all") {
+        filters.level = selectedLevel;
+      }
+
+      if (searchQuery) {
+        filters.search = searchQuery;
+      }
+
+      // Apply price range filters
+      if (priceRange !== "all") {
+        switch (priceRange) {
+          case "free":
+            filters.maxPrice = 0;
+            break;
+          case "under1000":
+            filters.maxPrice = 1000;
+            break;
+          case "1000to2000":
+            filters.minPrice = 1000;
+            filters.maxPrice = 2000;
+            break;
+          case "over2000":
+            filters.minPrice = 2000;
+            break;
+        }
+      }
+
+      const response = await courseService.getCourses(filters);
+
+      if (response.success && response.data) {
+        // Backend returns { success, data: { courses, pagination } }
+        const coursesData = (response.data as any).courses || response.data;
+        const paginationData = (response.data as any).pagination;
+
+        setCourses(coursesData);
+        if (paginationData) {
+          setPagination(paginationData);
+        }
+      } else {
+        setError("Failed to load courses");
+        setCourses([]);
+      }
+    } catch (error: any) {
       console.error("Failed to load courses:", error);
+      setError(error.message || "Failed to load courses. Please try again.");
+      setCourses([]);
     } finally {
       setLoading(false);
     }
@@ -309,6 +274,20 @@ export default function CoursesPage() {
               <div className="flex justify-center items-center py-20">
                 <Loading size="lg" text="Loading courses..." />
               </div>
+            ) : error ? (
+              <Card
+                padding="lg"
+                className="text-center py-12 bg-red-50 border-red-200"
+              >
+                <div className="text-6xl mb-4">⚠️</div>
+                <h3 className="text-xl font-semibold mb-2 text-red-900">
+                  Failed to load courses
+                </h3>
+                <p className="text-red-700 mb-4">{error}</p>
+                <Button onClick={loadCourses} variant="primary">
+                  Try Again
+                </Button>
+              </Card>
             ) : courses.length === 0 ? (
               <Card padding="lg" className="text-center py-12">
                 <div className="text-6xl mb-4">📚</div>
@@ -325,19 +304,29 @@ export default function CoursesPage() {
                     <Card hover padding="sm" className="h-full group">
                       <div className="relative overflow-hidden rounded-lg mb-4">
                         <img
-                          src={course.thumbnail}
+                          src={
+                            course.thumbnail ||
+                            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop&q=80"
+                          }
                           alt={course.title}
                           className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src =
+                              "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop&q=80";
+                          }}
                         />
-                        <Badge
-                          variant="warning"
-                          className="absolute top-3 left-3 bg-yellow-400 text-gray-900"
-                        >
-                          ⭐ {course.rating}
-                        </Badge>
+                        {course.rating && course.rating > 0 && (
+                          <Badge
+                            variant="warning"
+                            className="absolute top-3 left-3 bg-yellow-400 text-gray-900"
+                          >
+                            ⭐ {Number(course.rating).toFixed(1)}
+                          </Badge>
+                        )}
                         <Badge
                           variant="gray"
-                          className="absolute top-3 right-3 bg-white"
+                          className="absolute top-3 right-3 bg-white capitalize"
                         >
                           {course.level}
                         </Badge>
@@ -357,7 +346,10 @@ export default function CoursesPage() {
                         </p>
 
                         <p className="text-sm text-gray-600 mb-3">
-                          By {course.tutorName}
+                          By{" "}
+                          {course.tutor
+                            ? `${course.tutor.firstName} ${course.tutor.lastName}`
+                            : course.tutorName || "Unknown Instructor"}
                         </p>
 
                         <div className="flex items-center gap-3 text-sm text-gray-600 mb-4">
@@ -369,7 +361,11 @@ export default function CoursesPage() {
                             >
                               <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
                             </svg>
-                            {course.enrolledCount.toLocaleString()}
+                            {(
+                              course.enrollmentCount ||
+                              course.enrolledCount ||
+                              0
+                            ).toLocaleString()}
                           </span>
                           <span className="flex items-center gap-1">
                             <svg
@@ -386,7 +382,7 @@ export default function CoursesPage() {
                         <div className="flex items-center justify-between pt-4 border-t">
                           <div>
                             <span className="text-2xl font-bold text-gray-900">
-                              ${course.price}
+                              Rs. {course.price}
                             </span>
                           </div>
                           <Button variant="primary" size="sm">
@@ -399,6 +395,82 @@ export default function CoursesPage() {
                 ))}
               </div>
             )}
+
+            {/* Pagination */}
+            {!loading &&
+              !error &&
+              courses.length > 0 &&
+              pagination.totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-8">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setPagination((prev) => ({
+                        ...prev,
+                        page: prev.page - 1,
+                      }))
+                    }
+                    disabled={pagination.page === 1}
+                  >
+                    Previous
+                  </Button>
+
+                  <div className="flex gap-2">
+                    {Array.from(
+                      { length: Math.min(5, pagination.totalPages) },
+                      (_, i) => {
+                        let pageNum;
+                        if (pagination.totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (pagination.page <= 3) {
+                          pageNum = i + 1;
+                        } else if (
+                          pagination.page >=
+                          pagination.totalPages - 2
+                        ) {
+                          pageNum = pagination.totalPages - 4 + i;
+                        } else {
+                          pageNum = pagination.page - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() =>
+                              setPagination((prev) => ({
+                                ...prev,
+                                page: pageNum,
+                              }))
+                            }
+                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                              pagination.page === pageNum
+                                ? "bg-primary-600 text-white"
+                                : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      },
+                    )}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setPagination((prev) => ({
+                        ...prev,
+                        page: prev.page + 1,
+                      }))
+                    }
+                    disabled={pagination.page === pagination.totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
           </main>
         </div>
       </div>

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import PaymentModal, { PaymentData } from "@/components/ui/PaymentModal";
+import enrollmentService from "@/services/enrollment.service";
 import type { Course, CourseContent } from "@/types";
 
 export default function CourseDetailsPage() {
@@ -15,6 +17,8 @@ export default function CourseDetailsPage() {
   const [contents, setContents] = useState<CourseContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
 
   useEffect(() => {
     if (courseId) {
@@ -35,7 +39,7 @@ export default function CourseDetailsPage() {
 
       // Fetch real course data
       const courseResponse = await fetch(
-        `http://localhost:5000/api/courses/${courseId}`
+        `http://localhost:5000/api/courses/${courseId}`,
       );
 
       if (!courseResponse.ok) {
@@ -52,7 +56,7 @@ export default function CourseDetailsPage() {
 
       // Fetch course content
       const contentResponse = await fetch(
-        `http://localhost:5000/api/courses/${courseId}/content`
+        `http://localhost:5000/api/courses/${courseId}/content`,
       );
 
       if (contentResponse.ok) {
@@ -64,7 +68,7 @@ export default function CourseDetailsPage() {
     } catch (error) {
       console.error("Failed to load course:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to load course"
+        error instanceof Error ? error.message : "Failed to load course",
       );
     } finally {
       setLoading(false);
@@ -78,8 +82,36 @@ export default function CourseDetailsPage() {
       return;
     }
 
-    // Skip payment for now - go directly to player
-    router.push(`/student/learn/${courseId}`);
+    // Show payment modal
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSubmit = async (paymentData: PaymentData) => {
+    if (!course) return;
+
+    try {
+      setIsEnrolling(true);
+
+      const result = await enrollmentService.enrollInCourse({
+        courseId: parseInt(courseId),
+        paymentData,
+        amount: course.price,
+      });
+
+      if (result.success) {
+        setShowPaymentModal(false);
+        alert("Successfully enrolled in course! 🎉");
+        // Redirect to learning page
+        router.push(`/student/learn/${courseId}`);
+      } else {
+        alert(result.message || "Failed to enroll in course");
+      }
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      alert("Failed to process enrollment. Please try again.");
+    } finally {
+      setIsEnrolling(false);
+    }
   };
 
   if (loading) {
@@ -208,6 +240,20 @@ export default function CourseDetailsPage() {
       </div>
 
       {/* Course Content */}
+
+      {/* Payment Modal */}
+      {course && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onSubmit={handlePaymentSubmit}
+          course={{
+            title: course.title,
+            price: course.price,
+          }}
+          isProcessing={isEnrolling}
+        />
+      )}
       <div className="mb-12">
         <h2 className="text-3xl font-bold mb-6">Course Content</h2>
         <div className="space-y-4">

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuth, useDashboardPath } from '@/contexts/AuthContext';
-import type { UserRole } from '@/types';
+import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth, useDashboardPath } from "@/contexts/AuthContext";
+import type { UserRole } from "@/types";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,10 +11,10 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
 }
 
-export function ProtectedRoute({ 
-  children, 
-  allowedRoles = [], 
-  requireAuth = true 
+export function ProtectedRoute({
+  children,
+  allowedRoles = [],
+  requireAuth = true,
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user, hasRole } = useAuth();
   const router = useRouter();
@@ -28,20 +28,30 @@ export function ProtectedRoute({
     // If authentication is required but user is not authenticated
     if (requireAuth && !isAuthenticated) {
       // Store the intended destination for redirect after login
-      sessionStorage.setItem('redirectAfterLogin', pathname);
-      router.push('/auth/login');
+      sessionStorage.setItem("redirectAfterLogin", pathname);
+      router.replace("/auth/login");
       return;
     }
 
     // If specific roles are required, check if user has any of them
     if (allowedRoles.length > 0 && user) {
-      const hasRequiredRole = allowedRoles.some(role => hasRole(role));
+      const hasRequiredRole = allowedRoles.some((role) => hasRole(role));
       if (!hasRequiredRole) {
         // Redirect to their dashboard if they don't have permission
-        router.push(dashboardPath);
+        router.replace(dashboardPath);
       }
     }
-  }, [isAuthenticated, isLoading, user, hasRole, allowedRoles, requireAuth, router, pathname, dashboardPath]);
+  }, [
+    isAuthenticated,
+    isLoading,
+    user,
+    hasRole,
+    allowedRoles,
+    requireAuth,
+    router,
+    pathname,
+    dashboardPath,
+  ]);
 
   // Show loading state while checking auth
   if (isLoading) {
@@ -62,7 +72,7 @@ export function ProtectedRoute({
 
   // Don't render children if user doesn't have required role
   if (allowedRoles.length > 0 && user) {
-    const hasRequiredRole = allowedRoles.some(role => hasRole(role));
+    const hasRequiredRole = allowedRoles.some((role) => hasRole(role));
     if (!hasRequiredRole) {
       return null;
     }

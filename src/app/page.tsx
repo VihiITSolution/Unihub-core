@@ -1,88 +1,77 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button, Card, Badge } from "@/components/ui";
+import { courseService } from "@/services/course.service";
+import type { Course } from "@/types";
 
 export default function Home() {
+  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadFeaturedCourses();
+  }, []);
+
+  const loadFeaturedCourses = async () => {
+    try {
+      setLoading(true);
+      const response = await courseService.getCourses({ limit: 3, page: 1 });
+      if (response.success && response.data) {
+        const coursesData = (response.data as any).courses || response.data;
+        setFeaturedCourses(coursesData.slice(0, 3));
+      }
+    } catch (error) {
+      console.error("Failed to load featured courses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const categories = [
     {
-      name: "Web Development",
-      icon: "💻",
-      courses: 1234,
+      name: "Engineering",
+      icon: "⚙️",
+      courses: 245,
       color: "bg-blue-100 text-blue-700",
     },
     {
-      name: "Data Science",
-      icon: "📊",
-      courses: 892,
+      name: "Medicine",
+      icon: "🩺",
+      courses: 189,
       color: "bg-green-100 text-green-700",
     },
     {
-      name: "Business",
-      icon: "💼",
-      courses: 756,
+      name: "IT & Computing",
+      icon: "💻",
+      courses: 312,
       color: "bg-purple-100 text-purple-700",
     },
     {
-      name: "Design",
-      icon: "🎨",
-      courses: 634,
+      name: "Business & Management",
+      icon: "💼",
+      courses: 198,
       color: "bg-pink-100 text-pink-700",
     },
     {
-      name: "Marketing",
-      icon: "📈",
-      courses: 521,
+      name: "Science",
+      icon: "🔬",
+      courses: 156,
       color: "bg-orange-100 text-orange-700",
     },
     {
-      name: "Photography",
-      icon: "📷",
-      courses: 412,
+      name: "Arts & Humanities",
+      icon: "📚",
+      courses: 134,
       color: "bg-indigo-100 text-indigo-700",
     },
   ];
 
-  const featuredCourses = [
-    {
-      id: 1,
-      title: "Complete Web Development Bootcamp",
-      instructor: "John Doe",
-      price: 49.99,
-      originalPrice: 89.99,
-      rating: 4.8,
-      students: 12450,
-      image: "https://via.placeholder.com/400x250",
-      level: "Beginner",
-      bestseller: true,
-    },
-    {
-      id: 2,
-      title: "Advanced Python Programming",
-      instructor: "Jane Smith",
-      price: 39.99,
-      rating: 4.9,
-      students: 8934,
-      image: "https://via.placeholder.com/400x250",
-      level: "Advanced",
-      bestseller: false,
-    },
-    {
-      id: 3,
-      title: "UI/UX Design Masterclass",
-      instructor: "Mike Johnson",
-      price: 59.99,
-      originalPrice: 99.99,
-      rating: 4.7,
-      students: 6721,
-      image: "https://via.placeholder.com/400x250",
-      level: "Intermediate",
-      bestseller: true,
-    },
-  ];
-
   const stats = [
-    { value: "50K+", label: "Active Learners" },
-    { value: "10K+", label: "Expert Tutors" },
-    { value: "100K+", label: "Total Courses" },
+    { value: "5K+", label: "Active Students" },
+    { value: "500+", label: "Student Tutors" },
+    { value: "1200+", label: "Kuppi Sessions" },
     { value: "4.8/5", label: "Average Rating" },
   ];
 
@@ -94,25 +83,25 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-fade-in">
               <Badge variant="primary" className="mb-6">
-                🎉 Over 50,000 Students Learning
+                🎉 Sri Lanka's #1 University Student Platform
               </Badge>
               <h1 className="heading-1 text-gray-900 mb-6">
-                Learn Without Limits, Grow Without Boundaries
+                Kuppi Sessions & Academic Marketplace for University Students
               </h1>
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Join thousands of learners worldwide. Access expert-led courses,
-                connect with a thriving community, and transform your future
-                with UniHub.
+                Join thousands of Sri Lankan university students. Access
+                peer-led kuppi sessions, master complex modules, and buy/sell
+                academic supplies - all in one platform.
               </p>
               <div className="flex gap-4 flex-wrap">
                 <Link href="/courses">
                   <Button variant="primary" size="lg" icon="🚀">
-                    Start Learning
+                    Browse Kuppi Sessions
                   </Button>
                 </Link>
                 <Link href="/tutor/dashboard">
                   <Button variant="outline" size="lg" icon="🎓">
-                    Become a Tutor
+                    Create Kuppi
                   </Button>
                 </Link>
               </div>
@@ -132,7 +121,7 @@ export default function Home() {
                     {"★".repeat(5)}
                   </div>
                   <p className="text-sm text-gray-600">
-                    Trusted by 50,000+ learners
+                    Trusted by 5,000+ university students
                   </p>
                 </div>
               </div>
@@ -141,22 +130,10 @@ export default function Home() {
             <div className="relative animate-slide-up hidden lg:block">
               <div className="relative z-10">
                 <img
-                  src="https://via.placeholder.com/600x500"
-                  alt="Learning"
+                  src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&h=500&fit=crop&q=80"
+                  alt="Sri Lankan University Students Learning"
                   className="rounded-2xl shadow-2xl"
                 />
-              </div>
-              {/* Floating Cards */}
-              <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-xl z-20 animate-fade-in">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl">
-                    ✓
-                  </div>
-                  <div>
-                    <p className="font-semibold">Course Completed!</p>
-                    <p className="text-sm text-gray-600">Web Development</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -184,10 +161,10 @@ export default function Home() {
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="heading-2 text-gray-900 mb-4">
-              Explore Top Categories
+              Popular University Faculties
             </h2>
             <p className="text-lg text-gray-600">
-              Discover courses in the most popular fields
+              Find kuppi sessions for your degree program
             </p>
           </div>
 
@@ -221,75 +198,103 @@ export default function Home() {
         <div className="container-custom">
           <div className="flex justify-between items-center mb-12">
             <div>
-              <h2 className="heading-2 text-gray-900 mb-2">Featured Courses</h2>
-              <p className="text-gray-600">Hand-picked courses for you</p>
+              <h2 className="heading-2 text-gray-900 mb-2">
+                Featured Kuppi Sessions
+              </h2>
+              <p className="text-gray-600">
+                Popular sessions by fellow students
+              </p>
             </div>
             <Link href="/courses">
-              <Button variant="outline">View All Courses</Button>
+              <Button variant="outline">View All Sessions</Button>
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredCourses.map((course) => (
-              <Card key={course.id} hover padding="sm" className="group">
-                <div className="relative overflow-hidden rounded-lg mb-4">
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
-                  />
-                  {course.bestseller && (
-                    <Badge variant="warning" className="absolute top-3 left-3">
-                      ⭐ Bestseller
-                    </Badge>
-                  )}
-                  <Badge
-                    variant="gray"
-                    className="absolute top-3 right-3 bg-white"
-                  >
-                    {course.level}
-                  </Badge>
-                </div>
-
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
-                    {course.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {course.instructor}
-                  </p>
-
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="font-bold text-yellow-500">
-                      {course.rating}
-                    </span>
-                    <div className="flex text-yellow-500 text-sm">
-                      {"★".repeat(Math.floor(course.rating))}
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      ({course.students.toLocaleString()})
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-2xl font-bold text-gray-900">
-                        ${course.price}
-                      </span>
-                      {course.originalPrice && (
-                        <span className="text-sm text-gray-500 line-through ml-2">
-                          ${course.originalPrice}
-                        </span>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            </div>
+          ) : featuredCourses.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No courses available yet</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredCourses.map((course) => (
+                <Link key={course.id} href={`/courses/${course.id}`}>
+                  <Card hover padding="sm" className="group">
+                    <div className="relative overflow-hidden rounded-lg mb-4">
+                      <img
+                        src={
+                          course.thumbnail ||
+                          "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop&q=80"
+                        }
+                        alt={course.title}
+                        className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src =
+                            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop&q=80";
+                        }}
+                      />
+                      {course.rating && course.rating > 0 && (
+                        <Badge
+                          variant="warning"
+                          className="absolute top-3 left-3"
+                        >
+                          ⭐ {Number(course.rating).toFixed(1)}
+                        </Badge>
                       )}
+                      <Badge
+                        variant="gray"
+                        className="absolute top-3 right-3 bg-white capitalize"
+                      >
+                        {course.level}
+                      </Badge>
                     </div>
-                    <Button variant="primary" size="sm">
-                      Enroll
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
+                        {course.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        {course.tutor
+                          ? `${course.tutor.firstName} ${course.tutor.lastName}`
+                          : "Unknown Instructor"}
+                      </p>
+
+                      <div className="flex items-center gap-2 mb-3">
+                        {course.rating && course.rating > 0 && (
+                          <>
+                            <span className="font-bold text-yellow-500">
+                              {Number(course.rating).toFixed(1)}
+                            </span>
+                            <div className="flex text-yellow-500 text-sm">
+                              {"★".repeat(Math.floor(Number(course.rating)))}
+                            </div>
+                          </>
+                        )}
+                        <span className="text-sm text-gray-600">
+                          ({(course.enrollmentCount || 0).toLocaleString()})
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-2xl font-bold text-gray-900">
+                            Rs. {course.price}
+                          </span>
+                        </div>
+                        <Button variant="primary" size="sm">
+                          Enroll
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -301,16 +306,16 @@ export default function Home() {
               <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
                 📚
               </div>
-              <h3 className="heading-4 text-gray-900 mb-3">Learn</h3>
+              <h3 className="heading-4 text-gray-900 mb-3">Learn from Peers</h3>
               <p className="text-gray-600 leading-relaxed">
-                Access high-quality courses from expert tutors across multiple
-                disciplines and skill levels.
+                Access peer-led kuppi sessions created by fellow university
+                students who've mastered the modules you're studying.
               </p>
               <Link
                 href="/courses"
                 className="text-primary-600 hover:text-primary-700 font-medium mt-4 inline-flex items-center gap-2"
               >
-                Explore Courses
+                Browse Kuppis
                 <svg
                   className="w-4 h-4"
                   fill="none"
@@ -331,16 +336,16 @@ export default function Home() {
               <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
                 🎓
               </div>
-              <h3 className="heading-4 text-gray-900 mb-3">Teach</h3>
+              <h3 className="heading-4 text-gray-900 mb-3">Create Kuppi</h3>
               <p className="text-gray-600 leading-relaxed">
-                Share your expertise with thousands of students worldwide and
-                earn while making an impact.
+                Share your knowledge with fellow students and earn while helping
+                them ace their exams and assignments.
               </p>
               <Link
                 href="/tutor/dashboard"
                 className="text-primary-600 hover:text-primary-700 font-medium mt-4 inline-flex items-center gap-2"
               >
-                Become a Tutor
+                Start Teaching
                 <svg
                   className="w-4 h-4"
                   fill="none"
@@ -361,10 +366,12 @@ export default function Home() {
               <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
                 🛒
               </div>
-              <h3 className="heading-4 text-gray-900 mb-3">Shop</h3>
+              <h3 className="heading-4 text-gray-900 mb-3">
+                Academic Marketplace
+              </h3>
               <p className="text-gray-600 leading-relaxed">
-                Buy and sell educational resources, books, and materials in our
-                trusted marketplace.
+                Buy and sell university essentials - calculators, drawing
+                instruments, textbooks, electronics, and more.
               </p>
               <Link
                 href="/marketplace"
@@ -394,11 +401,12 @@ export default function Home() {
       <section className="section gradient-primary text-white">
         <div className="container-custom text-center">
           <h2 className="heading-2 mb-6">
-            Ready to Start Your Learning Journey?
+            Ready to Ace Your University Exams?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Join UniHub today and get access to thousands of courses, expert
-            instructors, and a global community of learners.
+            Join UniHub today and get access to peer-led kuppi sessions,
+            simplified module guides, and connect with fellow Sri Lankan
+            university students.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link href="/auth/register">
@@ -407,7 +415,7 @@ export default function Home() {
                 size="lg"
                 className="bg-white text-primary-600 hover:bg-gray-100"
               >
-                Sign Up Free
+                Join Free
               </Button>
             </Link>
             <Link href="/courses">
@@ -416,7 +424,7 @@ export default function Home() {
                 size="lg"
                 className="border-white text-white hover:bg-white hover:text-primary-600"
               >
-                Browse Courses
+                Browse Kuppi Sessions
               </Button>
             </Link>
           </div>

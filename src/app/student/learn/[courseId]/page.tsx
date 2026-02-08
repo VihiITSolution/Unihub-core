@@ -122,6 +122,16 @@ export default function LearnPage() {
     return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
   };
 
+  // Check if URL is a YouTube URL
+  const isYouTubeUrl = (url: string) => {
+    return url.includes("youtube.com") || url.includes("youtu.be");
+  };
+
+  // Check if URL is a Cloudinary URL
+  const isCloudinaryUrl = (url: string) => {
+    return url.includes("cloudinary.com");
+  };
+
   if (loading) {
     return (
       <div className="container-custom py-12">
@@ -242,13 +252,27 @@ export default function LearnPage() {
               {currentContent.type === "video" && currentContent.url && (
                 <div className="bg-black rounded-lg overflow-hidden mb-6">
                   <div className="aspect-video">
-                    <iframe
-                      src={getEmbedUrl(currentContent.url)}
-                      className="w-full h-full"
-                      allowFullScreen
-                      title={currentContent.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    ></iframe>
+                    {isYouTubeUrl(currentContent.url) ? (
+                      // YouTube iframe embed
+                      <iframe
+                        src={getEmbedUrl(currentContent.url)}
+                        className="w-full h-full"
+                        allowFullScreen
+                        title={currentContent.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      ></iframe>
+                    ) : (
+                      // HTML5 video player for Cloudinary or other video URLs
+                      <video
+                        className="w-full h-full"
+                        controls
+                        controlsList="nodownload"
+                        preload="metadata"
+                      >
+                        <source src={currentContent.url} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
                   </div>
                 </div>
               )}
