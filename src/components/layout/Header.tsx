@@ -5,18 +5,16 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
-import { useAuth, useDashboardPath } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const profileRef = useRef<HTMLDivElement>(null);
-
-  const { user, isAuthenticated, logout } = useAuth();
-  const dashboardPath = useDashboardPath();
+  const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
+  const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,30 +24,19 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close profile dropdown when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        profileRef.current &&
-        !profileRef.current.contains(event.target as Node)
-      ) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
       }
     };
 
     if (isProfileOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isProfileOpen]);
-
-  const handleLogout = () => {
-    logout();
-    setIsProfileOpen(false);
-    setIsMenuOpen(false);
-    router.replace("/");
-  };
 
   const navLinks = [
     { href: "/courses", label: "Courses" },
@@ -123,7 +110,6 @@ export default function Header() {
                 href={link.href}
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all duration-200 font-medium"
               >
-                <span>{link.icon}</span>
                 <span>{link.label}</span>
               </Link>
             ))}
@@ -343,61 +329,18 @@ export default function Header() {
                   className="flex items-center space-x-3 py-3 px-4 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <span className="text-xl">{link.icon}</span>
                   <span className="font-medium">{link.label}</span>
                 </Link>
               ))}
             </div>
 
             <div className="mt-4 pt-4 border-t space-y-3">
-              {isAuthenticated && user ? (
-                <>
-                  <div className="px-4 py-2 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium text-gray-900">
-                      {user.firstName} {user.lastName}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {user.email}
-                    </p>
-                  </div>
-                  <Link
-                    href={dashboardPath}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Button variant="outline" className="w-full">
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                    <Button
-                      variant="outline"
-                      className="w-full border-ocean-400 text-ocean-600 hover:bg-ocean-50"
-                    >
-                      Login
-                    </Button>
-                  </Link>
-                  <Link
-                    href="/auth/register"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Button
-                      variant="primary"
-                      className="w-full bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0"
-                    >
-                      Sign Up
-                    </Button>
-                  </Link>
-                </>
-              )}
+              <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="outline" className="w-full border-ocean-400 text-ocean-600 hover:bg-ocean-50">
+                  Login
+                </Button>
+              </Link>
+
             </div>
           </div>
         )}

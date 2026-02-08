@@ -18,8 +18,7 @@ export default function Sidebar({
   userType = "student",
 }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -35,6 +34,7 @@ export default function Sidebar({
     { href: "/student/dashboard", label: "Dashboard", icon: "dashboard" },
     { href: "/courses", label: "Browse Courses", icon: "courses" },
     { href: "/student/my-courses", label: "My Courses", icon: "book" },
+    { href: "/student/live-sessions", label: "Live Sessions", icon: "video" },
     { href: "/student/progress", label: "Progress", icon: "chart" },
     { href: "/marketplace", label: "Marketplace", icon: "shop" },
     {
@@ -45,10 +45,19 @@ export default function Sidebar({
     { href: "/student/messages", label: "Messages", icon: "message" },
   ];
 
+  const vendorLinks = [
+    { href: "/vendor/dashboard", label: "Vendor Dashboard", icon: "dashboard", badge: "Vendor" },
+    { href: "/vendor/listings", label: "My Listings", icon: "shop" },
+    { href: "/vendor/sales", label: "Sales & Orders", icon: "money" },
+    { href: "/vendor/boarding", label: "Boarding Places", icon: "home" },
+    { href: "/vendor/shop", label: "Shop Settings", icon: "settings" },
+  ];
+
   const tutorLinks = [
     { href: "/tutor/dashboard", label: "Dashboard", icon: "dashboard" },
     { href: "/tutor/courses", label: "My Courses", icon: "courses" },
     { href: "/tutor/create-course", label: "Create Course", icon: "add" },
+    { href: "/tutor/live-sessions", label: "Live Sessions", icon: "video" },
     { href: "/tutor/students", label: "Students", icon: "users" },
     { href: "/tutor/earnings", label: "Earnings", icon: "money" },
     { href: "/tutor/analytics", label: "Analytics", icon: "chart" },
@@ -63,12 +72,11 @@ export default function Sidebar({
     { href: "/admin/settings", label: "Settings", icon: "settings" },
   ];
 
-  const links =
-    userType === "tutor"
-      ? tutorLinks
-      : userType === "admin"
-        ? adminLinks
-        : studentLinks;
+  const links = userType === "tutor" ? tutorLinks : userType === "admin" ? adminLinks : studentLinks;
+  
+  // Show vendor links if user has completed vendor profile
+  const showVendorSection = userType === "student" && user?.isVendorProfileComplete;
+  const hasVendorOption = userType === "student" && !user?.isVendorProfileComplete;
 
   const bottomLinks = [
     { href: "/settings", label: "Settings", icon: "settings" },
@@ -263,6 +271,16 @@ export default function Sidebar({
           />
         </svg>
       ),
+      video: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      ),
+      home: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      ),
     };
     return icons[name] || icons.dashboard;
   };
@@ -355,6 +373,78 @@ export default function Sidebar({
               );
             })}
           </div>
+
+          {/* Vendor Section - Only show if user has completed vendor profile */}
+          {showVendorSection && (
+            <>
+              <div className="my-6 mx-4 divider-gradient" />
+              
+              {isOpen && (
+                <div className="px-4 mb-3">
+                  <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
+                    Vendor Tools
+                  </span>
+                </div>
+              )}
+              
+              <div className="space-y-1">
+                {vendorLinks.map((link) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`sidebar-item group relative ${
+                        isActive ? "sidebar-item-active bg-amber-500/10 hover:bg-amber-500/20" : "hover:bg-amber-500/5"
+                      }`}
+                    >
+                      <span className="sidebar-item-icon text-amber-400">
+                        <IconComponent name={link.icon} />
+                      </span>
+                      {isOpen ? (
+                        <span className="text-sm font-medium truncate">{link.label}</span>
+                      ) : (
+                        <span className="tooltip">{link.label}</span>
+                      )}
+                      {isActive && (
+                        <span className="absolute right-3 w-2 h-2 rounded-full bg-amber-400" />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Become Vendor CTA - Only show if user is not a vendor yet */}
+          {hasVendorOption && (
+            <>
+              <div className="my-6 mx-4 divider-gradient" />
+              
+              <Link
+                href="/student/become-vendor"
+                className="mx-2 p-3 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 transition-all text-white"
+              >
+                {isOpen ? (
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <div>
+                      <div className="text-sm font-semibold">Become a Vendor</div>
+                      <div className="text-xs opacity-90">Start selling on marketplace</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-center">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </div>
+                )}
+              </Link>
+            </>
+          )}
 
           {/* Divider */}
           <div className="my-6 mx-4 divider-gradient" />

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import type { Course, CourseContent } from "@/types";
 
 export default function LearnPage() {
@@ -42,7 +43,7 @@ export default function LearnPage() {
 
       // Fetch real course data
       const courseResponse = await fetch(
-        `http://localhost:5000/api/courses/${courseId}`
+        `${API_BASE_URL}/courses/${courseId}`
       );
 
       if (!courseResponse.ok) {
@@ -60,7 +61,10 @@ export default function LearnPage() {
 
         // For now, allow access if user is course owner
         // Later you can add enrollment check here
-        if (!isCourseOwner && user?.role !== "admin") {
+        const userRoles = user?.roles || [];
+        const isAdmin = userRoles.includes("admin");
+
+        if (!isCourseOwner && !isAdmin) {
           // TODO: Add enrollment check
           // const isEnrolled = await checkEnrollment(courseId, user.id);
           // if (!isEnrolled) {
@@ -75,7 +79,7 @@ export default function LearnPage() {
 
       // Fetch course content
       const contentResponse = await fetch(
-        `http://localhost:5000/api/courses/${courseId}/content`
+        `${API_BASE_URL}/courses/${courseId}/content`
       );
 
       if (contentResponse.ok) {
@@ -102,7 +106,7 @@ export default function LearnPage() {
     setCurrentContent(content);
   };
 
-  // Convert YouTube URL to embed format
+  // Convert YouTube URL to privacy-enhanced embed format
   const getEmbedUrl = (url: string) => {
     if (!url) return "";
 
@@ -119,7 +123,13 @@ export default function LearnPage() {
       videoId = url.split("/v/")[1]?.split("?")[0];
     }
 
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+    // Use youtube-nocookie.com for privacy-enhanced mode
+    // Add parameters to hide related videos, info, and controls branding
+    if (videoId) {
+      return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&showinfo=0`;
+    }
+
+    return url;
   };
 
   // Check if URL is a YouTube URL
@@ -199,11 +209,10 @@ export default function LearnPage() {
                 <button
                   key={content.id}
                   onClick={() => handleContentSelect(content)}
-                  className={`w-full text-left p-4 rounded-lg transition-colors ${
-                    currentContent.id === content.id
+                  className={`w-full text-left p-4 rounded-lg transition-colors ${currentContent?.id === content.id
                       ? "bg-primary-100 border-2 border-primary-500"
                       : "bg-gray-50 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0">
@@ -252,27 +261,16 @@ export default function LearnPage() {
               {currentContent.type === "video" && currentContent.url && (
                 <div className="bg-black rounded-lg overflow-hidden mb-6">
                   <div className="aspect-video">
-                    {isYouTubeUrl(currentContent.url) ? (
-                      // YouTube iframe embed
-                      <iframe
-                        src={getEmbedUrl(currentContent.url)}
-                        className="w-full h-full"
-                        allowFullScreen
-                        title={currentContent.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      ></iframe>
-                    ) : (
-                      // HTML5 video player for Cloudinary or other video URLs
-                      <video
-                        className="w-full h-full"
-                        controls
-                        controlsList="nodownload"
-                        preload="metadata"
-                      >
-                        <source src={currentContent.url} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>
-                    )}
+                    <iframe
+                      src={getEmbedUrl(currentContent.url)}
+                      className="w-full h-full"
+                      allowFullScreen
+                      title={currentContent.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      frameBorder="0"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      loading="lazy"
+                    ></iframe>
                   </div>
                 </div>
               )}
@@ -327,11 +325,10 @@ export default function LearnPage() {
                     }
                   }}
                   disabled={contents[0].id === currentContent.id}
-                  className={`px-6 py-2 rounded-lg font-semibold ${
-                    contents[0].id === currentContent.id
+                  className={`px-6 py-2 rounded-lg font-semibold ${contents[0].id === currentContent.id
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                    }`}
                 >
                   ← Previous
                 </button>
@@ -350,11 +347,10 @@ export default function LearnPage() {
                   disabled={
                     contents[contents.length - 1].id === currentContent.id
                   }
-                  className={`px-6 py-2 rounded-lg font-semibold ${
-                    contents[contents.length - 1].id === currentContent.id
+                  className={`px-6 py-2 rounded-lg font-semibold ${contents[contents.length - 1].id === currentContent.id
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "btn-primary"
-                  }`}
+                    }`}
                 >
                   Next →
                 </button>

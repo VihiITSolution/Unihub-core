@@ -290,11 +290,16 @@ export default function Home() {
                         </Button>
                       </div>
                     </div>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
+                    <Link href={`/courses`}>
+                      <Button variant="primary" size="sm">
+                        Enroll
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -409,15 +414,7 @@ export default function Home() {
             university students.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/auth/register">
-              <Button
-                variant="secondary"
-                size="lg"
-                className="bg-white text-primary-600 hover:bg-gray-100"
-              >
-                Join Free
-              </Button>
-            </Link>
+
             <Link href="/courses">
               <Button
                 variant="outline"
