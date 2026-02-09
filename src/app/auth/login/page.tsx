@@ -9,6 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const dashboardPath = useDashboardPath();
+  const hasRedirected = useRef(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -189,8 +190,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-
         </div>
       </div>
     </div>

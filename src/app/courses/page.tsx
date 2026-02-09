@@ -81,7 +81,11 @@ export default function CoursesPage() {
       const response = await courseService.getCourses(filters);
 
       if (response.success && response.data) {
-        setCourses(response.data);
+        // Handle if response.data is an object with courses array or directly an array
+        const coursesData = Array.isArray(response.data)
+          ? response.data
+          : response.data.courses || [];
+        setCourses(coursesData);
       } else {
         // Fallback or error handling
         console.error("Failed to fetch courses:", (response as any).message);
@@ -155,10 +159,11 @@ export default function CoursesPage() {
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${selectedCategory === cat.id
-                        ? "bg-primary-100 text-primary-700 font-medium"
-                        : "hover:bg-gray-100 text-gray-700"
-                        }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                        selectedCategory === cat.id
+                          ? "bg-primary-100 text-primary-700 font-medium"
+                          : "hover:bg-gray-100 text-gray-700"
+                      }`}
                     >
                       <span>{cat.icon}</span>
                       <span className="text-sm">{cat.name}</span>
@@ -175,10 +180,11 @@ export default function CoursesPage() {
                     <button
                       key={level}
                       onClick={() => setSelectedLevel(level)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedLevel === level
-                        ? "bg-primary-100 text-primary-700 font-medium"
-                        : "hover:bg-gray-100 text-gray-700"
-                        }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        selectedLevel === level
+                          ? "bg-primary-100 text-primary-700 font-medium"
+                          : "hover:bg-gray-100 text-gray-700"
+                      }`}
                     >
                       {level === "all"
                         ? "All Levels"
@@ -196,10 +202,11 @@ export default function CoursesPage() {
                     <button
                       key={range.id}
                       onClick={() => setPriceRange(range.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${priceRange === range.id
-                        ? "bg-primary-100 text-primary-700 font-medium"
-                        : "hover:bg-gray-100 text-gray-700"
-                        }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        priceRange === range.id
+                          ? "bg-primary-100 text-primary-700 font-medium"
+                          : "hover:bg-gray-100 text-gray-700"
+                      }`}
                     >
                       {range.label}
                     </button>
@@ -280,9 +287,10 @@ export default function CoursesPage() {
                       <div className="relative overflow-hidden rounded-lg mb-4">
                         <img
                           src={
-                            course.thumbnail && course.thumbnail.startsWith("http")
+                            course.thumbnail &&
+                            course.thumbnail.startsWith("http")
                               ? course.thumbnail
-                              : `${BACKEND_URL}${course.thumbnail || ''}`
+                              : `${BACKEND_URL}${course.thumbnail || ""}`
                           }
                           alt={course.title}
                           className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
@@ -322,7 +330,11 @@ export default function CoursesPage() {
                         </p>
 
                         <p className="text-sm text-gray-600 mb-3">
-                          By {course.tutorName || (course.tutor ? `${course.tutor.firstName} ${course.tutor.lastName}` : "Instructor")}
+                          By{" "}
+                          {course.tutorName ||
+                            (course.tutor
+                              ? `${course.tutor.firstName} ${course.tutor.lastName}`
+                              : "Instructor")}
                         </p>
 
                         <div className="flex items-center gap-3 text-sm text-gray-600 mb-4">
