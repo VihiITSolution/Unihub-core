@@ -11,7 +11,7 @@ import type { Course, CourseContent } from "@/types";
 export default function CourseDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const courseId = params?.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
@@ -19,12 +19,35 @@ export default function CourseDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(true);
 
   useEffect(() => {
     if (courseId) {
       loadCourseDetails();
+      checkEnrollmentStatus();
     }
-  }, [courseId]);
+  }, [courseId, isAuthenticated]);
+
+  const checkEnrollmentStatus = async () => {
+    if (!isAuthenticated || !courseId) {
+      setCheckingEnrollment(false);
+      return;
+    }
+
+    try {
+      const result = await enrollmentService.checkEnrollment(
+        parseInt(courseId),
+      );
+      if (result.success && result.data) {
+        setIsEnrolled(result.data.isEnrolled);
+      }
+    } catch (error) {
+      console.error("Failed to check enrollment:", error);
+    } finally {
+      setCheckingEnrollment(false);
+    }
+  };
 
   const loadCourseDetails = async () => {
     if (!courseId) {
@@ -76,9 +99,21 @@ export default function CourseDetailsPage() {
   };
 
   const handleEnroll = () => {
+    // Check if user is the tutor of this course
+    if (user && course && course.tutorId === user.id) {
+      router.push(`/tutor/courses`);
+      return;
+    }
+
     // Check if user is logged in
     if (!isAuthenticated) {
       router.push("/auth/login");
+      return;
+    }
+
+    // If already enrolled, go to learning page
+    if (isEnrolled) {
+      router.push(`/student/learn/${courseId}`);
       return;
     }
 
@@ -183,10 +218,20 @@ export default function CourseDetailsPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white font-bold">
-              {course.tutor?.firstName
-                ? course.tutor.firstName.charAt(0)
-                : course.tutorName?.charAt(0) || "T"}
+            <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+              {course.tutor?.profileImage ? (
+                <img
+                  src={course.tutor.profileImage}
+                  alt={`${course.tutor.firstName} ${course.tutor.lastName}`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <>
+                  {course.tutor?.firstName
+                    ? course.tutor.firstName.charAt(0)
+                    : course.tutorName?.charAt(0) || "T"}
+                </>
+              )}
             </div>
             <div>
               <p className="text-sm text-gray-600">Instructor</p>
@@ -219,8 +264,24 @@ export default function CourseDetailsPage() {
           <div className="text-3xl font-bold text-primary-600 mb-4">
             ${course.price}
           </div>
-          <button onClick={handleEnroll} className="btn-primary w-full mb-4">
-            Enroll Now
+          <button
+            onClick={handleEnroll}
+            className={`w-full mb-4 ${
+              user && course && course.tutorId === user.id
+                ? "btn-secondary"
+                : isEnrolled
+                  ? "btn-secondary"
+                  : "btn-primary"
+            }`}
+            disabled={checkingEnrollment}
+          >
+            {checkingEnrollment
+              ? "Checking..."
+              : user && course && course.tutorId === user.id
+                ? "View Course"
+                : isEnrolled
+                  ? "Open Course"
+                  : "Enroll Now"}
           </button>
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex items-center gap-2">

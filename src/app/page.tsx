@@ -31,6 +31,12 @@ export default function Home() {
 
   const categories = [
     {
+      name: "IT & Computing",
+      icon: "💻",
+      courses: 312,
+      color: "bg-purple-100 text-purple-700",
+    },
+    {
       name: "Engineering",
       icon: "⚙️",
       courses: 245,
@@ -42,12 +48,7 @@ export default function Home() {
       courses: 189,
       color: "bg-green-100 text-green-700",
     },
-    {
-      name: "IT & Computing",
-      icon: "💻",
-      courses: 312,
-      color: "bg-purple-100 text-purple-700",
-    },
+    
     {
       name: "Business & Management",
       icon: "💼",
@@ -70,8 +71,8 @@ export default function Home() {
 
   const stats = [
     { value: "5K+", label: "Active Students" },
-    { value: "500+", label: "Student Tutors" },
-    { value: "1200+", label: "Kuppi Sessions" },
+    { value: "50+", label: "Student Tutors" },
+    { value: "100+", label: "Kuppi Sessions" },
     { value: "4.8/5", label: "Average Rating" },
   ];
 
@@ -83,7 +84,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-fade-in">
               <Badge variant="primary" className="mb-6">
-                🎉 Sri Lanka's #1 University Student Platform
+                 Sri Lanka's #1 University Student Platform
               </Badge>
               <h1 className="heading-1 text-gray-900 mb-6">
                 Kuppi Sessions & Academic Marketplace for University Students
@@ -95,19 +96,19 @@ export default function Home() {
               </p>
               <div className="flex gap-4 flex-wrap">
                 <Link href="/courses">
-                  <Button variant="primary" size="lg" icon="🚀">
+                  <Button variant="primary" size="lg" >
                     Browse Kuppi Sessions
                   </Button>
                 </Link>
                 <Link href="/tutor/dashboard">
-                  <Button variant="outline" size="lg" icon="🎓">
+                  <Button variant="outline" size="lg" >
                     Create Kuppi
                   </Button>
                 </Link>
               </div>
 
               {/* Trust Indicators */}
-              <div className="mt-12 flex items-center gap-8 flex-wrap">
+              {/* <div className="mt-12 flex items-center gap-8 flex-wrap">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div
@@ -124,7 +125,7 @@ export default function Home() {
                     Trusted by 5,000+ university students
                   </p>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             <div className="relative animate-slide-up hidden lg:block">
@@ -157,7 +158,7 @@ export default function Home() {
       </section>
 
       {/* Categories Section */}
-      <section className="section bg-gray-50">
+      {/* <section className="section bg-gray-50">
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="heading-2 text-gray-900 mb-4">
@@ -191,7 +192,7 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Featured Courses */}
       <section className="section">

@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button, Card, Badge, Input, Loading } from "@/components/ui";
 import { courseService } from "@/services/course.service";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/types";
 
 export default function CoursesPage() {
+  const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -385,8 +387,17 @@ export default function CoursesPage() {
                               Rs. {course.price}
                             </span>
                           </div>
-                          <Button variant="primary" size="sm">
-                            Enroll Now
+                          <Button
+                            variant={
+                              user && course.tutorId === user.id
+                                ? "secondary"
+                                : "primary"
+                            }
+                            size="sm"
+                          >
+                            {user && course.tutorId === user.id
+                              ? "View"
+                              : "Enroll Now"}
                           </Button>
                         </div>
                       </div>
