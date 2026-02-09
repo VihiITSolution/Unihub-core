@@ -4,50 +4,26 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import PaymentModal, { PaymentData } from "@/components/ui/PaymentModal";
-import enrollmentService from "@/services/enrollment.service";
+import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
+import { courseService } from "@/services/course.service";
 import type { Course, CourseContent } from "@/types";
 
 export default function CourseDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, token } = useAuth();
   const courseId = params?.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [isEnrolling, setIsEnrolling] = useState(false);
-  const [isEnrolled, setIsEnrolled] = useState(false);
-  const [checkingEnrollment, setCheckingEnrollment] = useState(true);
+  const [enrollmentError, setEnrollmentError] = useState<string | null>(null);
 
   useEffect(() => {
     if (courseId) {
       loadCourseDetails();
-      checkEnrollmentStatus();
     }
   }, [courseId, isAuthenticated]);
-
-  const checkEnrollmentStatus = async () => {
-    if (!isAuthenticated || !courseId) {
-      setCheckingEnrollment(false);
-      return;
-    }
-
-    try {
-      const result = await enrollmentService.checkEnrollment(
-        parseInt(courseId),
-      );
-      if (result.success && result.data) {
-        setIsEnrolled(result.data.isEnrolled);
-      }
-    } catch (error) {
-      console.error("Failed to check enrollment:", error);
-    } finally {
-      setCheckingEnrollment(false);
-    }
-  };
 
   const loadCourseDetails = async () => {
     if (!courseId) {
@@ -61,8 +37,14 @@ export default function CourseDetailsPage() {
       setError(null);
 
       // Fetch real course data
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const courseResponse = await fetch(
-        `http://localhost:5000/api/courses/${courseId}`,
+        `${API_BASE_URL}/courses/${courseId}`,
+        { headers },
       );
 
       if (!courseResponse.ok) {
@@ -79,7 +61,7 @@ export default function CourseDetailsPage() {
 
       // Fetch course content
       const contentResponse = await fetch(
-        `http://localhost:5000/api/courses/${courseId}/content`,
+        `${API_BASE_URL}/courses/${courseId}/content`,
       );
 
       if (contentResponse.ok) {
@@ -98,7 +80,7 @@ export default function CourseDetailsPage() {
     }
   };
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     // Check if user is the tutor of this course
     if (user && course && course.tutorId === user.id) {
       router.push(`/tutor/courses`);
@@ -106,46 +88,29 @@ export default function CourseDetailsPage() {
     }
 
     // Check if user is logged in
-    if (!isAuthenticated) {
-      router.push("/auth/login");
+    if (!isAuthenticated || !token) {
+      router.push("/auth/login?redirect=/courses/" + courseId);
       return;
     }
-
-    // If already enrolled, go to learning page
-    if (isEnrolled) {
-      router.push(`/student/learn/${courseId}`);
-      return;
-    }
-
-    // Show payment modal
-    setShowPaymentModal(true);
-  };
-
-  const handlePaymentSubmit = async (paymentData: PaymentData) => {
-    if (!course) return;
 
     try {
-      setIsEnrolling(true);
+      setEnrollmentError(null);
+      // Call enrollment API
+      const response = await courseService.enrollInCourse(courseId, token);
 
-      const result = await enrollmentService.enrollInCourse({
-        courseId: parseInt(courseId),
-        paymentData,
-        amount: course.price,
-      });
-
-      if (result.success) {
-        setShowPaymentModal(false);
-        alert("Successfully enrolled in course! 🎉");
-        // Redirect to learning page
+      if (response.success) {
+        // Redirect to learning player on success
         router.push(`/student/learn/${courseId}`);
       } else {
-        alert(result.message || "Failed to enroll in course");
+        setEnrollmentError(
+          response.message || "Enrollment failed. Please try again.",
+        );
       }
-    } catch (error) {
-      console.error("Enrollment error:", error);
-      alert("Failed to process enrollment. Please try again.");
-    } finally {
-      setIsEnrolling(false);
+    } catch (err: any) {
+      console.error("Enrollment error:", err);
+      setEnrollmentError(
+        err.message || "Failed to enroll. Please try again later.",
+      );
     }
   };
 
@@ -251,7 +216,7 @@ export default function CourseDetailsPage() {
               src={
                 course.thumbnail.startsWith("http")
                   ? course.thumbnail
-                  : `http://localhost:5000${course.thumbnail}`
+                  : `${BACKEND_URL}${course.thumbnail}`
               }
               alt={course.title}
               className="w-full h-48 object-cover rounded-lg mb-4"
@@ -264,24 +229,28 @@ export default function CourseDetailsPage() {
           <div className="text-3xl font-bold text-primary-600 mb-4">
             ${course.price}
           </div>
+          {enrollmentError && (
+            <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
+              {enrollmentError}
+            </div>
+          )}
           <button
             onClick={handleEnroll}
             className={`w-full mb-4 ${
               user && course && course.tutorId === user.id
                 ? "btn-secondary"
-                : isEnrolled
+                : course.isEnrolled
                   ? "btn-secondary"
                   : "btn-primary"
             }`}
-            disabled={checkingEnrollment}
           >
-            {checkingEnrollment
-              ? "Checking..."
-              : user && course && course.tutorId === user.id
-                ? "View Course"
-                : isEnrolled
-                  ? "Open Course"
-                  : "Enroll Now"}
+            {user && course && course.tutorId === user.id
+              ? "View Course"
+              : course.isEnrolled
+                ? "Open Course"
+                : isAuthenticated
+                  ? "Enroll Now"
+                  : "Login to Enroll"}
           </button>
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex items-center gap-2">
@@ -301,20 +270,6 @@ export default function CourseDetailsPage() {
       </div>
 
       {/* Course Content */}
-
-      {/* Payment Modal */}
-      {course && (
-        <PaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          onSubmit={handlePaymentSubmit}
-          course={{
-            title: course.title,
-            price: course.price,
-          }}
-          isProcessing={isEnrolling}
-        />
-      )}
       <div className="mb-12">
         <h2 className="text-3xl font-bold mb-6">Course Content</h2>
         <div className="space-y-4">

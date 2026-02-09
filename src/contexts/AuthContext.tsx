@@ -1,19 +1,9 @@
-"use client";
+'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
-import {
-  authService,
-  type LoginCredentials,
-  type RegisterData,
-  type AuthResponse,
-} from "@/services/auth.service";
-import type { User, UserRole } from "@/types";
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { authService, type LoginCredentials, type RegisterData, type AuthResponse } from '@/services/auth.service';
+import type { User, UserRole } from '@/types';
+import { TOKEN_KEY, USER_KEY } from '@/lib/constants';
 
 interface AuthContextType {
   user: User | null;
@@ -35,8 +25,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = "unihub_token";
-const USER_KEY = "unihub_user";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -252,7 +240,7 @@ export function useAuth() {
 export function useDashboardPath() {
   const { user } = useAuth();
 
-  if (!user) return "/auth/login";
+  if (!user) return '/auth/login';
 
   switch (user.primaryRole) {
     case "student":

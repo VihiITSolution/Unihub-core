@@ -3,25 +3,22 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  userType?: "student" | "tutor" | "admin";
 }
 
-export default function DashboardLayout({
-  children,
-  userType = "student",
-}: DashboardLayoutProps) {
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const { user, logout, switchRole } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -58,6 +55,13 @@ export default function DashboardLayout({
     setSidebarOpen(!sidebarOpen);
   };
 
+  const getPageTitle = () => {
+    if (pathname.includes("/tutor")) return "Tutor Dashboard";
+    if (pathname.includes("/admin")) return "Admin Dashboard";
+    if (pathname.includes("/vendor")) return "Vendor Dashboard";
+    return "My Learning";
+  };
+
   return (
     <>
       {/* Hide the parent layout's header/footer by positioning over them */}
@@ -72,11 +76,7 @@ export default function DashboardLayout({
       `}</style>
 
       <div className="fixed inset-0 bg-gray-50 flex">
-        <Sidebar
-          isOpen={sidebarOpen}
-          onToggle={toggleSidebar}
-          userType={userType}
-        />
+        <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
         {/* Main Content */}
         <div
@@ -122,11 +122,7 @@ export default function DashboardLayout({
               {/* Breadcrumb or Page Title */}
               <div className="hidden lg:block">
                 <h1 className="text-lg font-semibold text-gray-900">
-                  {userType === "tutor"
-                    ? "Tutor Dashboard"
-                    : userType === "admin"
-                      ? "Admin Dashboard"
-                      : "My Learning"}
+                  {getPageTitle()}
                 </h1>
               </div>
             </div>

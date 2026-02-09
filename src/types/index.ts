@@ -47,10 +47,38 @@ export interface User {
   isActive: boolean;
   isStudentProfileComplete: boolean;
   isTutorProfileComplete: boolean;
+  isVendorProfileComplete: boolean;
   studentProfile?: StudentProfile;
   tutorProfile?: TutorProfile;
+  vendorProfile?: VendorProfile;
   createdAt: string;
   lastLogin?: string;
+}
+
+export interface VendorProfile {
+  id: number;
+  userId: number;
+  shopName: string;
+  shopDescription?: string;
+  businessType: "individual" | "business";
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  postalCode?: string;
+  taxId?: string;
+  isApproved: boolean;
+  approvalStatus: "pending" | "approved" | "rejected";
+  rejectionReason?: string;
+  isActive: boolean;
+  totalSales: number;
+  totalRevenue: number;
+  averageRating: number;
+  totalReviews: number;
+  isProfileComplete: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuthState {
@@ -88,13 +116,14 @@ export interface Course {
   isPublished?: boolean;
   createdAt: string;
   updatedAt: string;
+  isEnrolled?: boolean;
 }
 
 export interface CourseContent {
   id: string;
   courseId: string;
   title: string;
-  type: "video" | "pdf" | "quiz";
+  type: "video" | "pdf";
   url?: string;
   duration?: number;
   order: number;
@@ -110,32 +139,75 @@ export interface Enrollment {
 }
 
 // Marketplace types
-export interface Product {
-  id: string;
+export interface MarketplaceItem {
+  id: number;
+  sellerId: number;
   title: string;
   description: string;
-  images: string[];
-  price: number;
-  sellerId: string;
-  sellerName: string;
   category: string;
+  itemType: "book" | "notes" | "equipment" | "electronics" | "other";
+  condition: "new" | "like_new" | "good" | "fair" | "poor";
+  price: number;
+  images?: string[];
   stock: number;
-  rating: number;
-  reviewCount: number;
+  soldCount: number;
+  location?: string;
+  isAvailable: boolean;
+  viewCount: number;
+  contactInfo?: string;
+  seller?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    profileImage?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Order {
-  id: string;
-  buyerId: string;
-  sellerId: string;
-  productId: string;
+  id: number;
+  orderId: string;
+  buyerId: number;
+  sellerId: number;
+  itemId: number;
   quantity: number;
+  unitPrice: number;
   totalPrice: number;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled" | "refunded";
+  shippingAddress?: string;
+  buyerNotes?: string;
+  sellerNotes?: string;
+  trackingNumber?: string;
+  paymentId?: number;
+  confirmedAt?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
+  cancelledAt?: string;
+  cancellationReason?: string;
+  item?: MarketplaceItem;
+  buyer?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  seller?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   createdAt: string;
   updatedAt: string;
+}
+
+// Legacy Product type for compatibility (maps to MarketplaceItem)
+export interface Product extends Omit<MarketplaceItem, 'itemType' | 'condition' | 'soldCount'> {
+  sellerName?: string;
+  rating?: number;
+  reviewCount?: number;
 }
 
 // Payment types
@@ -168,4 +240,181 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
+}
+
+// Live Session types
+export type LiveSessionStatus = "scheduled" | "cancelled" | "live" | "ended" | "recorded";
+export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
+export type InvitationStatus = "pending" | "accepted" | "declined";
+
+export interface LiveSession {
+  id: string;
+  tutorId: string;
+  courseId?: string;
+  title: string;
+  description?: string;
+  scheduledStartTime: string;
+  scheduledEndTime: string;
+  actualStartTime?: string;
+  actualEndTime?: string;
+  isFree: boolean;
+  price: number;
+  platformCommissionRate: number;
+  maxAttendees?: number;
+  youtubeVideoId?: string;
+  youtubeBroadcastId?: string;
+  youtubeStreamKey?: string;
+  streamUrl?: string;
+  embedUrl?: string;
+  status: LiveSessionStatus;
+  totalRevenue: number;
+  platformCommission: number;
+  totalAttendees: number;
+  allowRecording: boolean;
+  recordingUrl?: string;
+  enableChat: boolean;
+  privacyStatus: "public" | "unlisted" | "private";
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+  tutor?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    profileImage?: string;
+  };
+  course?: Course;
+}
+
+export interface SessionEnrollment {
+  id: string;
+  sessionId: string;
+  studentId: string;
+  amountPaid: number;
+  paymentStatus: PaymentStatus;
+  paymentId?: string;
+  joinedAt?: string;
+  leftAt?: string;
+  attendanceDuration: number;
+  invitedBy?: string;
+  invitationStatus?: InvitationStatus;
+  createdAt: string;
+  updatedAt: string;
+  session?: LiveSession;
+  student?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    profileImage?: string;
+  };
+}
+
+export interface CreateLiveSessionData {
+  title: string;
+  description?: string;
+  courseId?: string;
+  scheduledStartTime: string;
+  scheduledEndTime: string;
+  isFree: boolean;
+  price?: number;
+  platformCommissionRate?: number;
+  maxAttendees?: number;
+  allowRecording?: boolean;
+  enableChat?: boolean;
+  privacyStatus?: "public" | "unlisted" | "private";
+  tags?: string[];
+}
+
+export interface LiveSessionFilters {
+  upcoming?: boolean;
+  tutorId?: string;
+  isFree?: boolean;
+  status?: LiveSessionStatus;
+  page?: number;
+  limit?: number;
+}
+
+// Boarding Places types
+export type RoomType = "single" | "shared" | "apartment" | "annex";
+export type GenderPreference = "male" | "female" | "any";
+export type BoardingApprovalStatus = "pending" | "approved" | "rejected";
+
+export interface BoardingPlace {
+  id: number;
+  vendorId: number;
+  title: string;
+  description: string;
+  address: string;
+  city: string;
+  district?: string;
+  nearestUniversity?: string;
+  distanceToUniversity?: number;
+  roomType: RoomType;
+  genderPreference: GenderPreference;
+  capacity: number;
+  availableSlots: number;
+  monthlyRent: number;
+  securityDeposit?: number;
+  amenities?: string[];
+  rules?: string;
+  images?: string[];
+  contactPhone: string;
+  contactEmail?: string;
+  isActive: boolean;
+  isPaid: boolean;
+  paidAt?: string;
+  adFee: number;
+  expiresAt?: string;
+  viewCount: number;
+  inquiryCount: number;
+  isApproved: boolean;
+  approvalStatus: BoardingApprovalStatus;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+  vendor?: {
+    id: number;
+    username: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    vendorProfile?: {
+      shopName: string;
+      contactPhone?: string;
+      contactEmail?: string;
+    };
+  };
+}
+
+export interface BoardingPlaceFilters {
+  city?: string;
+  roomType?: RoomType;
+  genderPreference?: GenderPreference;
+  minRent?: number;
+  maxRent?: number;
+  nearestUniversity?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface BoardingPlaceFormData {
+  title: string;
+  description: string;
+  address: string;
+  city: string;
+  district?: string;
+  nearestUniversity?: string;
+  distanceToUniversity?: number;
+  roomType: RoomType;
+  genderPreference: GenderPreference;
+  capacity: number;
+  monthlyRent: number;
+  securityDeposit?: number;
+  amenities?: string[];
+  rules?: string;
+  images?: string[];
+  contactPhone: string;
+  contactEmail?: string;
 }

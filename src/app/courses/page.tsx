@@ -6,6 +6,7 @@ import { Button, Card, Badge, Input, Loading } from "@/components/ui";
 import { courseService } from "@/services/course.service";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/types";
+import { BACKEND_URL } from "@/lib/constants";
 
 export default function CoursesPage() {
   const { user } = useAuth();
@@ -57,61 +58,36 @@ export default function CoursesPage() {
   const loadCourses = async () => {
     try {
       setLoading(true);
-      setError(null);
 
-      // Build filters
-      const filters: any = {
-        page: pagination.page,
-        limit: pagination.limit,
-      };
+      const filters: any = {};
+      if (selectedCategory !== "all") filters.category = selectedCategory;
+      if (selectedLevel !== "all") filters.level = selectedLevel;
+      if (searchQuery) filters.search = searchQuery;
 
-      if (selectedCategory !== "all") {
-        filters.category = selectedCategory;
-      }
-
-      if (selectedLevel !== "all") {
-        filters.level = selectedLevel;
-      }
-
-      if (searchQuery) {
-        filters.search = searchQuery;
-      }
-
-      // Apply price range filters
+      // Price range logic (simplified mapping)
       if (priceRange !== "all") {
-        switch (priceRange) {
-          case "free":
-            filters.maxPrice = 0;
-            break;
-          case "under1000":
-            filters.maxPrice = 1000;
-            break;
-          case "1000to2000":
-            filters.minPrice = 1000;
-            filters.maxPrice = 2000;
-            break;
-          case "over2000":
-            filters.minPrice = 2000;
-            break;
+        if (priceRange === "free") {
+          filters.maxPrice = 0;
+        } else if (priceRange === "under50") {
+          filters.maxPrice = 50;
+        } else if (priceRange === "50to100") {
+          filters.minPrice = 50;
+          filters.maxPrice = 100;
+        } else if (priceRange === "over100") {
+          filters.minPrice = 100;
         }
       }
 
       const response = await courseService.getCourses(filters);
 
       if (response.success && response.data) {
-        // Backend returns { success, data: { courses, pagination } }
-        const coursesData = (response.data as any).courses || response.data;
-        const paginationData = (response.data as any).pagination;
-
-        setCourses(coursesData);
-        if (paginationData) {
-          setPagination(paginationData);
-        }
+        setCourses(response.data);
       } else {
-        setError("Failed to load courses");
+        // Fallback or error handling
+        console.error("Failed to fetch courses:", (response as any).message);
         setCourses([]);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to load courses:", error);
       setError(error.message || "Failed to load courses. Please try again.");
       setCourses([]);
@@ -179,11 +155,10 @@ export default function CoursesPage() {
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                        selectedCategory === cat.id
-                          ? "bg-primary-100 text-primary-700 font-medium"
-                          : "hover:bg-gray-100 text-gray-700"
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${selectedCategory === cat.id
+                        ? "bg-primary-100 text-primary-700 font-medium"
+                        : "hover:bg-gray-100 text-gray-700"
+                        }`}
                     >
                       <span>{cat.icon}</span>
                       <span className="text-sm">{cat.name}</span>
@@ -200,11 +175,10 @@ export default function CoursesPage() {
                     <button
                       key={level}
                       onClick={() => setSelectedLevel(level)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        selectedLevel === level
-                          ? "bg-primary-100 text-primary-700 font-medium"
-                          : "hover:bg-gray-100 text-gray-700"
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedLevel === level
+                        ? "bg-primary-100 text-primary-700 font-medium"
+                        : "hover:bg-gray-100 text-gray-700"
+                        }`}
                     >
                       {level === "all"
                         ? "All Levels"
@@ -222,11 +196,10 @@ export default function CoursesPage() {
                     <button
                       key={range.id}
                       onClick={() => setPriceRange(range.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        priceRange === range.id
-                          ? "bg-primary-100 text-primary-700 font-medium"
-                          : "hover:bg-gray-100 text-gray-700"
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${priceRange === range.id
+                        ? "bg-primary-100 text-primary-700 font-medium"
+                        : "hover:bg-gray-100 text-gray-700"
+                        }`}
                     >
                       {range.label}
                     </button>
@@ -307,8 +280,9 @@ export default function CoursesPage() {
                       <div className="relative overflow-hidden rounded-lg mb-4">
                         <img
                           src={
-                            course.thumbnail ||
-                            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop&q=80"
+                            course.thumbnail && course.thumbnail.startsWith("http")
+                              ? course.thumbnail
+                              : `${BACKEND_URL}${course.thumbnail || ''}`
                           }
                           alt={course.title}
                           className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
@@ -348,10 +322,7 @@ export default function CoursesPage() {
                         </p>
 
                         <p className="text-sm text-gray-600 mb-3">
-                          By{" "}
-                          {course.tutor
-                            ? `${course.tutor.firstName} ${course.tutor.lastName}`
-                            : course.tutorName || "Unknown Instructor"}
+                          By {course.tutorName || (course.tutor ? `${course.tutor.firstName} ${course.tutor.lastName}` : "Instructor")}
                         </p>
 
                         <div className="flex items-center gap-3 text-sm text-gray-600 mb-4">
@@ -363,11 +334,7 @@ export default function CoursesPage() {
                             >
                               <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
                             </svg>
-                            {(
-                              course.enrollmentCount ||
-                              course.enrolledCount ||
-                              0
-                            ).toLocaleString()}
+                            {(course.enrolledCount || 0).toLocaleString()}
                           </span>
                           <span className="flex items-center gap-1">
                             <svg

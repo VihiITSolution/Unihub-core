@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { courseService } from "@/services/course.service";
+import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 
 interface CourseMaterial {
   id: string;
@@ -173,7 +174,7 @@ export default function CreateCoursePage() {
       formDataToSend.append("thumbnail", thumbnailFile);
 
       // Make API call with FormData
-      const response = await fetch("http://localhost:5000/api/courses", {
+      const response = await fetch(`${API_BASE_URL}/courses`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -229,7 +230,7 @@ export default function CreateCoursePage() {
         }
 
         await fetch(
-          `http://localhost:5000/api/courses/${createdCourseId}/content`,
+          `${API_BASE_URL}/courses/${createdCourseId}/content`,
           {
             method: "POST",
             headers: {

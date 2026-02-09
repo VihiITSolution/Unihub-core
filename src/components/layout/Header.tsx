@@ -26,7 +26,7 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close profile dropdown when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -43,13 +43,6 @@ export default function Header() {
         document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isProfileOpen]);
-
-  const handleLogout = () => {
-    logout();
-    setIsProfileOpen(false);
-    setIsMenuOpen(false);
-    router.replace("/");
-  };
 
   const navLinks = [
     { href: "/courses", label: "Courses" },
@@ -123,7 +116,6 @@ export default function Header() {
                 href={link.href}
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all duration-200 font-medium"
               >
-                <span>{link.icon}</span>
                 <span>{link.label}</span>
               </Link>
             ))}
@@ -372,7 +364,7 @@ export default function Header() {
                       </Link>
 
                       <button
-                        onClick={handleLogout}
+                        onClick={logout}
                         className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                       >
                         <svg
@@ -479,7 +471,6 @@ export default function Header() {
                   className="flex items-center space-x-3 py-3 px-4 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <span className="text-xl">{link.icon}</span>
                   <span className="font-medium">{link.label}</span>
                 </Link>
               ))}
@@ -629,7 +620,7 @@ export default function Header() {
                     </Button>
                   </Link>
                   <button
-                    onClick={handleLogout}
+                    onClick={logout}
                     className="w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     Logout
