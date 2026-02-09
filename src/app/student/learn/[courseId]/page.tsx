@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import reviewService, { Review } from "@/services/review.service";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import type { Course, CourseContent } from "@/types";
 
@@ -14,10 +15,15 @@ export default function LearnPage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
   const [currentContent, setCurrentContent] = useState<CourseContent | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userReview, setUserReview] = useState<Review | null>(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -27,8 +33,50 @@ export default function LearnPage() {
 
     if (courseId) {
       loadCourseContent();
+      loadUserReview();
     }
   }, [courseId, isAuthenticated]);
+
+  const loadUserReview = async () => {
+    if (!courseId) return;
+
+    try {
+      const result = await reviewService.getUserReview(parseInt(courseId));
+      if (result.success && result.data?.review) {
+        setUserReview(result.data.review);
+        setRating(result.data.review.rating);
+        setComment(result.data.review.comment || "");
+      }
+    } catch (error) {
+      console.error("Failed to load user review:", error);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!courseId || rating === 0) return;
+
+    try {
+      setSubmittingReview(true);
+      const result = await reviewService.addReview({
+        courseId: parseInt(courseId),
+        rating,
+        comment,
+      });
+
+      if (result.success) {
+        alert("Review submitted successfully!");
+        setShowRatingModal(false);
+        loadUserReview(); // Reload to get updated review
+      } else {
+        alert(result.message || "Failed to submit review");
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      alert("Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   const loadCourseContent = async () => {
     if (!courseId) {
@@ -42,9 +90,7 @@ export default function LearnPage() {
       setError(null);
 
       // Fetch real course data
-      const courseResponse = await fetch(
-        `${API_BASE_URL}/courses/${courseId}`
-      );
+      const courseResponse = await fetch(`${API_BASE_URL}/courses/${courseId}`);
 
       if (!courseResponse.ok) {
         throw new Error(`Failed to fetch course: ${courseResponse.status}`);
@@ -79,7 +125,7 @@ export default function LearnPage() {
 
       // Fetch course content
       const contentResponse = await fetch(
-        `${API_BASE_URL}/courses/${courseId}/content`
+        `${API_BASE_URL}/courses/${courseId}/content`,
       );
 
       if (contentResponse.ok) {
@@ -95,7 +141,7 @@ export default function LearnPage() {
     } catch (error) {
       console.error("Failed to load course content:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to load course"
+        error instanceof Error ? error.message : "Failed to load course",
       );
     } finally {
       setLoading(false);
@@ -209,10 +255,11 @@ export default function LearnPage() {
                 <button
                   key={content.id}
                   onClick={() => handleContentSelect(content)}
-                  className={`w-full text-left p-4 rounded-lg transition-colors ${currentContent?.id === content.id
+                  className={`w-full text-left p-4 rounded-lg transition-colors ${
+                    currentContent?.id === content.id
                       ? "bg-primary-100 border-2 border-primary-500"
                       : "bg-gray-50 hover:bg-gray-100"
-                    }`}
+                  }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0">
@@ -318,17 +365,18 @@ export default function LearnPage() {
                 <button
                   onClick={() => {
                     const currentIndex = contents.findIndex(
-                      (c) => c.id === currentContent.id
+                      (c) => c.id === currentContent.id,
                     );
                     if (currentIndex > 0) {
                       setCurrentContent(contents[currentIndex - 1]);
                     }
                   }}
                   disabled={contents[0].id === currentContent.id}
-                  className={`px-6 py-2 rounded-lg font-semibold ${contents[0].id === currentContent.id
+                  className={`px-6 py-2 rounded-lg font-semibold ${
+                    contents[0].id === currentContent.id
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
+                  }`}
                 >
                   ← Previous
                 </button>
@@ -338,7 +386,7 @@ export default function LearnPage() {
                 <button
                   onClick={() => {
                     const currentIndex = contents.findIndex(
-                      (c) => c.id === currentContent.id
+                      (c) => c.id === currentContent.id,
                     );
                     if (currentIndex < contents.length - 1) {
                       setCurrentContent(contents[currentIndex + 1]);
@@ -347,10 +395,11 @@ export default function LearnPage() {
                   disabled={
                     contents[contents.length - 1].id === currentContent.id
                   }
-                  className={`px-6 py-2 rounded-lg font-semibold ${contents[contents.length - 1].id === currentContent.id
+                  className={`px-6 py-2 rounded-lg font-semibold ${
+                    contents[contents.length - 1].id === currentContent.id
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "btn-primary"
-                    }`}
+                  }`}
                 >
                   Next →
                 </button>
@@ -367,6 +416,131 @@ export default function LearnPage() {
                   practice along with the video to maximize your learning.
                 </p>
               </div>
+
+              {/* Rating Section */}
+              <div className="mt-8 p-6 bg-white border border-gray-200 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4">Rate this Course</h3>
+                {userReview ? (
+                  <div>
+                    <p className="text-gray-600 mb-4">
+                      You rated this course {userReview.rating} out of 5 stars
+                    </p>
+                    <div className="flex gap-1 mb-4">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span
+                          key={star}
+                          className={`text-2xl ${
+                            star <= userReview.rating
+                              ? "text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                    {userReview.comment && (
+                      <p className="text-gray-700 mb-4 italic">
+                        "{userReview.comment}"
+                      </p>
+                    )}
+                    <button
+                      onClick={() => setShowRatingModal(true)}
+                      className="btn-secondary"
+                    >
+                      Update Review
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-gray-600 mb-4">
+                      Share your experience with this course
+                    </p>
+                    <button
+                      onClick={() => setShowRatingModal(true)}
+                      className="btn-primary"
+                    >
+                      Write a Review
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Rating Modal */}
+              {showRatingModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+                    <h3 className="text-2xl font-bold mb-4">
+                      Rate this Course
+                    </h3>
+
+                    {/* Star Rating */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Your Rating
+                      </label>
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRating(star)}
+                            className={`text-4xl transition-colors ${
+                              star <= rating
+                                ? "text-yellow-400 hover:text-yellow-500"
+                                : "text-gray-300 hover:text-gray-400"
+                            }`}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Comment */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Your Review (Optional)
+                      </label>
+                      <textarea
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        rows={4}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="Share your thoughts about this course..."
+                      />
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => {
+                          setShowRatingModal(false);
+                          if (userReview) {
+                            setRating(userReview.rating);
+                            setComment(userReview.comment || "");
+                          }
+                        }}
+                        className="flex-1 px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        disabled={submittingReview}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSubmitReview}
+                        disabled={rating === 0 || submittingReview}
+                        className={`flex-1 px-6 py-2 rounded-lg text-white font-semibold ${
+                          rating === 0 || submittingReview
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-primary-600 hover:bg-primary-700"
+                        }`}
+                      >
+                        {submittingReview ? "Submitting..." : "Submit Review"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         ) : (

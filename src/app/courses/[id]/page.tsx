@@ -11,7 +11,7 @@ import type { Course, CourseContent } from "@/types";
 export default function CourseDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, user, token } = useAuth();
   const courseId = params?.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
@@ -23,7 +23,7 @@ export default function CourseDetailsPage() {
     if (courseId) {
       loadCourseDetails();
     }
-  }, [courseId]);
+  }, [courseId, isAuthenticated]);
 
   const loadCourseDetails = async () => {
     if (!courseId) {
@@ -44,7 +44,7 @@ export default function CourseDetailsPage() {
 
       const courseResponse = await fetch(
         `${API_BASE_URL}/courses/${courseId}`,
-        { headers }
+        { headers },
       );
 
       if (!courseResponse.ok) {
@@ -61,7 +61,7 @@ export default function CourseDetailsPage() {
 
       // Fetch course content
       const contentResponse = await fetch(
-        `${API_BASE_URL}/courses/${courseId}/content`
+        `${API_BASE_URL}/courses/${courseId}/content`,
       );
 
       if (contentResponse.ok) {
@@ -81,6 +81,12 @@ export default function CourseDetailsPage() {
   };
 
   const handleEnroll = async () => {
+    // Check if user is the tutor of this course
+    if (user && course && course.tutorId === user.id) {
+      router.push(`/tutor/courses`);
+      return;
+    }
+
     // Check if user is logged in
     if (!isAuthenticated || !token) {
       router.push("/auth/login?redirect=/courses/" + courseId);
@@ -96,11 +102,15 @@ export default function CourseDetailsPage() {
         // Redirect to learning player on success
         router.push(`/student/learn/${courseId}`);
       } else {
-        setEnrollmentError(response.message || "Enrollment failed. Please try again.");
+        setEnrollmentError(
+          response.message || "Enrollment failed. Please try again.",
+        );
       }
     } catch (err: any) {
       console.error("Enrollment error:", err);
-      setEnrollmentError(err.message || "Failed to enroll. Please try again later.");
+      setEnrollmentError(
+        err.message || "Failed to enroll. Please try again later.",
+      );
     }
   };
 
@@ -173,10 +183,20 @@ export default function CourseDetailsPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white font-bold">
-              {course.tutor?.firstName
-                ? course.tutor.firstName.charAt(0)
-                : course.tutorName?.charAt(0) || "T"}
+            <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+              {course.tutor?.profileImage ? (
+                <img
+                  src={course.tutor.profileImage}
+                  alt={`${course.tutor.firstName} ${course.tutor.lastName}`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <>
+                  {course.tutor?.firstName
+                    ? course.tutor.firstName.charAt(0)
+                    : course.tutorName?.charAt(0) || "T"}
+                </>
+              )}
             </div>
             <div>
               <p className="text-sm text-gray-600">Instructor</p>
@@ -214,15 +234,24 @@ export default function CourseDetailsPage() {
               {enrollmentError}
             </div>
           )}
-          {course.isEnrolled ? (
-            <button disabled className="btn-primary w-full mb-4 opacity-50 cursor-not-allowed">
-              Already Enrolled
-            </button>
-          ) : (
-            <button onClick={handleEnroll} className="btn-primary w-full mb-4">
-              {isAuthenticated ? "Enroll Now" : "Login to Enroll"}
-            </button>
-          )}
+          <button
+            onClick={handleEnroll}
+            className={`w-full mb-4 ${
+              user && course && course.tutorId === user.id
+                ? "btn-secondary"
+                : course.isEnrolled
+                  ? "btn-secondary"
+                  : "btn-primary"
+            }`}
+          >
+            {user && course && course.tutorId === user.id
+              ? "View Course"
+              : course.isEnrolled
+                ? "Open Course"
+                : isAuthenticated
+                  ? "Enroll Now"
+                  : "Login to Enroll"}
+          </button>
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <span>✓</span>
@@ -241,20 +270,6 @@ export default function CourseDetailsPage() {
       </div>
 
       {/* Course Content */}
-
-      {/* Payment Modal */}
-      {course && (
-        <PaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          onSubmit={handlePaymentSubmit}
-          course={{
-            title: course.title,
-            price: course.price,
-          }}
-          isProcessing={isEnrolling}
-        />
-      )}
       <div className="mb-12">
         <h2 className="text-3xl font-bold mb-6">Course Content</h2>
         <div className="space-y-4">
@@ -270,9 +285,7 @@ export default function CourseDetailsPage() {
                 <div>
                   <h3 className="font-semibold">{content.title}</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>
-                      {content.type === "video" ? "🎥" : "📄"}
-                    </span>
+                    <span>{content.type === "video" ? "🎥" : "📄"}</span>
                     <span>{content.type.toUpperCase()}</span>
                     {content.duration && <span>• {content.duration} min</span>}
                   </div>

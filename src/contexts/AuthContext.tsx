@@ -19,6 +19,8 @@ interface AuthContextType {
   logout: () => void;
   hasRole: (role: UserRole) => boolean;
   refreshUser: () => Promise<void>;
+  updateUser: (updatedUser: User) => void;
+  switchRole: (role: UserRole) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -174,6 +176,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [token]);
 
+  const updateUser = useCallback((updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+  }, []);
+
+  const switchRole = useCallback(
+    async (role: UserRole): Promise<{ success: boolean; error?: string }> => {
+      if (!token || !user) {
+        return { success: false, error: "Not authenticated" };
+      }
+
+      // Check if user has this role
+      if (!user.roles.includes(role)) {
+        return { success: false, error: "You don't have this role" };
+      }
+
+      try {
+        const response = await authService.switchRole(token, role);
+        if (response.success && response.data?.user) {
+          setUser(response.data.user);
+          localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+          return { success: true };
+        }
+        return {
+          success: false,
+          error: response.message || "Failed to switch role",
+        };
+      } catch (error) {
+        console.error("Failed to switch role:", error);
+        return { success: false, error: "Failed to switch role" };
+      }
+    },
+    [token, user],
+  );
+
   const value: AuthContextType = {
     user,
     token,
@@ -184,6 +221,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     hasRole,
     refreshUser,
+    updateUser,
+    switchRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

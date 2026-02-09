@@ -160,7 +160,41 @@ const enrollmentService = {
   },
 
   /**
-   * Update token = getToken();
+   * Check if user is enrolled in a specific course
+   */
+  async checkEnrollment(courseId: number): Promise<{
+    success: boolean;
+    data?: { isEnrolled: boolean; enrollment: Enrollment | null };
+  }> {
+    try {
+      const token = getToken();
+      if (!token) {
+        return {
+          success: false,
+          data: { isEnrolled: false, enrollment: null },
+        };
+      }
+
+      const response = await apiClient.get<{
+        success: boolean;
+        data: { isEnrolled: boolean; enrollment: Enrollment | null };
+      }>(`/enrollments/check/${courseId}`, { token });
+
+      return {
+        success: response.success,
+        data: response.data,
+      };
+    } catch (error: any) {
+      console.error("Failed to check enrollment:", error);
+      return {
+        success: false,
+        data: { isEnrolled: false, enrollment: null },
+      };
+    }
+  },
+
+  /**
+   * Update enrollment progress
       if (!token) {
         return {
           success: false,
@@ -221,6 +255,78 @@ const enrollmentService = {
       return {
         success: false,
         message: "Failed to cancel enrollment",
+      };
+    }
+  },
+
+  /**
+   * Get all students enrolled in tutor's courses
+   */
+  async getTutorStudents(token: string): Promise<{
+    success: boolean;
+    message?: string;
+    data?: {
+      students: Array<{
+        enrollmentId: number;
+        enrolledAt: string;
+        progress: number;
+        completedAt?: string;
+        student: {
+          id: number;
+          firstName: string;
+          lastName: string;
+          email: string;
+          university?: string;
+          department?: string;
+          degree?: string;
+        };
+        course: {
+          id: number;
+          title: string;
+          thumbnail?: string;
+        };
+      }>;
+      totalStudents: number;
+    };
+  }> {
+    try {
+      const response = await apiClient.get<{
+        success: boolean;
+        message?: string;
+        data: {
+          students: Array<{
+            enrollmentId: number;
+            enrolledAt: string;
+            progress: number;
+            completedAt?: string;
+            student: {
+              id: number;
+              firstName: string;
+              lastName: string;
+              email: string;
+              university?: string;
+              department?: string;
+              degree?: string;
+            };
+            course: {
+              id: number;
+              title: string;
+              thumbnail?: string;
+            };
+          }>;
+          totalStudents: number;
+        };
+      }>("/enrollments/tutor/students", { token });
+
+      return {
+        success: response.success,
+        data: response.data,
+      };
+    } catch (error: any) {
+      console.error("Failed to load tutor students:", error);
+      return {
+        success: false,
+        message: "Failed to load enrolled students",
       };
     }
   },

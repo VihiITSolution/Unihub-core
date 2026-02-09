@@ -57,7 +57,6 @@ export default function Sidebar({
     { href: "/tutor/dashboard", label: "Dashboard", icon: "dashboard" },
     { href: "/tutor/courses", label: "My Courses", icon: "courses" },
     { href: "/tutor/create-course", label: "Create Course", icon: "add" },
-    { href: "/tutor/live-sessions", label: "Live Sessions", icon: "video" },
     { href: "/tutor/students", label: "Students", icon: "users" },
     { href: "/tutor/earnings", label: "Earnings", icon: "money" },
     { href: "/tutor/analytics", label: "Analytics", icon: "chart" },
@@ -480,11 +479,19 @@ export default function Sidebar({
         {/* User Profile Section */}
         <div className="border-t border-white/10 p-4">
           <div className="flex items-center gap-3">
-            <div className="avatar flex-shrink-0">
-              <span>
-                {user?.firstName?.[0] || ""}
-                {user?.lastName?.[0] || ""}
-              </span>
+            <div className="avatar flex-shrink-0 overflow-hidden">
+              {user?.profileImage ? (
+                <img
+                  src={user.profileImage}
+                  alt={`${user.firstName} ${user.lastName}`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span>
+                  {user?.firstName?.[0] || ""}
+                  {user?.lastName?.[0] || ""}
+                </span>
+              )}
             </div>
             {isOpen && (
               <div className="flex-1 min-w-0 animate-fade-in">

@@ -168,30 +168,6 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
-
-      {/* Recommendations */}
-      <div className="mt-16">
-        <h2 className="text-3xl font-bold mb-6">Recommended for You</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="card">
-              <div className="w-full h-40 bg-gradient-to-r from-secondary-400 to-primary-400 rounded-lg mb-4"></div>
-              <h3 className="text-lg font-semibold mb-2">
-                Advanced Course {i}
-              </h3>
-              <p className="text-gray-600 mb-4 text-sm">
-                Take your skills to the next level
-              </p>
-              <Link
-                href={`/courses/${i}`}
-                className="text-primary-600 hover:underline"
-              >
-                View Course →
-              </Link>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

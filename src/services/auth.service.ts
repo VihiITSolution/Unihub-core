@@ -1,5 +1,5 @@
-import { apiClient } from '@/lib/api-client';
-import type { ApiResponse, User, AuthState, StudentProfile } from '@/types';
+import { apiClient } from "@/lib/api-client";
+import type { ApiResponse, User, AuthState, StudentProfile } from "@/types";
 
 export interface LoginCredentials {
   email: string;
@@ -24,8 +24,8 @@ export interface RegisterData {
   lastName: string;
   email: string;
   password: string;
-  roles: ('student' | 'tutor' | 'vendor' | 'admin')[];
-  primaryRole?: 'student' | 'tutor' | 'vendor' | 'admin';
+  roles: ("student" | "tutor" | "vendor" | "admin")[];
+  primaryRole?: "student" | "tutor" | "vendor" | "admin";
   phoneNumber?: string;
   studentProfile?: StudentProfileData;
 }
@@ -36,28 +36,85 @@ export interface AuthResponse {
 }
 
 export const authService = {
-  async login(credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> {
-    return apiClient.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
+  async login(
+    credentials: LoginCredentials,
+  ): Promise<ApiResponse<AuthResponse>> {
+    return apiClient.post<ApiResponse<AuthResponse>>(
+      "/auth/login",
+      credentials,
+    );
   },
 
   async register(data: RegisterData): Promise<ApiResponse<AuthResponse>> {
-    return apiClient.post<ApiResponse<AuthResponse>>('/auth/register', data);
+    return apiClient.post<ApiResponse<AuthResponse>>("/auth/register", data);
   },
 
   async logout(token: string): Promise<ApiResponse<null>> {
-    return apiClient.post<ApiResponse<null>>('/auth/logout', {}, { token });
+    return apiClient.post<ApiResponse<null>>("/auth/logout", {}, { token });
   },
 
   async getCurrentUser(token: string): Promise<ApiResponse<{ user: User }>> {
-    return apiClient.get<ApiResponse<{ user: User }>>('/auth/profile', { token });
+    return apiClient.get<ApiResponse<{ user: User }>>("/auth/profile", {
+      token,
+    });
   },
 
   async refreshToken(token: string): Promise<ApiResponse<{ token: string }>> {
     return apiClient.post<ApiResponse<{ token: string }>>(
-      '/auth/refresh',
+      "/auth/refresh",
       {},
-      { token }
+      { token },
+    );
+  },
+
+  async updateProfile(
+    token: string,
+    data: {
+      firstName?: string;
+      lastName?: string;
+      phoneNumber?: string;
+      bio?: string;
+      profileImage?: string;
+    },
+  ): Promise<ApiResponse<{ user: User }>> {
+    return apiClient.put<ApiResponse<{ user: User }>>("/auth/profile", data, {
+      token,
+    });
+  },
+
+  async uploadProfilePhoto(
+    token: string,
+    file: File,
+  ): Promise<ApiResponse<{ user: User; profileImage: string }>> {
+    const formData = new FormData();
+    formData.append("profileImage", file);
+
+    const response = await fetch(
+      "http://localhost:5000/api/auth/profile/photo",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to upload profile photo");
+    }
+
+    return response.json();
+  },
+
+  async switchRole(
+    token: string,
+    primaryRole: "student" | "tutor" | "vendor" | "admin",
+  ): Promise<ApiResponse<{ user: User }>> {
+    return apiClient.post<ApiResponse<{ user: User }>>(
+      "/auth/switch-role",
+      { primaryRole },
+      { token },
     );
   },
 };
-

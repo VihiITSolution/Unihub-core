@@ -5,16 +5,18 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, useDashboardPath } from "@/contexts/AuthContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const { user, logout, isAuthenticated } = useAuth();
-  const router = useRouter();
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const { user, isAuthenticated, logout, switchRole } = useAuth();
+  const dashboardPath = useDashboardPath();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,14 +29,18 @@ export default function Header() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
         setIsProfileOpen(false);
       }
     };
 
     if (isProfileOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isProfileOpen]);
 
@@ -140,9 +146,19 @@ export default function Header() {
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-ocean-500 to-ocean-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                      {user.firstName?.[0]}
-                      {user.lastName?.[0]}
+                    <div className="w-8 h-8 bg-gradient-to-br from-ocean-500 to-ocean-600 rounded-full flex items-center justify-center text-white text-sm font-medium overflow-hidden">
+                      {user.profileImage ? (
+                        <img
+                          src={user.profileImage}
+                          alt={`${user.firstName} ${user.lastName}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <>
+                          {user.firstName?.[0]}
+                          {user.lastName?.[0]}
+                        </>
+                      )}
                     </div>
                     <span className="text-sm font-medium text-gray-700">
                       {user.firstName}
@@ -167,17 +183,143 @@ export default function Header() {
                   {/* Dropdown Menu */}
                   {isProfileOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900">
-                          {user.firstName} {user.lastName}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {user.email}
-                        </p>
-                        <p className="text-xs text-ocean-600 mt-1 capitalize">
-                          {user.primaryRole}
-                        </p>
+                      <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ocean-500 to-ocean-600 flex items-center justify-center text-white text-sm font-medium overflow-hidden flex-shrink-0">
+                          {user.profileImage ? (
+                            <img
+                              src={user.profileImage}
+                              alt={`${user.firstName} ${user.lastName}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <>
+                              {user.firstName?.[0]}
+                              {user.lastName?.[0]}
+                            </>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {user.firstName} {user.lastName}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {user.email}
+                          </p>
+                          <p className="text-xs text-ocean-600 mt-1 capitalize">
+                            {user.primaryRole}
+                          </p>
+                        </div>
                       </div>
+
+                      {/* Role Switcher - Show only if user has multiple roles */}
+                      {user.roles.length > 1 && (
+                        <>
+                          <div className="px-4 py-2 border-b border-gray-100">
+                            <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                              Switch Mode
+                            </p>
+                            <div className="space-y-1">
+                              {user.roles.includes("student") && (
+                                <button
+                                  onClick={async () => {
+                                    if (user.primaryRole !== "student") {
+                                      const result =
+                                        await switchRole("student");
+                                      if (result.success) {
+                                        router.push("/student/dashboard");
+                                        setIsProfileOpen(false);
+                                      }
+                                    }
+                                  }}
+                                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors ${
+                                    user.primaryRole === "student"
+                                      ? "bg-blue-50 text-blue-700 font-medium"
+                                      : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                      />
+                                    </svg>
+                                    Student Mode
+                                  </span>
+                                  {user.primaryRole === "student" && (
+                                    <svg
+                                      className="w-4 h-4 text-blue-600"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                  )}
+                                </button>
+                              )}
+                              {user.roles.includes("tutor") && (
+                                <button
+                                  onClick={async () => {
+                                    if (user.primaryRole !== "tutor") {
+                                      const result = await switchRole("tutor");
+                                      if (result.success) {
+                                        router.push("/tutor/dashboard");
+                                        setIsProfileOpen(false);
+                                      }
+                                    }
+                                  }}
+                                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors ${
+                                    user.primaryRole === "tutor"
+                                      ? "bg-green-50 text-green-700 font-medium"
+                                      : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                      />
+                                    </svg>
+                                    Tutor Mode
+                                  </span>
+                                  {user.primaryRole === "tutor" && (
+                                    <svg
+                                      className="w-4 h-4 text-green-600"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
 
                       <Link
                         href={dashboardPath}
@@ -222,7 +364,7 @@ export default function Header() {
                       </Link>
 
                       <button
-                        onClick={handleLogout}
+                        onClick={logout}
                         className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                       >
                         <svg
@@ -335,12 +477,178 @@ export default function Header() {
             </div>
 
             <div className="mt-4 pt-4 border-t space-y-3">
-              <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" className="w-full border-ocean-400 text-ocean-600 hover:bg-ocean-50">
-                  Login
-                </Button>
-              </Link>
+              {isAuthenticated && user ? (
+                <>
+                  <div className="px-4 py-2 bg-gray-50 rounded-lg flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ocean-500 to-ocean-600 flex items-center justify-center text-white text-sm font-medium overflow-hidden flex-shrink-0">
+                      {user.profileImage ? (
+                        <img
+                          src={user.profileImage}
+                          alt={`${user.firstName} ${user.lastName}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <>
+                          {user.firstName?.[0]}
+                          {user.lastName?.[0]}
+                        </>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
 
+                  {/* Role Switcher for Mobile - Show only if user has multiple roles */}
+                  {user.roles.length > 1 && (
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg">
+                      <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                        Switch Mode
+                      </p>
+                      <div className="space-y-2">
+                        {user.roles.includes("student") && (
+                          <button
+                            onClick={async () => {
+                              if (user.primaryRole !== "student") {
+                                const result = await switchRole("student");
+                                if (result.success) {
+                                  router.push("/student/dashboard");
+                                  setIsMenuOpen(false);
+                                }
+                              }
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors ${
+                              user.primaryRole === "student"
+                                ? "bg-blue-50 text-blue-700 font-medium"
+                                : "bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                />
+                              </svg>
+                              Student Mode
+                            </span>
+                            {user.primaryRole === "student" && (
+                              <svg
+                                className="w-4 h-4 text-blue-600"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                        )}
+                        {user.roles.includes("tutor") && (
+                          <button
+                            onClick={async () => {
+                              if (user.primaryRole !== "tutor") {
+                                const result = await switchRole("tutor");
+                                if (result.success) {
+                                  router.push("/tutor/dashboard");
+                                  setIsMenuOpen(false);
+                                }
+                              }
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors ${
+                              user.primaryRole === "tutor"
+                                ? "bg-green-50 text-green-700 font-medium"
+                                : "bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                />
+                              </svg>
+                              Tutor Mode
+                            </span>
+                            {user.primaryRole === "tutor" && (
+                              <svg
+                                className="w-4 h-4 text-green-600"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <Link
+                    href={dashboardPath}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Button variant="outline" className="w-full">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                    <Button
+                      variant="outline"
+                      className="w-full border-ocean-400 text-ocean-600 hover:bg-ocean-50"
+                    >
+                      Login
+                    </Button>
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Button
+                      variant="primary"
+                      className="w-full bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0"
+                    >
+                      Sign Up
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
