@@ -76,7 +76,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       `}</style>
 
       <div className="fixed inset-0 bg-gray-50 flex">
-        <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+        <Sidebar
+          isOpen={sidebarOpen}
+          onToggle={toggleSidebar}
+          userType={
+            user?.primaryRole as "student" | "tutor" | "admin" | undefined
+          }
+        />
 
         {/* Main Content */}
         <div

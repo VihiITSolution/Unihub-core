@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
 import type { Course, CourseContent } from "@/types";
+import PaymentModal, { PaymentData } from "@/components/ui/PaymentModal";
 
 export default function CourseDetailsPage() {
   const params = useParams();
@@ -18,6 +19,8 @@ export default function CourseDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [enrollmentError, setEnrollmentError] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
 
   useEffect(() => {
     if (courseId) {
@@ -80,7 +83,7 @@ export default function CourseDetailsPage() {
     }
   };
 
-  const handleEnroll = async () => {
+  const handleEnroll = () => {
     // Check if user is the tutor of this course
     if (user && course && course.tutorId === user.id) {
       router.push(`/tutor/courses`);
@@ -93,12 +96,41 @@ export default function CourseDetailsPage() {
       return;
     }
 
+    // If already enrolled, go to learning page
+    if (course?.isEnrolled) {
+      router.push(`/student/learn/${courseId}`);
+      return;
+    }
+
+    // Show payment modal for paid courses
+    if (course && course.price > 0) {
+      setShowPaymentModal(true);
+    } else {
+      // For free courses, enroll directly
+      handlePaymentSubmit({
+        cardNumber: "",
+        cardName: "",
+        expiryDate: "",
+        cvv: "",
+        paymentMethod: "free",
+      });
+    }
+  };
+
+  const handlePaymentSubmit = async (paymentData: PaymentData) => {
+    if (!course) return;
+
     try {
+      setIsEnrolling(true);
       setEnrollmentError(null);
-      // Call enrollment API
-      const response = await courseService.enrollInCourse(courseId, token);
+
+      // TODO: Process payment with payment gateway
+      // For now, just proceed with enrollment
+
+      const response = await courseService.enrollInCourse(courseId, token!);
 
       if (response.success) {
+        setShowPaymentModal(false);
         // Redirect to learning player on success
         router.push(`/student/learn/${courseId}`);
       } else {
@@ -111,6 +143,8 @@ export default function CourseDetailsPage() {
       setEnrollmentError(
         err.message || "Failed to enroll. Please try again later.",
       );
+    } finally {
+      setIsEnrolling(false);
     }
   };
 
@@ -268,6 +302,20 @@ export default function CourseDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {course && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onSubmit={handlePaymentSubmit}
+          course={{
+            title: course.title,
+            price: course.price,
+          }}
+          isProcessing={isEnrolling}
+        />
+      )}
 
       {/* Course Content */}
       <div className="mb-12">

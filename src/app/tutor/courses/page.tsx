@@ -44,13 +44,19 @@ export default function TutorCoursesPage() {
       const response = await courseService.getTutorCourses(token);
 
       if (response.success && response.data) {
-        setCourses(response.data);
+        // Handle if response.data is an object with courses array or directly an array
+        const coursesData = Array.isArray(response.data)
+          ? response.data
+          : (response.data as any).courses || [];
+        setCourses(coursesData);
       } else {
         setError("Failed to load courses");
+        setCourses([]);
       }
     } catch (error) {
       console.error("Failed to load courses:", error);
       setError("Failed to load courses");
+      setCourses([]);
     } finally {
       setLoading(false);
     }
