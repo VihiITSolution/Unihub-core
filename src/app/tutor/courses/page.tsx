@@ -172,9 +172,44 @@ export default function TutorCoursesPage() {
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {course.title}
-                    </h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {course.title}
+                        </h3>
+                        {/* Approval Status Badge */}
+                        {course.approvalStatus === "approved" && (
+                          <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                            ✓ Approved
+                          </span>
+                        )}
+                        {course.approvalStatus === "pending" && (
+                          <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
+                            ⏳ Pending Review
+                          </span>
+                        )}
+                        {course.approvalStatus === "rejected" && (
+                          <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                            ✗ Rejected
+                          </span>
+                        )}
+                        {course.approvalStatus === "draft" && (
+                          <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
+                            📝 Draft
+                          </span>
+                        )}
+                      </div>
+                      {/* Rejection Reason */}
+                      {course.approvalStatus === "rejected" &&
+                        course.rejectionReason && (
+                          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-sm text-red-700">
+                              <strong>Rejection Reason:</strong>{" "}
+                              {course.rejectionReason}
+                            </p>
+                          </div>
+                        )}
+                    </div>
                     <div className="flex items-center gap-1 ml-4">
                       <Link
                         href={`/tutor/edit-course/${course.id}`}
