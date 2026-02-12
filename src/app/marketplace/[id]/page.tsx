@@ -149,7 +149,7 @@ export default function ProductDetailsPage() {
           <h1 className="text-4xl font-bold mb-4">{product.title}</h1>
 
           <div className="text-5xl font-bold text-primary-600 mb-6">
-            ${product.price.toFixed(2)}
+            ${Number(product.price).toFixed(2)}
           </div>
 
           <p className="text-gray-600 mb-6 leading-relaxed text-lg">
@@ -209,7 +209,7 @@ export default function ProductDetailsPage() {
                   </button>
                 </div>
                 <span className="text-gray-600 text-sm">
-                  Total: ${(product.price * quantity).toFixed(2)}
+                  Total: ${(Number(product.price) * quantity).toFixed(2)}
                 </span>
               </div>
 
@@ -250,8 +250,6 @@ export default function ProductDetailsPage() {
               <p className="text-sm mt-1">This item is currently unavailable</p>
             </div>
           )}
-                  </button>
-                </div>
           {/* Features */}
           <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg">
             <h3 className="font-semibold text-green-900 mb-3">Buyer Protection</h3>
