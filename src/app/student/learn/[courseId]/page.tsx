@@ -639,6 +639,7 @@ export default function LearnPage() {
                           or{" "}
                           <button
                             onClick={() =>
+                              currentContent.url &&
                               handleDownloadPdf(
                                 currentContent.url,
                                 currentContent.title,
