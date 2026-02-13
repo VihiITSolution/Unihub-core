@@ -189,9 +189,9 @@ export default function ProductDetailsPage() {
             <div className="flex justify-between items-center">
               <span className="text-gray-600 font-medium">Seller:</span>
               <span className="font-semibold">
-                {product.seller?.vendorProfile?.shopName ||
-                  product.seller?.name ||
-                  "Unknown Seller"}
+                {product.seller
+                  ? `${product.seller.firstName} ${product.seller.lastName}`
+                  : "Unknown Seller"}
               </span>
             </div>
             {product.soldCount > 0 && (
