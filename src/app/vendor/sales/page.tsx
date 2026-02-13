@@ -168,7 +168,7 @@ export default function VendorSalesPage() {
                 <div className="text-right">
                   <div className="text-2xl font-bold text-primary-600">
                     $
-                    {order.totalAmount?.toFixed(2) ||
+                    {order.totalPrice?.toFixed(2) ||
                       order.item?.price.toFixed(2)}
                   </div>
                   <div className="text-sm text-gray-600">
@@ -191,7 +191,10 @@ export default function VendorSalesPage() {
                   Buyer
                 </div>
                 <div className="text-sm">
-                  {order.buyer?.name || "N/A"} ({order.buyer?.email || "N/A"})
+                  {order.buyer
+                    ? `${order.buyer.firstName} ${order.buyer.lastName}`
+                    : "N/A"}{" "}
+                  ({order.buyer?.email || "N/A"})
                 </div>
               </div>
 
