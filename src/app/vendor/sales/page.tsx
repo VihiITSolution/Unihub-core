@@ -6,7 +6,12 @@ import { useRouter } from "next/navigation";
 import { marketplaceService } from "@/services/marketplace.service";
 import type { Order } from "@/types";
 
-type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+type OrderStatus =
+  | "pending"
+  | "confirmed"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
 
 export default function VendorSalesPage() {
   const { user, token } = useAuth();
@@ -46,11 +51,18 @@ export default function VendorSalesPage() {
     loadOrders();
   }, [filter]);
 
-  const handleStatusUpdate = async (orderId: number, newStatus: OrderStatus) => {
+  const handleStatusUpdate = async (
+    orderId: number,
+    newStatus: OrderStatus,
+  ) => {
     if (!token) return;
 
     try {
-      await marketplaceService.updateOrderStatus(orderId, newStatus, token);
+      await marketplaceService.updateOrderStatus(
+        orderId,
+        { status: newStatus },
+        token,
+      );
       await loadOrders();
     } catch (error) {
       console.error("Failed to update order status:", error);
@@ -60,21 +72,31 @@ export default function VendorSalesPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending": return "bg-yellow-100 text-yellow-800";
-      case "confirmed": return "bg-blue-100 text-blue-800";
-      case "shipped": return "bg-purple-100 text-purple-800";
-      case "delivered": return "bg-green-100 text-green-800";
-      case "cancelled": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "confirmed":
+        return "bg-blue-100 text-blue-800";
+      case "shipped":
+        return "bg-purple-100 text-purple-800";
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getNextStatus = (currentStatus: string): OrderStatus | null => {
     switch (currentStatus) {
-      case "pending": return "confirmed";
-      case "confirmed": return "shipped";
-      case "shipped": return "delivered";
-      default: return null;
+      case "pending":
+        return "confirmed";
+      case "confirmed":
+        return "shipped";
+      case "shipped":
+        return "delivered";
+      default:
+        return null;
     }
   };
 
@@ -95,7 +117,14 @@ export default function VendorSalesPage() {
 
       {/* Filter Tabs */}
       <div className="flex gap-4 mb-6 border-b overflow-x-auto">
-        {["all", "pending", "confirmed", "shipped", "delivered", "cancelled"].map((status) => (
+        {[
+          "all",
+          "pending",
+          "confirmed",
+          "shipped",
+          "delivered",
+          "cancelled",
+        ].map((status) => (
           <button
             key={status}
             onClick={() => setFilter(status as any)}
@@ -115,9 +144,7 @@ export default function VendorSalesPage() {
         <div className="card text-center py-12">
           <div className="text-6xl mb-4">📦</div>
           <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
-          <p className="text-gray-600">
-            Your customer orders will appear here
-          </p>
+          <p className="text-gray-600">Your customer orders will appear here</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -127,7 +154,9 @@ export default function VendorSalesPage() {
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-lg font-semibold">Order #{order.id}</h3>
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
+                    <span
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}
+                    >
                       {order.status}
                     </span>
                   </div>
@@ -138,7 +167,9 @@ export default function VendorSalesPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-primary-600">
-                    ${order.totalAmount?.toFixed(2) || order.item?.price.toFixed(2)}
+                    $
+                    {order.totalAmount?.toFixed(2) ||
+                      order.item?.price.toFixed(2)}
                   </div>
                   <div className="text-sm text-gray-600">
                     Qty: {order.quantity}
@@ -156,7 +187,9 @@ export default function VendorSalesPage() {
 
               {/* Buyer Info */}
               <div className="mb-4">
-                <div className="text-sm font-medium text-gray-700 mb-1">Buyer</div>
+                <div className="text-sm font-medium text-gray-700 mb-1">
+                  Buyer
+                </div>
                 <div className="text-sm">
                   {order.buyer?.name || "N/A"} ({order.buyer?.email || "N/A"})
                 </div>
@@ -167,7 +200,12 @@ export default function VendorSalesPage() {
                 <div className="flex gap-2 pt-4 border-t">
                   {getNextStatus(order.status) && (
                     <button
-                      onClick={() => handleStatusUpdate(order.id, getNextStatus(order.status)!)}
+                      onClick={() =>
+                        handleStatusUpdate(
+                          order.id,
+                          getNextStatus(order.status)!,
+                        )
+                      }
                       className="btn-primary text-sm"
                     >
                       Mark as {getNextStatus(order.status)}
