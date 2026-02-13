@@ -4,23 +4,39 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button, Card, Badge } from "@/components/ui";
 import { courseService } from "@/services/course.service";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/types";
+import { API_BASE_URL } from "@/lib/constants";
 
 export default function Home() {
+  const { user, token, isAuthenticated } = useAuth();
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadFeaturedCourses();
-  }, []);
+  }, [isAuthenticated, token]);
 
   const loadFeaturedCourses = async () => {
     try {
       setLoading(true);
-      const response = await courseService.getCourses({ limit: 3, page: 1 });
-      if (response.success && response.data) {
-        const coursesData = (response.data as any).courses || response.data;
-        setFeaturedCourses(coursesData.slice(0, 3));
+
+      // Fetch with authentication header if user is logged in
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/courses?limit=3&page=1`, {
+        headers,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          const coursesData = (result.data as any).courses || result.data;
+          setFeaturedCourses(coursesData.slice(0, 3));
+        }
       }
     } catch (error) {
       console.error("Failed to load featured courses:", error);
@@ -48,7 +64,7 @@ export default function Home() {
       courses: 189,
       color: "bg-green-100 text-green-700",
     },
-    
+
     {
       name: "Business & Management",
       icon: "💼",
@@ -84,7 +100,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-fade-in">
               <Badge variant="primary" className="mb-6">
-                 Sri Lanka's #1 University Student Platform
+                Sri Lanka's #1 University Student Platform
               </Badge>
               <h1 className="heading-1 text-gray-900 mb-6">
                 Kuppi Sessions & Academic Marketplace for University Students
@@ -96,12 +112,12 @@ export default function Home() {
               </p>
               <div className="flex gap-4 flex-wrap">
                 <Link href="/courses">
-                  <Button variant="primary" size="lg" >
+                  <Button variant="primary" size="lg">
                     Browse Kuppi Sessions
                   </Button>
                 </Link>
                 <Link href="/tutor/dashboard">
-                  <Button variant="outline" size="lg" >
+                  <Button variant="outline" size="lg">
                     Create Kuppi
                   </Button>
                 </Link>
@@ -286,9 +302,23 @@ export default function Home() {
                             Rs. {course.price}
                           </span>
                         </div>
-                        <Button variant="primary" size="sm">
-                          Enroll
-                        </Button>
+                        {user && course.tutorId === user.id ? (
+                          <Link href={`/tutor/edit-course/${course.id}`}>
+                            <Button variant="secondary" size="sm">
+                              Manage
+                            </Button>
+                          </Link>
+                        ) : course.isEnrolled ? (
+                          <Link href={`/student/learn/${course.id}`}>
+                            <Button variant="success" size="sm">
+                              {course.price === 0 ? "View Course" : "Watch Now"}
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button variant="primary" size="sm">
+                            Enroll Now
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </Card>

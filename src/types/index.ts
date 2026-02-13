@@ -136,6 +136,7 @@ export interface CourseContent {
   title: string;
   type: "video" | "pdf";
   url?: string;
+  youtubeVideoId?: string;
   duration?: number;
   order: number;
 }

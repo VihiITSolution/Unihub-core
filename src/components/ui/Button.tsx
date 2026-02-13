@@ -3,7 +3,7 @@ import Link from "next/link";
 
 interface ButtonProps {
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "outline" | "ghost";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "success";
   size?: "sm" | "md" | "lg";
   href?: string;
   onClick?: () => void;
@@ -35,6 +35,8 @@ export const Button: React.FC<ButtonProps> = ({
     outline:
       "border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500",
     ghost: "text-gray-700 hover:bg-gray-100 focus:ring-gray-500",
+    success:
+      "bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md focus:ring-green-500",
   };
 
   const sizes = {

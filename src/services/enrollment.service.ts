@@ -195,30 +195,14 @@ const enrollmentService = {
 
   /**
    * Update enrollment progress
-      if (!token) {
-        return {
-          success: false,
-          message: "Authentication required",
-        };
-      }
-
-      const response = await apiClient.put<{
-        success: boolean;
-        message: string;
-      }>(`/enrollments/${enrollmentId}/progress`, { progress, status }, { token
+   */
+  async updateProgress(
+    enrollmentId: number,
     progress: number,
     status?: string,
   ): Promise<{ success: boolean; message?: string }> {
     try {
-      const response = await apiClient.put<{
-        success: boolean;
-        message: string;
-      }>(`/enrollments/${enrollmentId}/progress`, { progress, status });
-      return {
-        success: response.success,
-        message: response.message,
-      };
-    } catch token = getToken();
+      const token = getToken();
       if (!token) {
         return {
           success: false,
@@ -226,10 +210,23 @@ const enrollmentService = {
         };
       }
 
-      const response = await apiClient.delete<{
+      const response = await apiClient.put<{
         success: boolean;
         message: string;
-      }>(`/enrollments/${enrollmentId}`, { token }
+      }>(
+        `/enrollments/${enrollmentId}/progress`,
+        { progress, status },
+        { token },
+      );
+
+      return {
+        success: response.success,
+        message: response.message,
+      };
+    } catch (error: any) {
+      console.error("Failed to update progress:", error);
+      return {
+        success: false,
         message: "Failed to update progress",
       };
     }

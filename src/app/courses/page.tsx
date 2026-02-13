@@ -6,10 +6,10 @@ import { Button, Card, Badge, Input, Loading } from "@/components/ui";
 import { courseService } from "@/services/course.service";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/types";
-import { BACKEND_URL } from "@/lib/constants";
+import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 
 export default function CoursesPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +53,7 @@ export default function CoursesPage() {
     sortBy,
     searchQuery,
     pagination.page,
+    token,
   ]);
 
   const loadCourses = async () => {
@@ -78,17 +79,37 @@ export default function CoursesPage() {
         }
       }
 
-      const response = await courseService.getCourses(filters);
+      // Fetch with authentication header if user is logged in
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
 
-      if (response.success && response.data) {
-        // Handle if response.data is an object with courses array or directly an array
-        const coursesData = Array.isArray(response.data)
-          ? response.data
-          : response.data.courses || [];
-        setCourses(coursesData);
+      const queryParams = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, String(value));
+        }
+      });
+      const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
+
+      const response = await fetch(`${API_BASE_URL}/courses${query}`, {
+        headers,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          const coursesData = Array.isArray(result.data)
+            ? result.data
+            : result.data.courses || [];
+          setCourses(coursesData);
+        } else {
+          console.error("Failed to fetch courses:", result.message);
+          setCourses([]);
+        }
       } else {
-        // Fallback or error handling
-        console.error("Failed to fetch courses:", (response as any).message);
+        console.error("Failed to fetch courses:", response.status);
         setCourses([]);
       }
     } catch (error) {
@@ -366,18 +387,34 @@ export default function CoursesPage() {
                               Rs. {course.price}
                             </span>
                           </div>
-                          <Button
-                            variant={
-                              user && course.tutorId === user.id
-                                ? "secondary"
-                                : "primary"
-                            }
-                            size="sm"
-                          >
-                            {user && course.tutorId === user.id
-                              ? "View"
-                              : "Enroll Now"}
-                          </Button>
+                          {user && course.tutorId === user.id ? (
+                            <Link href={`/tutor/edit-course/${course.id}`}>
+                              <Button variant="secondary" size="sm">
+                                Manage
+                              </Button>
+                            </Link>
+                          ) : course.isEnrolled ? (
+                            <Link href={`/student/learn/${course.id}`}>
+                              <Button variant="success" size="sm">
+                                {course.price === 0
+                                  ? "View Course"
+                                  : "Watch Now"}
+                              </Button>
+                            </Link>
+                          ) : (
+                            <Button
+                              variant={
+                                user && course.tutorId === user.id
+                                  ? "secondary"
+                                  : "primary"
+                              }
+                              size="sm"
+                            >
+                              {user && course.tutorId === user.id
+                                ? "View"
+                                : "Enroll Now"}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </Card>

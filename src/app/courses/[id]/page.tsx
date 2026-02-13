@@ -187,7 +187,14 @@ export default function CourseDetailsPage() {
       {/* Course Header */}
       <div className="grid md:grid-cols-3 gap-8 mb-12">
         <div className="md:col-span-2">
-          <h1 className="text-4xl font-bold mb-4">{course.title}</h1>
+          <div className="flex items-center gap-3 mb-4">
+            <h1 className="text-4xl font-bold">{course.title}</h1>
+            {course.isEnrolled && (
+              <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
+                ✓ Enrolled
+              </span>
+            )}
+          </div>
           <p className="text-xl text-gray-600 mb-6">{course.description}</p>
 
           <div className="flex items-center gap-4 mb-4">
@@ -274,14 +281,16 @@ export default function CourseDetailsPage() {
               user && course && course.tutorId === user.id
                 ? "btn-secondary"
                 : course.isEnrolled
-                  ? "btn-secondary"
+                  ? "bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200"
                   : "btn-primary"
             }`}
           >
             {user && course && course.tutorId === user.id
-              ? "View Course"
+              ? "Manage Course"
               : course.isEnrolled
-                ? "Open Course"
+                ? course.price === 0
+                  ? "View Course"
+                  : "Continue Learning"
                 : isAuthenticated
                   ? "Enroll Now"
                   : "Login to Enroll"}
