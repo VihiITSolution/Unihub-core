@@ -114,7 +114,11 @@ export default function CoursesPage() {
       }
     } catch (error) {
       console.error("Failed to load courses:", error);
-      setError(error.message || "Failed to load courses. Please try again.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load courses. Please try again.",
+      );
       setCourses([]);
     } finally {
       setLoading(false);
