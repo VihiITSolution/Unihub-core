@@ -37,7 +37,7 @@ export default function EditCoursePage() {
     description: "",
     price: "",
     category: "",
-    level: "beginner",
+    level: "beginner" as "beginner" | "intermediate" | "advanced",
     duration: "",
   });
 
