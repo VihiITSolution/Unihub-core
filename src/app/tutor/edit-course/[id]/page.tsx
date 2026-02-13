@@ -88,7 +88,7 @@ export default function EditCoursePage() {
       console.log("Course response:", response);
 
       if (response.success && response.data) {
-        const course = response.data.course || response.data;
+        const course = response.data;
         console.log("Course data:", course);
 
         setFormData({
