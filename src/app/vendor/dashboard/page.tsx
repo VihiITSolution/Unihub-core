@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { vendorService } from "@/services/vendor.service";
 import { marketplaceService } from "@/services/marketplace.service";
+import type { Order, PaginatedResponse } from "@/types";
 import Link from "next/link";
 
 interface DashboardStats {
