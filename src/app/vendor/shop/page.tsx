@@ -40,7 +40,7 @@ export default function VendorShopSettingsPage() {
       setLoading(true);
       const response = await vendorService.getMyProfile(token);
       if (response.success && response.data) {
-        setFormData(response.data.profile);
+        setFormData(response.data.vendorProfile);
       }
     } catch (error) {
       console.error("Failed to load profile:", error);
