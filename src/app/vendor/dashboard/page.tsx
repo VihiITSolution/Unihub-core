@@ -26,7 +26,7 @@ export default function VendorDashboardPage() {
     totalSales: 0,
     totalRevenue: 0,
     pendingOrders: 0,
-    averageRating: 0
+    averageRating: 0,
   });
 
   useEffect(() => {
@@ -42,30 +42,39 @@ export default function VendorDashboardPage() {
 
     try {
       setLoading(true);
-      
+
       // Load vendor stats
       const vendorStats = await vendorService.getStats(token);
-      
+
       // Load listings
       const listings = await marketplaceService.getMyListings(token);
-      
+
       // Load sales - handle if there are none
-      let sales = { success: true, data: [] };
+      let sales: PaginatedResponse<Order> = {
+        success: true,
+        data: [],
+        pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+      };
       try {
-        sales = await marketplaceService.getMySales({ status: 'pending' }, token);
+        sales = await marketplaceService.getMySales(
+          { status: "pending" },
+          token,
+        );
       } catch (error) {
         // Ignore errors for empty sales
-        console.log('No sales found (expected for new vendors)');
+        console.log("No sales found (expected for new vendors)");
       }
 
       if (vendorStats.success && vendorStats.data) {
         setStats({
           totalListings: listings.data?.items?.length || 0,
-          activeListings: listings.data?.items?.filter((item: any) => item.isAvailable).length || 0,
+          activeListings:
+            listings.data?.items?.filter((item: any) => item.isAvailable)
+              .length || 0,
           totalSales: vendorStats.data.stats.totalSales,
           totalRevenue: vendorStats.data.stats.totalRevenue,
           pendingOrders: sales.data?.length || 0,
-          averageRating: vendorStats.data.stats.averageRating
+          averageRating: vendorStats.data.stats.averageRating,
         });
       }
     } catch (error) {
@@ -87,43 +96,56 @@ export default function VendorDashboardPage() {
     <div className="container-custom py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Vendor Dashboard</h1>
-        <p className="text-gray-600">Welcome back! Here's your shop overview.</p>
+        <p className="text-gray-600">
+          Welcome back! Here's your shop overview.
+        </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="card bg-gradient-to-br from-blue-50 to-blue-100">
-          <div className="text-sm text-blue-600 font-medium mb-1">Total Listings</div>
-          <div className="text-3xl font-bold text-blue-900">{stats.totalListings}</div>
+          <div className="text-sm text-blue-600 font-medium mb-1">
+            Total Listings
+          </div>
+          <div className="text-3xl font-bold text-blue-900">
+            {stats.totalListings}
+          </div>
           <div className="text-sm text-blue-600 mt-1">
             {stats.activeListings} active
           </div>
         </div>
 
         <div className="card bg-gradient-to-br from-green-50 to-green-100">
-          <div className="text-sm text-green-600 font-medium mb-1">Total Sales</div>
-          <div className="text-3xl font-bold text-green-900">{stats.totalSales}</div>
-          <div className="text-sm text-green-600 mt-1">
-            items sold
+          <div className="text-sm text-green-600 font-medium mb-1">
+            Total Sales
           </div>
+          <div className="text-3xl font-bold text-green-900">
+            {stats.totalSales}
+          </div>
+          <div className="text-sm text-green-600 mt-1">items sold</div>
         </div>
 
         <div className="card bg-gradient-to-br from-purple-50 to-purple-100">
-          <div className="text-sm text-purple-600 font-medium mb-1">Total Revenue</div>
+          <div className="text-sm text-purple-600 font-medium mb-1">
+            Total Revenue
+          </div>
           <div className="text-3xl font-bold text-purple-900">
-            ${typeof stats.totalRevenue === 'number' ? stats.totalRevenue.toFixed(2) : parseFloat(stats.totalRevenue || 0).toFixed(2)}
+            $
+            {typeof stats.totalRevenue === "number"
+              ? stats.totalRevenue.toFixed(2)
+              : parseFloat(stats.totalRevenue || 0).toFixed(2)}
           </div>
-          <div className="text-sm text-purple-600 mt-1">
-            all time
-          </div>
+          <div className="text-sm text-purple-600 mt-1">all time</div>
         </div>
 
         <div className="card bg-gradient-to-br from-orange-50 to-orange-100">
-          <div className="text-sm text-orange-600 font-medium mb-1">Pending Orders</div>
-          <div className="text-3xl font-bold text-orange-900">{stats.pendingOrders}</div>
-          <div className="text-sm text-orange-600 mt-1">
-            need attention
+          <div className="text-sm text-orange-600 font-medium mb-1">
+            Pending Orders
           </div>
+          <div className="text-3xl font-bold text-orange-900">
+            {stats.pendingOrders}
+          </div>
+          <div className="text-sm text-orange-600 mt-1">need attention</div>
         </div>
       </div>
 
@@ -137,7 +159,9 @@ export default function VendorDashboardPage() {
           >
             <div className="text-4xl mb-2">📦</div>
             <div className="font-semibold">Create New Listing</div>
-            <div className="text-sm text-gray-600 mt-1">Add a product to your shop</div>
+            <div className="text-sm text-gray-600 mt-1">
+              Add a product to your shop
+            </div>
           </Link>
 
           <Link
@@ -157,7 +181,9 @@ export default function VendorDashboardPage() {
           >
             <div className="text-4xl mb-2">⚙️</div>
             <div className="font-semibold">Shop Settings</div>
-            <div className="text-sm text-gray-600 mt-1">Update your shop info</div>
+            <div className="text-sm text-gray-600 mt-1">
+              Update your shop info
+            </div>
           </Link>
         </div>
       </div>
@@ -170,7 +196,9 @@ export default function VendorDashboardPage() {
             <div>
               <div className="text-sm text-gray-600 mb-1">Average Rating</div>
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold">{stats.averageRating.toFixed(1)}</span>
+                <span className="text-3xl font-bold">
+                  {stats.averageRating.toFixed(1)}
+                </span>
                 <span className="text-yellow-500 text-2xl">⭐</span>
               </div>
             </div>
@@ -178,9 +206,10 @@ export default function VendorDashboardPage() {
             <div>
               <div className="text-sm text-gray-600 mb-1">Conversion Rate</div>
               <div className="text-3xl font-bold">
-                {stats.totalListings > 0 
+                {stats.totalListings > 0
                   ? ((stats.totalSales / stats.totalListings) * 100).toFixed(1)
-                  : 0}%
+                  : 0}
+                %
               </div>
             </div>
           </div>
