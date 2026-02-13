@@ -21,12 +21,8 @@ export default function VendorShopSettingsPage() {
     contactPhone: "",
     address: "",
     city: "",
-    state: "",
     postalCode: "",
     country: "USA",
-    bankAccountName: "",
-    bankAccountNumber: "",
-    bankName: ""
   });
 
   useEffect(() => {
@@ -77,10 +73,14 @@ export default function VendorShopSettingsPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -96,7 +96,9 @@ export default function VendorShopSettingsPage() {
     <div className="container-custom py-8 max-w-3xl">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Shop Settings</h1>
-        <p className="text-gray-600">Update your vendor profile and shop information</p>
+        <p className="text-gray-600">
+          Update your vendor profile and shop information
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="card">
@@ -115,7 +117,7 @@ export default function VendorShopSettingsPage() {
         {/* Shop Information */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Shop Information</h2>
-          
+
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">Shop Name</label>
             <input
@@ -128,7 +130,9 @@ export default function VendorShopSettingsPage() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Shop Description</label>
+            <label className="block text-sm font-medium mb-2">
+              Shop Description
+            </label>
             <textarea
               name="shopDescription"
               value={formData?.shopDescription || ""}
@@ -139,7 +143,9 @@ export default function VendorShopSettingsPage() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Business Type</label>
+            <label className="block text-sm font-medium mb-2">
+              Business Type
+            </label>
             <select
               name="businessType"
               value={formData?.businessType || "individual"}
@@ -155,7 +161,7 @@ export default function VendorShopSettingsPage() {
         {/* Contact Information */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
-          
+
           <div className="grid md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium mb-2">Email</label>
@@ -184,9 +190,11 @@ export default function VendorShopSettingsPage() {
         {/* Address */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Address</h2>
-          
+
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Street Address</label>
+            <label className="block text-sm font-medium mb-2">
+              Street Address
+            </label>
             <input
               type="text"
               name="address"
@@ -220,7 +228,9 @@ export default function VendorShopSettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Postal Code</label>
+              <label className="block text-sm font-medium mb-2">
+                Postal Code
+              </label>
               <input
                 type="text"
                 name="postalCode"
@@ -249,9 +259,11 @@ export default function VendorShopSettingsPage() {
           <p className="text-sm text-gray-600 mb-4">
             For receiving payments from sales
           </p>
-          
+
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Account Holder Name</label>
+            <label className="block text-sm font-medium mb-2">
+              Account Holder Name
+            </label>
             <input
               type="text"
               name="bankAccountName"
@@ -262,7 +274,9 @@ export default function VendorShopSettingsPage() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Account Number</label>
+            <label className="block text-sm font-medium mb-2">
+              Account Number
+            </label>
             <input
               type="text"
               name="bankAccountNumber"
