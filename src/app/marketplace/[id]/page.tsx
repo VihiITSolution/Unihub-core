@@ -336,33 +336,6 @@ export default function ProductDetailsPage() {
                 </div>
               </dl>
             </div>
-            {product.seller?.vendorProfile && (
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Seller Information
-                </h3>
-                <dl className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <dt className="text-gray-600">Shop:</dt>
-                    <dd className="font-medium">
-                      {product.seller.vendorProfile.shopName}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-gray-600">Total Sales:</dt>
-                    <dd className="font-medium">
-                      {product.seller.vendorProfile.totalSales || 0} items
-                    </dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-gray-600">Business Type:</dt>
-                    <dd className="font-medium capitalize">
-                      {product.seller.vendorProfile.businessType}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            )}
           </div>
         </div>
       </div>
