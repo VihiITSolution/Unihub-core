@@ -18,7 +18,8 @@ export default function Sidebar({
   userType = "student",
 }: SidebarProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
