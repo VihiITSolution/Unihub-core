@@ -204,24 +204,13 @@ export default function VendorShopSettingsPage() {
             />
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4 mb-4">
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium mb-2">City</label>
               <input
                 type="text"
                 name="city"
                 value={formData?.city || ""}
-                onChange={handleChange}
-                className="input"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">State</label>
-              <input
-                type="text"
-                name="state"
-                value={formData?.state || ""}
                 onChange={handleChange}
                 className="input"
               />
@@ -247,51 +236,6 @@ export default function VendorShopSettingsPage() {
               type="text"
               name="country"
               value={formData?.country || "USA"}
-              onChange={handleChange}
-              className="input"
-            />
-          </div>
-        </div>
-
-        {/* Bank Information */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Bank Information</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            For receiving payments from sales
-          </p>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">
-              Account Holder Name
-            </label>
-            <input
-              type="text"
-              name="bankAccountName"
-              value={formData?.bankAccountName || ""}
-              onChange={handleChange}
-              className="input"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">
-              Account Number
-            </label>
-            <input
-              type="text"
-              name="bankAccountNumber"
-              value={formData?.bankAccountNumber || ""}
-              onChange={handleChange}
-              className="input"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Bank Name</label>
-            <input
-              type="text"
-              name="bankName"
-              value={formData?.bankName || ""}
               onChange={handleChange}
               className="input"
             />
