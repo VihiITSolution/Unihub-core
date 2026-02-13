@@ -37,10 +37,10 @@ export default function WatchLiveSessionPage() {
       }
 
       const response = await liveSessionService.joinSession(sessionId, token);
-      
+
       setSession(response.data.session);
       setEmbedUrl(response.data.embedUrl);
-      setChatUrl(response.data.chatUrl);
+      setChatUrl(response.data.chatUrl ?? null);
       setHasJoined(true);
     } catch (err: any) {
       setError(err.message || "Failed to join session");
