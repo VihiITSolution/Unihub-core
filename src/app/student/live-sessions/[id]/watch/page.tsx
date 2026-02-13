@@ -36,7 +36,10 @@ export default function WatchLiveSessionPage() {
         return;
       }
 
-      const response = await liveSessionService.joinSession(sessionId, token);
+      const response = await liveSessionService.joinSession(
+        sessionId,
+        token ?? undefined,
+      );
 
       setSession(response.data.session);
       setEmbedUrl(response.data.embedUrl);
@@ -54,7 +57,7 @@ export default function WatchLiveSessionPage() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      await liveSessionService.leaveSession(sessionId, token);
+      await liveSessionService.leaveSession(sessionId, token ?? undefined);
     } catch (err: any) {
       console.error("Failed to leave session:", err);
     }
