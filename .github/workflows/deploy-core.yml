@@ -36,6 +36,8 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/unihub-core:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/unihub-core:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/unihub-core:buildcache,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.API_BASE_URL }}
 
       # Step 5: Deploy to Digital Ocean Droplet
       - name: Deploy to Digital Ocean
@@ -62,7 +64,7 @@ jobs:
               --restart unless-stopped \
               -p 3001:3001 \
               -e NODE_ENV=production \
-              -e NEXT_PUBLIC_API_BASE_URL=${{ secrets.API_BASE_URL }} \
+              -e NEXT_PUBLIC_API_URL=${{ secrets.API_BASE_URL }} \
               ${{ secrets.DOCKER_USERNAME }}/unihub-core:latest
 
             # Clean up old images
