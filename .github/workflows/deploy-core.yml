@@ -61,8 +61,7 @@ jobs:
             docker run -d \
               --name unihub-core \
               --network unihub-network \
-              --restart unless-stopped \
-              -p 3001:3001 \
+              --restart unless-stopped \             
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL=${{ secrets.API_BASE_URL }} \
               ${{ secrets.DOCKER_USERNAME }}/unihub-core:latest
