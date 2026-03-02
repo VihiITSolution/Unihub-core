@@ -53,21 +53,21 @@ export default function StudentDashboard() {
 
       {/* Stats Cards */}
       <div className="grid md:grid-cols-3 gap-6 mb-12">
-        <div className="card">
+        <div className="card p-6">
           <div className="text-4xl mb-2">📚</div>
           <div className="text-3xl font-bold text-primary-600">
             {enrollments.length}
           </div>
           <div className="text-gray-600">Enrolled Courses</div>
         </div>
-        <div className="card">
+        <div className="card p-6">
           <div className="text-4xl mb-2">✓</div>
           <div className="text-3xl font-bold text-green-600">
             {completedCount}
           </div>
           <div className="text-gray-600">Completed Courses</div>
         </div>
-        <div className="card">
+        <div className="card p-6">
           <div className="text-4xl mb-2">⏱️</div>
           <div className="text-3xl font-bold text-secondary-600">
             {totalLearningTime}h
