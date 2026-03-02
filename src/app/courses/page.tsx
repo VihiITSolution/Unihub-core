@@ -8,13 +8,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/types";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 
+interface Faculty {
+  id: number;
+  name: string;
+  icon: string;
+}
+
 export default function CoursesPage() {
   const { user, token } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedLevel, setSelectedLevel] = useState("all");
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [selectedFaculty, setSelectedFaculty] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("all");
   const [priceRange, setPriceRange] = useState("all");
   const [sortBy, setSortBy] = useState("popular");
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,17 +32,13 @@ export default function CoursesPage() {
     totalPages: 0,
   });
 
-  const categories = [
-    { id: "all", name: "All Categories", icon: "📚" },
-    { id: "Engineering", name: "Engineering", icon: "⚙️" },
-    { id: "Medicine", name: "Medicine", icon: "🩺" },
-    { id: "IT & Computing", name: "IT & Computing", icon: "💻" },
-    { id: "Business & Management", name: "Business & Management", icon: "💼" },
-    { id: "Science", name: "Science", icon: "🔬" },
-    { id: "Arts & Humanities", name: "Arts & Humanities", icon: "📚" },
+  const years = [
+    { id: "all", label: "All Years" },
+    { id: "1", label: "1st Year" },
+    { id: "2", label: "2nd Year" },
+    { id: "3", label: "3rd Year" },
+    { id: "4", label: "4th Year" },
   ];
-
-  const levels = ["all", "beginner", "intermediate", "advanced"];
   const priceRanges = [
     { id: "all", label: "All Prices" },
     { id: "free", label: "Free" },
@@ -45,10 +48,14 @@ export default function CoursesPage() {
   ];
 
   useEffect(() => {
+    loadFaculties();
+  }, []);
+
+  useEffect(() => {
     loadCourses();
   }, [
-    selectedCategory,
-    selectedLevel,
+    selectedFaculty,
+    selectedYear,
     priceRange,
     sortBy,
     searchQuery,
@@ -56,13 +63,50 @@ export default function CoursesPage() {
     token,
   ]);
 
+  const loadFaculties = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/faculties?active=true`);
+      const data = await response.json();
+      if (data.success && data.data && Array.isArray(data.data.faculties)) {
+        // Add "All Faculties" option at the beginning
+        setFaculties([
+          { id: 0, name: "All Faculties", icon: "" },
+          ...data.data.faculties,
+        ]);
+      } else {
+        // Fallback to default faculties if API fails
+        setFaculties([
+          { id: 0, name: "All Faculties", icon: "" },
+          { id: 1, name: "Computing", icon: "" },
+          { id: 2, name: "Engineering", icon: "" },
+          { id: 3, name: "Science", icon: "" },
+          { id: 4, name: "Medicine", icon: "" },
+          { id: 5, name: "Business", icon: "" },
+          { id: 6, name: "Arts", icon: "" },
+        ]);
+      }
+    } catch (error) {
+      console.error("Failed to load faculties:", error);
+      // Fallback to default faculties
+      setFaculties([
+        { id: 0, name: "All Faculties", icon: "" },
+        { id: 1, name: "Computing", icon: "" },
+        { id: 2, name: "Engineering", icon: "" },
+        { id: 3, name: "Science", icon: "" },
+        { id: 4, name: "Medicine", icon: "" },
+        { id: 5, name: "Business", icon: "" },
+        { id: 6, name: "Arts", icon: "" },
+      ]);
+    }
+  };
+
   const loadCourses = async () => {
     try {
       setLoading(true);
 
       const filters: any = {};
-      if (selectedCategory !== "all") filters.category = selectedCategory;
-      if (selectedLevel !== "all") filters.level = selectedLevel;
+      if (selectedFaculty !== "all") filters.facultyId = selectedFaculty;
+      if (selectedYear !== "all") filters.year = selectedYear;
       if (searchQuery) filters.search = searchQuery;
 
       // Price range logic (simplified mapping)
@@ -176,44 +220,46 @@ export default function CoursesPage() {
                 />
               </div>
 
-              {/* Categories */}
+              {/* Faculties */}
               <div className="mb-6">
-                <h4 className="font-medium mb-3">Category</h4>
+                <h4 className="font-medium mb-3">Faculty</h4>
                 <div className="space-y-2">
-                  {categories.map((cat) => (
+                  {faculties.map((faculty) => (
                     <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                        selectedCategory === cat.id
+                      key={faculty.id}
+                      onClick={() =>
+                        setSelectedFaculty(
+                          faculty.id === 0 ? "all" : String(faculty.id),
+                        )
+                      }
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        selectedFaculty ===
+                        (faculty.id === 0 ? "all" : String(faculty.id))
                           ? "bg-primary-100 text-primary-700 font-medium"
                           : "hover:bg-gray-100 text-gray-700"
                       }`}
                     >
-                      <span>{cat.icon}</span>
-                      <span className="text-sm">{cat.name}</span>
+                      {faculty.name}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Level */}
+              {/* Year */}
               <div className="mb-6">
-                <h4 className="font-medium mb-3">Level</h4>
+                <h4 className="font-medium mb-3">Year</h4>
                 <div className="space-y-2">
-                  {levels.map((level) => (
+                  {years.map((year) => (
                     <button
-                      key={level}
-                      onClick={() => setSelectedLevel(level)}
+                      key={year.id}
+                      onClick={() => setSelectedYear(year.id)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        selectedLevel === level
+                        selectedYear === year.id
                           ? "bg-primary-100 text-primary-700 font-medium"
                           : "hover:bg-gray-100 text-gray-700"
                       }`}
                     >
-                      {level === "all"
-                        ? "All Levels"
-                        : level.charAt(0).toUpperCase() + level.slice(1)}
+                      {year.label}
                     </button>
                   ))}
                 </div>
@@ -243,8 +289,8 @@ export default function CoursesPage() {
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  setSelectedCategory("all");
-                  setSelectedLevel("all");
+                  setSelectedFaculty("all");
+                  setSelectedYear("all");
                   setPriceRange("all");
                   setSearchQuery("");
                 }}

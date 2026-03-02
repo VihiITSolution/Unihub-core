@@ -6,6 +6,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
 
+interface Faculty {
+  id: number;
+  name: string;
+  icon?: string;
+  description?: string;
+}
+
 interface CourseMaterial {
   id: string;
   title: string;
@@ -36,8 +43,8 @@ export default function EditCoursePage() {
     title: "",
     description: "",
     price: "",
-    category: "",
-    level: "beginner" as "beginner" | "intermediate" | "advanced",
+    facultyId: "",
+    year: "",
     duration: "",
   });
 
@@ -50,15 +57,10 @@ export default function EditCoursePage() {
     order: "",
   });
 
-  const categories = [
-    "Web Development",
-    "Data Science",
-    "Mobile Development",
-    "Design",
-    "Business",
-    "Marketing",
-    "Personal Development",
-  ];
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [addingFaculty, setAddingFaculty] = useState(false);
+  const [newFacultyName, setNewFacultyName] = useState("");
+  const [newFacultyIcon, setNewFacultyIcon] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -71,10 +73,24 @@ export default function EditCoursePage() {
       return;
     }
 
+    loadFaculties();
+
     if (courseId && token) {
       loadCourse();
     }
   }, [courseId, token, isAuthenticated, hasRole, router]);
+
+  const loadFaculties = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/faculties`);
+      const data = await response.json();
+      if (data.success && data.data && Array.isArray(data.data.faculties)) {
+        setFaculties(data.data.faculties);
+      }
+    } catch (error) {
+      console.error("Failed to load faculties:", error);
+    }
+  };
 
   const loadCourse = async () => {
     if (!token || !courseId) return;
@@ -95,8 +111,8 @@ export default function EditCoursePage() {
           title: course.title || "",
           description: course.description || "",
           price: course.price != null ? course.price.toString() : "",
-          category: course.category || "",
-          level: course.level || "beginner",
+          facultyId: course.facultyId ? course.facultyId.toString() : "",
+          year: course.year ? course.year.toString() : "",
           duration: course.duration != null ? course.duration.toString() : "",
         });
         setCurrentThumbnail(course.thumbnail || null);
@@ -263,7 +279,43 @@ export default function EditCoursePage() {
       setSubmitting(false);
     }
   };
+  const handleAddFaculty = async () => {
+    if (!newFacultyName.trim()) {
+      alert("Please enter a faculty name");
+      return;
+    }
 
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/faculties`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: newFacultyName,
+          icon: newFacultyIcon || "🎓",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert("Faculty added successfully!");
+        setNewFacultyName("");
+        setNewFacultyIcon("");
+        setAddingFaculty(false);
+        await loadFaculties();
+      } else {
+        alert(result.message || "Failed to add faculty");
+      }
+    } catch (error) {
+      console.error("Failed to add faculty:", error);
+      alert("Failed to add faculty. Please try again.");
+    }
+  };
   const handleRemoveMaterial = async (id: string) => {
     if (!token || !courseId) return;
 
@@ -310,8 +362,8 @@ export default function EditCoursePage() {
       formDataToSend.append("title", formData.title);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("price", formData.price);
-      formDataToSend.append("category", formData.category);
-      formDataToSend.append("level", formData.level);
+      formDataToSend.append("facultyId", formData.facultyId);
+      formDataToSend.append("year", formData.year);
       formDataToSend.append("duration", formData.duration);
 
       // Add thumbnail file if selected
@@ -453,39 +505,98 @@ export default function EditCoursePage() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Category <span className="text-red-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Faculty <span className="text-red-500">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setAddingFaculty(!addingFaculty)}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      >
+                        ➕ Add Faculty
+                      </button>
+                    </div>
                     <select
-                      name="category"
+                      name="facultyId"
                       required
-                      value={formData.category}
+                      value={formData.facultyId}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="">Select a category</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
+                      <option value="">Select a faculty</option>
+                      {faculties.map((faculty) => (
+                        <option key={faculty.id} value={faculty.id}>
+                          {faculty.icon} {faculty.name}
                         </option>
                       ))}
                     </select>
+                    {addingFaculty && (
+                      <div className="mt-3 p-4 bg-gray-50 rounded-lg space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Faculty Name
+                          </label>
+                          <input
+                            type="text"
+                            value={newFacultyName}
+                            onChange={(e) => setNewFacultyName(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="e.g., Faculty of Computing"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Icon (emoji)
+                          </label>
+                          <input
+                            type="text"
+                            value={newFacultyIcon}
+                            onChange={(e) => setNewFacultyIcon(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="🎓"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleAddFaculty}
+                            className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                          >
+                            Add
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAddingFaculty(false);
+                              setNewFacultyName("");
+                              setNewFacultyIcon("");
+                            }}
+                            className="flex-1 px-3 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Difficulty Level <span className="text-red-500">*</span>
+                      Year Level <span className="text-red-500">*</span>
                     </label>
                     <select
-                      name="level"
+                      name="year"
                       required
-                      value={formData.level}
+                      value={formData.year}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="beginner">Beginner</option>
-                      <option value="intermediate">Intermediate</option>
-                      <option value="advanced">Advanced</option>
+                      <option value="">Select year</option>
+                      <option value="1">1st Year</option>
+                      <option value="2">2nd Year</option>
+                      <option value="3">3rd Year</option>
+                      <option value="4">4th Year</option>
                     </select>
                   </div>
                 </div>

@@ -14,6 +14,13 @@ interface CourseMaterial {
   duration?: number;
 }
 
+interface Faculty {
+  id: number;
+  name: string;
+  icon: string;
+  description?: string;
+}
+
 export default function CreateCoursePage() {
   const router = useRouter();
   const { token, isAuthenticated, hasRole } = useAuth();
@@ -23,13 +30,17 @@ export default function CreateCoursePage() {
   const [createdCourseId, setCreatedCourseId] = useState<string | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [showAddFaculty, setShowAddFaculty] = useState(false);
+  const [newFacultyName, setNewFacultyName] = useState("");
+  const [newFacultyIcon, setNewFacultyIcon] = useState("🎓");
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     price: "",
-    category: "",
-    level: "beginner" as "beginner" | "intermediate" | "advanced",
+    facultyId: "",
+    year: "1",
     duration: "",
   });
 
@@ -41,17 +52,71 @@ export default function CreateCoursePage() {
     duration: "",
   });
 
-  const categories = [
-    "Programming",
-    "Web Development",
-    "Data Science",
-    "Mobile Development",
-    "Design",
-    "Business",
-    "Marketing",
-    "Mathematics",
-    "Personal Development",
+  const years = [
+    { value: "1", label: "1st Year" },
+    { value: "2", label: "2nd Year" },
+    { value: "3", label: "3rd Year" },
+    { value: "4", label: "4th Year" },
   ];
+
+  // Load faculties on mount
+  useEffect(() => {
+    loadFaculties();
+  }, []);
+
+  const loadFaculties = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/faculties?active=true`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          setFaculties(result.data.faculties || []);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load faculties:", error);
+    }
+  };
+
+  const handleAddFaculty = async () => {
+    if (!newFacultyName.trim()) {
+      alert("Please enter a faculty name");
+      return;
+    }
+
+    if (!token) {
+      alert("Please login to add faculty");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/faculties`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: newFacultyName,
+          icon: newFacultyIcon,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        await loadFaculties();
+        setShowAddFaculty(false);
+        setNewFacultyName("");
+        setNewFacultyIcon("🎓");
+        alert("Faculty added successfully!");
+      } else {
+        alert(result.message || "Failed to add faculty");
+      }
+    } catch (error) {
+      console.error("Failed to add faculty:", error);
+      alert("Failed to add faculty. Please try again.");
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -68,7 +133,7 @@ export default function CreateCoursePage() {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -117,7 +182,7 @@ export default function CreateCoursePage() {
   };
 
   const handleMaterialChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setCurrentMaterial((prev) => ({ ...prev, [name]: value }));
@@ -168,8 +233,8 @@ export default function CreateCoursePage() {
       formDataToSend.append("title", formData.title);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("price", formData.price);
-      formDataToSend.append("category", formData.category);
-      formDataToSend.append("level", formData.level);
+      formDataToSend.append("facultyId", formData.facultyId);
+      formDataToSend.append("year", formData.year);
       formDataToSend.append("duration", formData.duration);
       formDataToSend.append("thumbnail", thumbnailFile);
 
@@ -201,7 +266,7 @@ export default function CreateCoursePage() {
   const handleFinish = async () => {
     if (materials.length === 0) {
       const confirm = window.confirm(
-        "You haven't added any materials. Do you want to add them later?"
+        "You haven't added any materials. Do you want to add them later?",
       );
       if (confirm) {
         router.push("/tutor/dashboard");
@@ -218,7 +283,7 @@ export default function CreateCoursePage() {
         materialFormData.append("type", material.type);
         materialFormData.append(
           "order",
-          materials.indexOf(material).toString()
+          materials.indexOf(material).toString(),
         );
 
         if (material.duration) {
@@ -229,16 +294,13 @@ export default function CreateCoursePage() {
           materialFormData.append("video", material.file);
         }
 
-        await fetch(
-          `${API_BASE_URL}/courses/${createdCourseId}/content`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: materialFormData,
-          }
-        );
+        await fetch(`${API_BASE_URL}/courses/${createdCourseId}/content`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: materialFormData,
+        });
       }
 
       alert("Course and materials created successfully!");
@@ -349,38 +411,102 @@ export default function CreateCoursePage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Category <span className="text-red-500">*</span>
+                      Faculty <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      name="category"
-                      required
-                      value={formData.category}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">Select a category</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex gap-2">
+                      <select
+                        name="facultyId"
+                        required
+                        value={formData.facultyId}
+                        onChange={handleChange}
+                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Select a faculty</option>
+                        {faculties.map((faculty) => (
+                          <option key={faculty.id} value={faculty.id}>
+                            {faculty.icon} {faculty.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddFaculty(!showAddFaculty)}
+                        className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                        title="Add New Faculty"
+                      >
+                        ➕
+                      </button>
+                    </div>
+                    {showAddFaculty && (
+                      <div className="mt-3 p-4 border border-green-200 bg-green-50 rounded-lg">
+                        <h4 className="font-semibold text-gray-700 mb-3">
+                          Add New Faculty
+                        </h4>
+                        <div className="space-y-3">
+                          <div>
+                            <input
+                              type="text"
+                              value={newFacultyName}
+                              onChange={(e) =>
+                                setNewFacultyName(e.target.value)
+                              }
+                              placeholder="Faculty name"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            />
+                          </div>
+                          <div>
+                            <input
+                              type="text"
+                              value={newFacultyIcon}
+                              onChange={(e) =>
+                                setNewFacultyIcon(e.target.value)
+                              }
+                              placeholder="Icon (emoji)"
+                              maxLength={2}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={handleAddFaculty}
+                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                            >
+                              Add
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowAddFaculty(false);
+                                setNewFacultyName("");
+                                setNewFacultyIcon("🎓");
+                              }}
+                              className="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Difficulty Level <span className="text-red-500">*</span>
+                      Academic Year <span className="text-red-500">*</span>
                     </label>
                     <select
-                      name="level"
+                      name="year"
                       required
-                      value={formData.level}
+                      value={formData.year}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="beginner">Beginner</option>
-                      <option value="intermediate">Intermediate</option>
-                      <option value="advanced">Advanced</option>
+                      {years.map((year) => (
+                        <option key={year.value} value={year.value}>
+                          {year.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -648,8 +774,8 @@ export default function CreateCoursePage() {
                 {loading
                   ? "Saving..."
                   : materials.length > 0
-                  ? "Finish & Save All"
-                  : "Skip Materials"}
+                    ? "Finish & Save All"
+                    : "Skip Materials"}
               </button>
             </div>
           </div>
