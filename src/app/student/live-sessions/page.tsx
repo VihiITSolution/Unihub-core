@@ -181,7 +181,7 @@ export default function StudentLiveSessionsPage() {
                   <div className="flex items-center gap-2">
                     <span>💰</span>
                     <span className="font-semibold">
-                      {session.isFree ? "Free" : `$${session.price}`}
+                      {session.isFree ? "Free" : `Rs. ${session.price}`}
                     </span>
                   </div>
                 </div>
@@ -194,7 +194,7 @@ export default function StudentLiveSessionsPage() {
                   >
                     {session.isFree
                       ? "Enroll Free"
-                      : `Enroll for $${session.price}`}
+                      : `Enroll for Rs. ${session.price}`}
                   </button>
                 )}
 

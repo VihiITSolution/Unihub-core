@@ -60,7 +60,6 @@ export default function EditCoursePage() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [addingFaculty, setAddingFaculty] = useState(false);
   const [newFacultyName, setNewFacultyName] = useState("");
-  const [newFacultyIcon, setNewFacultyIcon] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -103,8 +102,8 @@ export default function EditCoursePage() {
       const response = await courseService.getCourseById(courseId);
       console.log("Course response:", response);
 
-      if (response.success && response.data) {
-        const course = response.data;
+      if (response.success && response.data && response.data.course) {
+        const course = response.data.course;
         console.log("Course data:", course);
 
         setFormData({
@@ -127,6 +126,43 @@ export default function EditCoursePage() {
       setError("Failed to load course");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddFaculty = async () => {
+    if (!newFacultyName.trim()) {
+      alert("Please enter a faculty name");
+      return;
+    }
+
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/faculties`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: newFacultyName,
+          icon: "🎓",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert("Faculty added successfully!");
+        setNewFacultyName("");
+        setAddingFaculty(false);
+        await loadFaculties();
+      } else {
+        alert(result.message || "Failed to add faculty");
+      }
+    } catch (error) {
+      console.error("Failed to add faculty:", error);
+      alert("Failed to add faculty. Please try again.");
     }
   };
 
@@ -279,43 +315,7 @@ export default function EditCoursePage() {
       setSubmitting(false);
     }
   };
-  const handleAddFaculty = async () => {
-    if (!newFacultyName.trim()) {
-      alert("Please enter a faculty name");
-      return;
-    }
 
-    if (!token) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/faculties`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: newFacultyName,
-          icon: newFacultyIcon || "🎓",
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert("Faculty added successfully!");
-        setNewFacultyName("");
-        setNewFacultyIcon("");
-        setAddingFaculty(false);
-        await loadFaculties();
-      } else {
-        alert(result.message || "Failed to add faculty");
-      }
-    } catch (error) {
-      console.error("Failed to add faculty:", error);
-      alert("Failed to add faculty. Please try again.");
-    }
-  };
   const handleRemoveMaterial = async (id: string) => {
     if (!token || !courseId) return;
 
@@ -384,7 +384,17 @@ export default function EditCoursePage() {
 
       if (result.success) {
         alert("Course updated successfully!");
-        router.push("/tutor/dashboard");
+        // Reload the course data to show updated information
+        await loadCourse();
+        // Clear the thumbnail preview if it was changed
+        if (thumbnailFile) {
+          setThumbnailFile(null);
+          setThumbnailPreview(null);
+        }
+        // Optionally redirect to dashboard after a short delay
+        setTimeout(() => {
+          router.push("/tutor/dashboard");
+        }, 1500);
       } else {
         setError(result.message || "Failed to update course");
       }
@@ -527,7 +537,7 @@ export default function EditCoursePage() {
                       <option value="">Select a faculty</option>
                       {faculties.map((faculty) => (
                         <option key={faculty.id} value={faculty.id}>
-                          {faculty.icon} {faculty.name}
+                          {faculty.name}
                         </option>
                       ))}
                     </select>
@@ -545,18 +555,6 @@ export default function EditCoursePage() {
                             placeholder="e.g., Faculty of Computing"
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Icon (emoji)
-                          </label>
-                          <input
-                            type="text"
-                            value={newFacultyIcon}
-                            onChange={(e) => setNewFacultyIcon(e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="🎓"
-                          />
-                        </div>
                         <div className="flex gap-2">
                           <button
                             type="button"
@@ -570,7 +568,6 @@ export default function EditCoursePage() {
                             onClick={() => {
                               setAddingFaculty(false);
                               setNewFacultyName("");
-                              setNewFacultyIcon("");
                             }}
                             className="flex-1 px-3 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
                           >
@@ -612,11 +609,11 @@ export default function EditCoursePage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Price (USD) <span className="text-red-500">*</span>
+                    Price (LKR) <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-3.5 text-gray-500">
-                      $
+                      Rs.
                     </span>
                     <input
                       type="number"
@@ -626,8 +623,8 @@ export default function EditCoursePage() {
                       step="0.01"
                       value={formData.price}
                       onChange={handleChange}
-                      className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="99.99"
+                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="9999.99"
                     />
                   </div>
                 </div>

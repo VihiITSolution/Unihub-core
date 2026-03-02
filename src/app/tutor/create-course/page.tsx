@@ -33,7 +33,6 @@ export default function CreateCoursePage() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [showAddFaculty, setShowAddFaculty] = useState(false);
   const [newFacultyName, setNewFacultyName] = useState("");
-  const [newFacultyIcon, setNewFacultyIcon] = useState("🎓");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -98,7 +97,7 @@ export default function CreateCoursePage() {
         },
         body: JSON.stringify({
           name: newFacultyName,
-          icon: newFacultyIcon,
+          icon: "🎓",
         }),
       });
 
@@ -107,7 +106,6 @@ export default function CreateCoursePage() {
         await loadFaculties();
         setShowAddFaculty(false);
         setNewFacultyName("");
-        setNewFacultyIcon("🎓");
         alert("Faculty added successfully!");
       } else {
         alert(result.message || "Failed to add faculty");
@@ -424,21 +422,21 @@ export default function CreateCoursePage() {
                         <option value="">Select a faculty</option>
                         {faculties.map((faculty) => (
                           <option key={faculty.id} value={faculty.id}>
-                            {faculty.icon} {faculty.name}
+                            {faculty.name}
                           </option>
                         ))}
                       </select>
                       <button
                         type="button"
                         onClick={() => setShowAddFaculty(!showAddFaculty)}
-                        className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                        className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
                         title="Add New Faculty"
                       >
                         ➕
                       </button>
                     </div>
                     {showAddFaculty && (
-                      <div className="mt-3 p-4 border border-green-200 bg-green-50 rounded-lg">
+                      <div className="mt-3 p-4 border border-blue-200 bg-blue-50 rounded-lg">
                         <h4 className="font-semibold text-gray-700 mb-3">
                           Add New Faculty
                         </h4>
@@ -450,19 +448,7 @@ export default function CreateCoursePage() {
                               onChange={(e) =>
                                 setNewFacultyName(e.target.value)
                               }
-                              placeholder="Faculty name"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            />
-                          </div>
-                          <div>
-                            <input
-                              type="text"
-                              value={newFacultyIcon}
-                              onChange={(e) =>
-                                setNewFacultyIcon(e.target.value)
-                              }
-                              placeholder="Icon (emoji)"
-                              maxLength={2}
+                              placeholder="Faculty name (e.g., Faculty of Computing)"
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                             />
                           </div>
@@ -470,7 +456,7 @@ export default function CreateCoursePage() {
                             <button
                               type="button"
                               onClick={handleAddFaculty}
-                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                              className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                             >
                               Add
                             </button>
@@ -479,7 +465,6 @@ export default function CreateCoursePage() {
                               onClick={() => {
                                 setShowAddFaculty(false);
                                 setNewFacultyName("");
-                                setNewFacultyIcon("🎓");
                               }}
                               className="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
                             >
@@ -514,11 +499,11 @@ export default function CreateCoursePage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Price (USD) <span className="text-red-500">*</span>
+                      Price (LKR) <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-3.5 text-gray-500">
-                        $
+                        Rs.
                       </span>
                       <input
                         type="number"
@@ -528,8 +513,8 @@ export default function CreateCoursePage() {
                         step="0.01"
                         value={formData.price}
                         onChange={handleChange}
-                        className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="99.99"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="9999.99"
                       />
                     </div>
                   </div>

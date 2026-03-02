@@ -39,7 +39,8 @@ export default function VendorListingsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!token || !confirm("Are you sure you want to delete this listing?")) return;
+    if (!token || !confirm("Are you sure you want to delete this listing?"))
+      return;
 
     try {
       await marketplaceService.deleteListing(id, token);
@@ -50,7 +51,7 @@ export default function VendorListingsPage() {
     }
   };
 
-  const filteredListings = listings.filter(item => {
+  const filteredListings = listings.filter((item) => {
     if (filter === "active") return item.isAvailable;
     if (filter === "inactive") return !item.isAvailable;
     return true;
@@ -96,7 +97,7 @@ export default function VendorListingsPage() {
               : "border-transparent text-gray-600 hover:text-gray-900"
           }`}
         >
-          Active ({listings.filter(l => l.isAvailable).length})
+          Active ({listings.filter((l) => l.isAvailable).length})
         </button>
         <button
           onClick={() => setFilter("inactive")}
@@ -106,7 +107,7 @@ export default function VendorListingsPage() {
               : "border-transparent text-gray-600 hover:text-gray-900"
           }`}
         >
-          Inactive ({listings.filter(l => !l.isAvailable).length})
+          Inactive ({listings.filter((l) => !l.isAvailable).length})
         </button>
       </div>
 
@@ -127,14 +128,30 @@ export default function VendorListingsPage() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Product</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Category</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Price</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Stock</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Sold</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Views</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Product
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Category
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Price
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Stock
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Sold
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Views
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -147,9 +164,17 @@ export default function VendorListingsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm">{item.category}</td>
-                  <td className="px-4 py-3 font-semibold">${item.price}</td>
+                  <td className="px-4 py-3 font-semibold">Rs. {item.price}</td>
                   <td className="px-4 py-3">
-                    <span className={item.stock > 10 ? "text-green-600" : item.stock > 0 ? "text-orange-600" : "text-red-600"}>
+                    <span
+                      className={
+                        item.stock > 10
+                          ? "text-green-600"
+                          : item.stock > 0
+                            ? "text-orange-600"
+                            : "text-red-600"
+                      }
+                    >
                       {item.stock}
                     </span>
                   </td>

@@ -169,9 +169,9 @@ export default function CoursesPage() {
     }
   };
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ${minutes % 60}m`;
+  const formatDuration = (hours: number) => {
+    if (!hours || hours === 0) return "0 hours";
+    return hours === 1 ? "1 hour" : `${hours} hours`;
   };
 
   return (
@@ -379,18 +379,37 @@ export default function CoursesPage() {
                             ⭐ {Number(course.rating).toFixed(1)}
                           </Badge>
                         )}
-                        <Badge
-                          variant="gray"
-                          className="absolute top-3 right-3 bg-white capitalize"
-                        >
-                          {course.level}
-                        </Badge>
+                        {course.year ? (
+                          <Badge
+                            variant="gray"
+                            className="absolute top-3 right-3 bg-purple-100 text-purple-700 font-medium"
+                          >
+                            Year {course.year}
+                          </Badge>
+                        ) : (
+                          course.level && (
+                            <Badge
+                              variant="gray"
+                              className="absolute top-3 right-3 bg-white capitalize"
+                            >
+                              {course.level}
+                            </Badge>
+                          )
+                        )}
                       </div>
 
                       <div className="p-4">
-                        <Badge variant="primary" size="sm" className="mb-2">
-                          {course.category}
-                        </Badge>
+                        {course.faculty ? (
+                          <Badge variant="primary" size="sm" className="mb-2">
+                            {course.faculty.name}
+                          </Badge>
+                        ) : (
+                          course.category && (
+                            <Badge variant="primary" size="sm" className="mb-2">
+                              {course.category}
+                            </Badge>
+                          )
+                        )}
 
                         <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
                           {course.title}
@@ -417,7 +436,7 @@ export default function CoursesPage() {
                             >
                               <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
                             </svg>
-                            {(course.enrolledCount || 0).toLocaleString()}
+                            {(course.enrollmentCount || 0).toLocaleString()}
                           </span>
                           <span className="flex items-center gap-1">
                             <svg

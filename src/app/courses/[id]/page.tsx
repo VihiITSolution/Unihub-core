@@ -206,21 +206,40 @@ export default function CourseDetailsPage() {
               </span>
             </div>
             <div className="text-gray-600">
-              {course.enrolledCount || course.enrollmentCount || 0} students
-              enrolled
+              {course.enrollmentCount || 0} students enrolled
             </div>
           </div>
 
           <div className="flex items-center gap-4 mb-6">
-            <span className="px-4 py-2 bg-primary-100 text-primary-700 rounded-full">
-              {course.level}
-            </span>
-            <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full">
-              {course.category}
-            </span>
-            <span className="text-gray-600">
-              ⏱️ {Math.floor((course.duration || 0) / 60)} hours
-            </span>
+            {course.facultyId && course.faculty && course.year ? (
+              <>
+                <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full font-medium">
+                  {course.faculty.name}
+                </span>
+                <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full font-medium">
+                  Year {course.year}
+                </span>
+              </>
+            ) : (
+              <>
+                {course.level && (
+                  <span className="px-4 py-2 bg-primary-100 text-primary-700 rounded-full">
+                    {course.level.charAt(0).toUpperCase() +
+                      course.level.slice(1)}
+                  </span>
+                )}
+                {course.category && (
+                  <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full">
+                    {course.category}
+                  </span>
+                )}
+              </>
+            )}
+            {course.duration > 0 && (
+              <span className="text-gray-600">
+                {course.duration} {course.duration === 1 ? "hour" : "hours"}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -268,7 +287,7 @@ export default function CourseDetailsPage() {
             </div>
           )}
           <div className="text-3xl font-bold text-primary-600 mb-4">
-            ${course.price}
+            Rs. {course.price}
           </div>
           {enrollmentError && (
             <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
@@ -355,6 +374,66 @@ export default function CourseDetailsPage() {
           ))}
         </div>
       </div>
+
+      {/* Reviews Section */}
+      {course.reviews && course.reviews.length > 0 && (
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold mb-6">Student Reviews</h2>
+          <div className="space-y-4">
+            {course.reviews.map((review) => (
+              <div key={review.id} className="card p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
+                    {review.user?.profileImage ? (
+                      <img
+                        src={review.user.profileImage}
+                        alt={`${review.user.firstName} ${review.user.lastName}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      review.user?.firstName?.charAt(0) || "?"
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-semibold">
+                          {review.user
+                            ? `${review.user.firstName} ${review.user.lastName}`
+                            : "Anonymous"}
+                        </p>
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <span
+                              key={i}
+                              className={
+                                i < review.rating
+                                  ? "text-yellow-500"
+                                  : "text-gray-300"
+                              }
+                            >
+                              ⭐
+                            </span>
+                          ))}
+                          <span className="text-gray-600 text-sm ml-2">
+                            {review.rating}/5
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {review.comment && (
+                      <p className="text-gray-700 mt-2">{review.comment}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

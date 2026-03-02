@@ -262,15 +262,37 @@ export default function Home() {
                           ⭐ {Number(course.rating).toFixed(1)}
                         </Badge>
                       )}
-                      <Badge
-                        variant="gray"
-                        className="absolute top-3 right-3 bg-white capitalize"
-                      >
-                        {course.level}
-                      </Badge>
+                      {course.year ? (
+                        <Badge
+                          variant="gray"
+                          className="absolute top-3 right-3 bg-purple-100 text-purple-700 font-medium"
+                        >
+                          Year {course.year}
+                        </Badge>
+                      ) : (
+                        course.level && (
+                          <Badge
+                            variant="gray"
+                            className="absolute top-3 right-3 bg-white capitalize"
+                          >
+                            {course.level}
+                          </Badge>
+                        )
+                      )}
                     </div>
 
                     <div className="p-4">
+                      {course.faculty ? (
+                        <Badge variant="primary" size="sm" className="mb-2">
+                          {course.faculty.name}
+                        </Badge>
+                      ) : (
+                        course.category && (
+                          <Badge variant="primary" size="sm" className="mb-2">
+                            {course.category}
+                          </Badge>
+                        )
+                      )}
                       <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
                         {course.title}
                       </h3>

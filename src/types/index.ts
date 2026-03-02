@@ -110,11 +110,17 @@ export interface Course {
   level: "beginner" | "intermediate" | "advanced";
   facultyId?: number;
   year?: number;
+  faculty?: {
+    id: number;
+    name: string;
+    icon?: string;
+    description?: string;
+  };
   duration: number; // in minutes
-  enrolledCount?: number;
   enrollmentCount?: number;
   rating?: number;
   reviewCount?: number;
+  reviews?: Review[];
   isPublished?: boolean;
   approvalStatus?: "draft" | "pending" | "approved" | "rejected";
   rejectionReason?: string;
@@ -130,6 +136,22 @@ export interface Course {
   createdAt: string;
   updatedAt: string;
   isEnrolled?: boolean;
+}
+
+export interface Review {
+  id: number;
+  courseId: number;
+  userId: number;
+  rating: number;
+  comment?: string;
+  user?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    profileImage?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CourseContent {

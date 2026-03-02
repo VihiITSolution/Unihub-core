@@ -198,7 +198,7 @@ export default function CreateListingPage() {
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">
-                Price (USD) <span className="text-red-500">*</span>
+                Price (LKR) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"

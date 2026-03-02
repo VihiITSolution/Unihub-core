@@ -181,7 +181,7 @@ export default function VendorSalesPage() {
               <div className="mb-4 p-4 bg-gray-50 rounded-lg">
                 <div className="font-medium mb-1">{order.item?.title}</div>
                 <div className="text-sm text-gray-600">
-                  {order.item?.category} • ${order.item?.price} each
+                  {order.item?.category} • Rs. {order.item?.price} each
                 </div>
               </div>
 

@@ -185,7 +185,7 @@ export default function TutorLiveSessionsPage() {
                   <div className="flex gap-4 text-sm text-gray-500">
                     <span>📅 {formatDate(session.scheduledStartTime)}</span>
                     <span>
-                      {session.isFree ? "🆓 Free" : `💰 $${session.price}`}
+                      {session.isFree ? "🆓 Free" : `💰 Rs. ${session.price}`}
                     </span>
                     <span>👥 {session.totalAttendees} attendees</span>
                     {!session.isFree && (

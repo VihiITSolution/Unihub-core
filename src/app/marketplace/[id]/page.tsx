@@ -163,7 +163,7 @@ export default function ProductDetailsPage() {
           <h1 className="text-4xl font-bold mb-4">{product.title}</h1>
 
           <div className="text-5xl font-bold text-primary-600 mb-6">
-            ${Number(product.price).toFixed(2)}
+            Rs. {Number(product.price).toFixed(2)}
           </div>
 
           <p className="text-gray-600 mb-6 leading-relaxed text-lg">
@@ -233,7 +233,7 @@ export default function ProductDetailsPage() {
                   </button>
                 </div>
                 <span className="text-gray-600 text-sm">
-                  Total: ${(Number(product.price) * quantity).toFixed(2)}
+                  Total: Rs. {(Number(product.price) * quantity).toFixed(2)}
                 </span>
               </div>
 

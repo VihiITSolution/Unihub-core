@@ -66,7 +66,7 @@ export default function PaymentModal({
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Course Price:</span>
             <span className="text-2xl font-bold text-primary-600">
-              ${priceNumber.toFixed(2)}
+              Rs. {priceNumber.toFixed(2)}
             </span>
           </div>
         </div>
@@ -176,7 +176,9 @@ export default function PaymentModal({
             disabled={isProcessing}
             className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 font-semibold"
           >
-            {isProcessing ? "Processing..." : `Pay $${priceNumber.toFixed(2)}`}
+            {isProcessing
+              ? "Processing..."
+              : `Pay Rs. ${priceNumber.toFixed(2)}`}
           </button>
         </div>
       </form>
