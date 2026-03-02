@@ -1,6 +1,5 @@
 name: Deploy Core App to Digital Ocean
 
-# Trigger on push to main branch
 on:
   push:
     branches:
@@ -36,6 +35,8 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/unihub-core:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/unihub-core:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/unihub-core:buildcache,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.API_BASE_URL }}
 
       # Step 5: Deploy to Digital Ocean Droplet
       - name: Deploy to Digital Ocean
@@ -45,24 +46,16 @@ jobs:
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
-            # Login to Docker Hub
+            set -e
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-
-            # Stop and remove old container
             docker stop unihub-core || true
             docker rm unihub-core || true
-
-            # Pull latest image
             docker pull ${{ secrets.DOCKER_USERNAME }}/unihub-core:latest
-
-            # Run new container
             docker run -d \
               --name unihub-core \
+              --network unihub-network \
               --restart unless-stopped \
-              -p 3001:3001 \
               -e NODE_ENV=production \
-              -e NEXT_PUBLIC_API_BASE_URL=${{ secrets.API_BASE_URL }} \
+              -e NEXT_PUBLIC_API_URL=${{ secrets.API_BASE_URL }} \
               ${{ secrets.DOCKER_USERNAME }}/unihub-core:latest
-
-            # Clean up old images
             docker image prune -f

@@ -251,7 +251,7 @@ export default function CourseDetailsPage() {
         </div>
 
         {/* Enrollment Card */}
-        <div className="card">
+        <div className="card p-5">
           {course.thumbnail ? (
             <img
               src={
@@ -333,10 +333,10 @@ export default function CourseDetailsPage() {
           {contents.map((content, index) => (
             <div
               key={content.id}
-              className="card flex items-center justify-between"
+              className="card p-6 flex items-center justify-between gap-4"
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-semibold">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center font-semibold text-lg">
                   {index + 1}
                 </div>
                 <div>

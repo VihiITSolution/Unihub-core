@@ -122,8 +122,10 @@ export default function MarketplacePage() {
       ) : (
         <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map((product) => (
-            <Link key={product.id} href={`/marketplace/${product.id}`}>
-              <div className="card hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
+            <Link key={product.id} href={`/marketplace/${product.id}`}
+            className="md:col-span-2 lg:col-span-1"
+            >
+              <div className="card p-5 hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
                 <div className="w-full h-48 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg mb-4 flex items-center justify-center text-white text-4xl font-bold">
                   {product.title.charAt(0)}
                 </div>
