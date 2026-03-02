@@ -108,6 +108,8 @@ export interface Course {
   };
   category: string;
   level: "beginner" | "intermediate" | "advanced";
+  facultyId?: number;
+  year?: number;
   duration: number; // in minutes
   enrolledCount?: number;
   enrollmentCount?: number;
