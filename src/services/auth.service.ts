@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { API_BASE_URL } from "@/lib/constants";
 import type { ApiResponse, User, AuthState, StudentProfile } from "@/types";
 
 export interface LoginCredentials {
@@ -89,16 +90,13 @@ export const authService = {
     const formData = new FormData();
     formData.append("profileImage", file);
 
-    const response = await fetch(
-      "http://localhost:5000/api/auth/profile/photo",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+    const response = await fetch(`${API_BASE_URL}/auth/profile/photo`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-    );
+      body: formData,
+    });
 
     if (!response.ok) {
       throw new Error("Failed to upload profile photo");
