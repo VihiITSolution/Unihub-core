@@ -29,7 +29,7 @@ export interface CreateCourseData {
 
 export const courseService = {
   async getCourses(
-    filters?: CourseFilters
+    filters?: CourseFilters,
   ): Promise<PaginatedResponse<Course>> {
     const queryParams = new URLSearchParams();
     if (filters) {
@@ -43,23 +43,23 @@ export const courseService = {
     return apiClient.get<PaginatedResponse<Course>>(`/courses${query}`);
   },
 
-  async getCourseById(id: string): Promise<ApiResponse<Course>> {
-    return apiClient.get<ApiResponse<Course>>(`/courses/${id}`);
+  async getCourseById(id: string): Promise<ApiResponse<{ course: Course }>> {
+    return apiClient.get<ApiResponse<{ course: Course }>>(`/courses/${id}`);
   },
 
   async getCourseContent(
     courseId: string,
-    token: string
+    token: string,
   ): Promise<ApiResponse<CourseContent[]>> {
     return apiClient.get<ApiResponse<CourseContent[]>>(
       `/courses/${courseId}/content`,
-      { token }
+      { token },
     );
   },
 
   async createCourse(
     data: CreateCourseData,
-    token: string
+    token: string,
   ): Promise<ApiResponse<Course>> {
     return apiClient.post<ApiResponse<Course>>("/courses", data, { token });
   },
@@ -67,7 +67,7 @@ export const courseService = {
   async updateCourse(
     id: string,
     data: Partial<CreateCourseData>,
-    token: string
+    token: string,
   ): Promise<ApiResponse<Course>> {
     return apiClient.put<ApiResponse<Course>>(`/courses/${id}`, data, {
       token,
@@ -80,12 +80,12 @@ export const courseService = {
 
   async enrollInCourse(
     courseId: string,
-    token: string
+    token: string,
   ): Promise<ApiResponse<Enrollment>> {
     return apiClient.post<ApiResponse<Enrollment>>(
       "/enrollments",
       { courseId: parseInt(courseId) }, // Backend expects courseId as integer in body
-      { token }
+      { token },
     );
   },
 
