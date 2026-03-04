@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { liveSessionService } from "@/services/live-session.service";
 import type { LiveSession } from "@/types";
+import { TOKEN_KEY } from "@/lib/constants";
 
 export default function WatchLiveSessionPage() {
   const params = useParams();
@@ -30,7 +31,7 @@ export default function WatchLiveSessionPage() {
 
   const joinSession = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem(TOKEN_KEY);
       if (!token) {
         router.push("/auth/login");
         return;
@@ -51,7 +52,7 @@ export default function WatchLiveSessionPage() {
 
   const leaveSession = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem(TOKEN_KEY);
       if (!token) return;
 
       await liveSessionService.leaveSession(sessionId, token);

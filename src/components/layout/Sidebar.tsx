@@ -31,10 +31,8 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
     { href: "/courses", label: "Browse Courses", icon: "courses" },
     { href: "/student/my-courses", label: "My Courses", icon: "book" },
     { href: "/student/live-sessions", label: "Live Sessions", icon: "video" },
-    { href: "/student/progress", label: "Progress", icon: "chart" },
+    { href: "/student/bodima", label: "Bodima", icon: "home" },
     { href: "/marketplace", label: "Marketplace", icon: "shop" },
-    { href: "/student/certificates", label: "Certificates", icon: "certificate" },
-    { href: "/student/messages", label: "Messages", icon: "message" },
   ];
 
   const vendorLinks = [
@@ -53,7 +51,6 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
     { href: "/tutor/students", label: "Students", icon: "users" },
     { href: "/tutor/earnings", label: "Earnings", icon: "money" },
     { href: "/tutor/analytics", label: "Analytics", icon: "chart" },
-    { href: "/tutor/messages", label: "Messages", icon: "message" },
   ];
 
   const adminLinks = [

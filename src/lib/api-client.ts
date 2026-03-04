@@ -1,6 +1,7 @@
+import { TOKEN_KEY } from './constants';
+
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-const TOKEN_KEY = 'unihub_token';
 
 export interface RequestOptions extends RequestInit {
   token?: string;

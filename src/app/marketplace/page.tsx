@@ -28,7 +28,7 @@ export default function MarketplacePage() {
       });
       
       if (response.success && response.data) {
-        setProducts(response.data);
+        setProducts(response.data.items || []);
       }
     } catch (error) {
       console.error("Failed to load products:", error);

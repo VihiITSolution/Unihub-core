@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { liveSessionService } from "@/services/live-session.service";
 import type { LiveSession } from "@/types";
+import { TOKEN_KEY } from "@/lib/constants";
 
 export default function StudentLiveSessionsPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function StudentLiveSessionsPage() {
 
   const loadSessions = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem(TOKEN_KEY);
       
       const filters: any = {};
       if (filter === "upcoming") {
@@ -31,7 +32,7 @@ export default function StudentLiveSessionsPage() {
       }
 
       const response = await liveSessionService.getSessions(filters, token);
-      setSessions(response.data || []);
+      setSessions(response.data?.sessions || []);
     } catch (err: any) {
       setError(err.message || "Failed to load sessions");
     } finally {
@@ -41,7 +42,7 @@ export default function StudentLiveSessionsPage() {
 
   const handleEnroll = async (sessionId: string, isFree: boolean) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem(TOKEN_KEY);
       if (!token) {
         router.push("/auth/login");
         return;

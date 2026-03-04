@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { liveSessionService } from "@/services/live-session.service";
 import type { SessionEnrollment } from "@/types";
+import { TOKEN_KEY } from "@/lib/constants";
 
 export default function MySessionsPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function MySessionsPage() {
 
   const loadEnrollments = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem(TOKEN_KEY);
       if (!token) {
         router.push("/auth/login");
         return;

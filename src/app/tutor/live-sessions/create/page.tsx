@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { liveSessionService } from "@/services/live-session.service";
 import type { CreateLiveSessionData } from "@/types";
+import { TOKEN_KEY } from "@/lib/constants";
 
 export default function CreateLiveSessionPage() {
   const router = useRouter();
@@ -35,7 +36,7 @@ export default function CreateLiveSessionPage() {
     setError(null);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem(TOKEN_KEY);
       if (!token) {
         throw new Error("Please log in to create a live session");
       }

@@ -1,9 +1,10 @@
 import { apiClient } from "@/lib/api-client";
+import { TOKEN_KEY } from "@/lib/constants";
 
 // Helper function to get token
 const getToken = (): string | null => {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("unihub_token");
+    return localStorage.getItem(TOKEN_KEY);
   }
   return null;
 };

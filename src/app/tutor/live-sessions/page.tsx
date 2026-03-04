@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { liveSessionService } from "@/services/live-session.service";
 import type { LiveSession, LiveSessionStatus } from "@/types";
+import { TOKEN_KEY } from "@/lib/constants";
 
 export default function TutorLiveSessionsPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function TutorLiveSessionsPage() {
 
   const loadSessions = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem(TOKEN_KEY);
       if (!token) {
         router.push("/auth/login");
         return;
@@ -33,7 +34,7 @@ export default function TutorLiveSessionsPage() {
       }
 
       const response = await liveSessionService.getSessions(filters, token);
-      setSessions(response.data || []);
+      setSessions(response.data?.sessions || []);
     } catch (err: any) {
       setError(err.message || "Failed to load sessions");
     } finally {
@@ -43,7 +44,7 @@ export default function TutorLiveSessionsPage() {
 
   const handleStartSession = async (id: string) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem(TOKEN_KEY);
       if (!token) return;
 
       await liveSessionService.startSession(id, token);
@@ -55,7 +56,7 @@ export default function TutorLiveSessionsPage() {
 
   const handleEndSession = async (id: string) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem(TOKEN_KEY);
       if (!token) return;
 
       if (confirm("Are you sure you want to end this session?")) {
@@ -69,7 +70,7 @@ export default function TutorLiveSessionsPage() {
 
   const handleCancelSession = async (id: string) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem(TOKEN_KEY);
       if (!token) return;
 
       if (confirm("Are you sure you want to cancel this session?")) {

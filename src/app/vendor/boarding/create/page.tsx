@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { boardingService } from '@/services/boarding.service';
+import { universityService, type University } from '@/services/university.service';
 import { BoardingPlaceFormData, RoomType, GenderPreference } from '@/types';
 
 const AMENITIES_OPTIONS = [
@@ -15,6 +16,11 @@ export default function CreateBoardingListing() {
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [showCustomUniversity, setShowCustomUniversity] = useState(false);
+  const [selectedUniversityId, setSelectedUniversityId] = useState<number | null>(null);
+  
   const [formData, setFormData] = useState<BoardingPlaceFormData>({
     title: '',
     description: '',
@@ -43,6 +49,77 @@ export default function CreateBoardingListing() {
       ...prev,
       [name]: type === 'number' ? parseFloat(value) || 0 : value
     }));
+  };
+
+  // Load nearest universities when user clicks geolocation button
+  const handleGetNearestUniversities = async () => {
+    setLoadingLocation(true);
+    try {
+      const position = await universityService.getCurrentPosition();
+      const response = await universityService.getNearestUniversities({
+        latitude: position.latitude,
+        longitude: position.longitude,
+        radius: 50,
+        limit: 20
+      });
+
+      if (response.success && response.data.universities.length > 0) {
+        setUniversities(response.data.universities);
+        alert(`Found ${response.count} universities within 50km of your location`);
+      } else {
+        alert('No universities found nearby. You can enter a custom university name.');
+        setShowCustomUniversity(true);
+      }
+    } catch (error: any) {
+      console.error('Location error:', error);
+      alert(error.message || 'Failed to get location. You can enter a custom university name.');
+      setShowCustomUniversity(true);
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  // Load all universities on component mount as fallback
+  useEffect(() => {
+    const loadUniversities = async () => {
+      try {
+        const response = await universityService.getUniversities();
+        if (response.success) {
+          setUniversities(response.data.universities);
+        }
+      } catch (error) {
+        console.error('Failed to load universities:', error);
+      }
+    };
+    loadUniversities();
+  }, []);
+
+  // Handle university selection from dropdown
+  const handleUniversitySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    
+    if (value === 'custom') {
+      setShowCustomUniversity(true);
+      setSelectedUniversityId(null);
+      setFormData(prev => ({
+        ...prev,
+        nearestUniversity: '',
+        distanceToUniversity: undefined
+      }));
+    } else if (value) {
+      const universityId = parseInt(value);
+      const selectedUni = universities.find(u => u.id === universityId);
+      
+      if (selectedUni) {
+        setSelectedUniversityId(universityId);
+        setShowCustomUniversity(false);
+        setFormData(prev => ({
+          ...prev,
+          nearestUniversity: selectedUni.name,
+          distanceToUniversity: selectedUni.distance || undefined
+        }));
+      }
+    }
   };
 
   const handleAmenityToggle = (amenity: string) => {
@@ -188,18 +265,72 @@ export default function CreateBoardingListing() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nearest University
-              </label>
-              <input
-                type="text"
-                name="nearestUniversity"
-                value={formData.nearestUniversity}
-                onChange={handleInputChange}
-                placeholder="E.g., University of Colombo"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
-              />
+            {/* University Selection with Geolocation */}
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Nearest University
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGetNearestUniversities}
+                  disabled={loadingLocation}
+                  className="text-sm text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 disabled:opacity-50"
+                >
+                  {loadingLocation ? (
+                    <>
+                      <span className="animate-spin">⏳</span> Getting location...
+                    </>
+                  ) : (
+                    <>
+                      📍 Find nearest universities
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {!showCustomUniversity ? (
+                <div className="space-y-2">
+                  <select
+                    value={selectedUniversityId || ''}
+                    onChange={handleUniversitySelect}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="">Select a university</option>
+                    {universities.map(uni => (
+                      <option key={uni.id} value={uni.id}>
+                        {uni.name} {uni.city && `- ${uni.city}`} 
+                        {uni.distance && ` (${uni.distance.toFixed(1)}km away)`}
+                      </option>
+                    ))}
+                    <option value="custom">➕ Enter custom university name</option>
+                  </select>
+                  <p className="text-xs text-gray-500">
+                    Select from the list or click "Find nearest" to see universities near you
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    name="nearestUniversity"
+                    value={formData.nearestUniversity}
+                    onChange={handleInputChange}
+                    placeholder="E.g., University of Colombo"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCustomUniversity(false);
+                      setFormData(prev => ({ ...prev, nearestUniversity: '' }));
+                    }}
+                    className="text-sm text-amber-600 hover:text-amber-700"
+                  >
+                    ← Back to university list
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>
