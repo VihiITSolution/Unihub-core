@@ -15,16 +15,11 @@ export default function CreateListingPage() {
     title: "",
     description: "",
     category: "books",
-    itemType: "book" as
-      | "book"
-      | "notes"
-      | "equipment"
-      | "electronics"
-      | "other",
+    itemType: "book" as "book" | "notes" | "equipment" | "electronics" | "other",
     price: "",
     stock: "1",
-    condition: "new" as "new" | "like_new" | "good" | "fair" | "poor",
-    images: [] as string[],
+    condition: "new",
+    images: [] as string[]
   });
 
   useEffect(() => {
@@ -49,14 +44,23 @@ export default function CreateListingPage() {
           itemType: formData.itemType,
           price: parseFloat(formData.price),
           stock: parseInt(formData.stock),
-          condition: formData.condition,
-          images: formData.images,
+          condition: formData.condition as 'new' | 'like_new' | 'good' | 'fair' | 'poor',
+          images: formData.images
         },
-        token,
+        token
       );
 
-      if (response.success) {
-        router.push("/vendor/listings");
+      if (response.success && response.data) {
+        const item = response.data.item;
+        
+        // Check if payment is required
+        if (item.requiresPayment && !item.isPaid) {
+          // Redirect to payment page
+          router.push(`/vendor/listings/${item.id}/pay`);
+        } else {
+          // If no payment required or already paid, go to listings
+          router.push("/vendor/listings");
+        }
       } else {
         setError(response.error || "Failed to create listing");
       }
@@ -67,14 +71,10 @@ export default function CreateListingPage() {
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.value
     });
   };
 
@@ -95,7 +95,7 @@ export default function CreateListingPage() {
         {/* Product Information */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Product Information</h2>
-
+          
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">
               Product Title <span className="text-red-500">*</span>
@@ -151,27 +151,6 @@ export default function CreateListingPage() {
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Item Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="itemType"
-                value={formData.itemType}
-                onChange={handleChange}
-                required
-                className="input"
-              >
-                <option value="book">Book</option>
-                <option value="notes">Notes</option>
-                <option value="equipment">Equipment</option>
-                <option value="electronics">Electronics</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
                 Condition <span className="text-red-500">*</span>
               </label>
               <select
@@ -182,7 +161,7 @@ export default function CreateListingPage() {
                 className="input"
               >
                 <option value="new">New</option>
-                <option value="like_new">Like New</option>
+                <option value="like-new">Like New</option>
                 <option value="good">Good</option>
                 <option value="fair">Fair</option>
                 <option value="poor">Poor</option>
@@ -194,11 +173,11 @@ export default function CreateListingPage() {
         {/* Pricing & Inventory */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Pricing & Inventory</h2>
-
+          
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">
-                Price (LKR) <span className="text-red-500">*</span>
+                Price (USD) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -238,9 +217,7 @@ export default function CreateListingPage() {
             <div className="text-gray-500">
               <div className="text-4xl mb-2">📷</div>
               <p>Image upload coming soon</p>
-              <p className="text-sm mt-1">
-                For now, listings will use default images
-              </p>
+              <p className="text-sm mt-1">For now, listings will use default images</p>
             </div>
           </div>
         </div>

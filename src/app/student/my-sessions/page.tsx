@@ -26,10 +26,7 @@ export default function MySessionsPage() {
       }
 
       const filters = filter === "upcoming" ? { upcoming: true } : undefined;
-      const response = await liveSessionService.getMyEnrollments(
-        filters,
-        token ?? undefined,
-      );
+      const response = await liveSessionService.getMyEnrollments(filters, token);
       setEnrollments(response.data || []);
     } catch (err: any) {
       setError(err.message || "Failed to load enrollments");
@@ -100,9 +97,7 @@ export default function MySessionsPage() {
       {/* Enrollments List */}
       {enrollments.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-600 mb-4">
-            You haven't enrolled in any sessions yet
-          </p>
+          <p className="text-gray-600 mb-4">You haven't enrolled in any sessions yet</p>
           <Link
             href="/student/live-sessions"
             className="text-blue-600 hover:underline"
@@ -123,15 +118,11 @@ export default function MySessionsPage() {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-2">
-                      {session.title}
-                    </h3>
+                    <h3 className="text-xl font-semibold mb-2">{session.title}</h3>
                     <p className="text-gray-600 mb-2">{session.description}</p>
-
+                    
                     <div className="flex gap-4 text-sm text-gray-500 mb-2">
-                      <span>
-                        👨‍🏫 {session.tutor?.firstName} {session.tutor?.lastName}
-                      </span>
+                      <span>👨‍🏫 {session.tutor?.firstName} {session.tutor?.lastName}</span>
                       <span>📅 {formatDate(session.scheduledStartTime)}</span>
                       {enrollment.amountPaid > 0 && (
                         <span>💰 Paid ${enrollment.amountPaid.toFixed(2)}</span>
@@ -140,10 +131,7 @@ export default function MySessionsPage() {
 
                     {enrollment.joinedAt && (
                       <div className="text-sm text-gray-600">
-                        <span>
-                          ⏱️ Attended:{" "}
-                          {formatDuration(enrollment.attendanceDuration)}
-                        </span>
+                        <span>⏱️ Attended: {formatDuration(enrollment.attendanceDuration)}</span>
                       </div>
                     )}
                   </div>
@@ -165,8 +153,7 @@ export default function MySessionsPage() {
                       </div>
                     )}
 
-                    {(session.status === "ended" ||
-                      session.status === "recorded") &&
+                    {(session.status === "ended" || session.status === "recorded") &&
                       session.recordingUrl && (
                         <a
                           href={session.recordingUrl}
@@ -182,16 +169,14 @@ export default function MySessionsPage() {
 
                 {/* Payment Status */}
                 <div className="pt-3 border-t border-gray-200">
-                  <span className="text-sm text-gray-600">
-                    Payment Status:{" "}
-                  </span>
+                  <span className="text-sm text-gray-600">Payment Status: </span>
                   <span
                     className={`text-sm font-medium ${
                       enrollment.paymentStatus === "completed"
                         ? "text-green-600"
                         : enrollment.paymentStatus === "pending"
-                          ? "text-yellow-600"
-                          : "text-red-600"
+                        ? "text-yellow-600"
+                        : "text-red-600"
                     }`}
                   >
                     {enrollment.paymentStatus.toUpperCase()}

@@ -6,13 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
 
-interface Faculty {
-  id: number;
-  name: string;
-  icon?: string;
-  description?: string;
-}
-
 interface CourseMaterial {
   id: string;
   title: string;
@@ -33,7 +26,7 @@ export default function EditCoursePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"details" | "materials">(
-    "details",
+    "details"
   );
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -43,8 +36,8 @@ export default function EditCoursePage() {
     title: "",
     description: "",
     price: "",
-    facultyId: "",
-    year: "",
+    category: "",
+    level: "beginner",
     duration: "",
   });
 
@@ -57,9 +50,15 @@ export default function EditCoursePage() {
     order: "",
   });
 
-  const [faculties, setFaculties] = useState<Faculty[]>([]);
-  const [addingFaculty, setAddingFaculty] = useState(false);
-  const [newFacultyName, setNewFacultyName] = useState("");
+  const categories = [
+    "Web Development",
+    "Data Science",
+    "Mobile Development",
+    "Design",
+    "Business",
+    "Marketing",
+    "Personal Development",
+  ];
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -72,24 +71,10 @@ export default function EditCoursePage() {
       return;
     }
 
-    loadFaculties();
-
     if (courseId && token) {
       loadCourse();
     }
   }, [courseId, token, isAuthenticated, hasRole, router]);
-
-  const loadFaculties = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/faculties`);
-      const data = await response.json();
-      if (data.success && data.data && Array.isArray(data.data.faculties)) {
-        setFaculties(data.data.faculties);
-      }
-    } catch (error) {
-      console.error("Failed to load faculties:", error);
-    }
-  };
 
   const loadCourse = async () => {
     if (!token || !courseId) return;
@@ -102,16 +87,16 @@ export default function EditCoursePage() {
       const response = await courseService.getCourseById(courseId);
       console.log("Course response:", response);
 
-      if (response.success && response.data && response.data.course) {
-        const course = response.data.course;
+      if (response.success && response.data) {
+        const course = response.data.course || response.data;
         console.log("Course data:", course);
 
         setFormData({
           title: course.title || "",
           description: course.description || "",
           price: course.price != null ? course.price.toString() : "",
-          facultyId: course.facultyId ? course.facultyId.toString() : "",
-          year: course.year ? course.year.toString() : "",
+          category: course.category || "",
+          level: course.level || "beginner",
           duration: course.duration != null ? course.duration.toString() : "",
         });
         setCurrentThumbnail(course.thumbnail || null);
@@ -129,47 +114,10 @@ export default function EditCoursePage() {
     }
   };
 
-  const handleAddFaculty = async () => {
-    if (!newFacultyName.trim()) {
-      alert("Please enter a faculty name");
-      return;
-    }
-
-    if (!token) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/faculties`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: newFacultyName,
-          icon: "🎓",
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert("Faculty added successfully!");
-        setNewFacultyName("");
-        setAddingFaculty(false);
-        await loadFaculties();
-      } else {
-        alert(result.message || "Failed to add faculty");
-      }
-    } catch (error) {
-      console.error("Failed to add faculty:", error);
-      alert("Failed to add faculty. Please try again.");
-    }
-  };
-
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -212,31 +160,26 @@ export default function EditCoursePage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.data && Array.isArray(data.data.contents)) {
+        if (data.success && data.data) {
           setMaterials(
-            data.data.contents
-              .filter((content: any) => content && content.type) // Filter out invalid entries
-              .map((content: any) => ({
-                id: content.id,
-                title: content.title,
-                type: content.type,
-                url: content.url,
-                duration: content.duration,
-                order: content.order,
-              })),
+            data.data.contents.map((content: any) => ({
+              id: content.id,
+              title: content.title,
+              type: content.type,
+              url: content.url,
+              duration: content.duration,
+              order: content.order,
+            }))
           );
-        } else {
-          setMaterials([]);
         }
       }
     } catch (error) {
       console.error("Failed to load materials:", error);
-      setMaterials([]);
     }
   };
 
@@ -251,7 +194,7 @@ export default function EditCoursePage() {
     }
   };
 
-  const handleAddMaterial = async () => {
+  const handleAddMaterial = () => {
     if (!currentMaterial.title || !currentMaterial.file) {
       alert("Please provide a title and file for the material");
       return;
@@ -262,90 +205,72 @@ export default function EditCoursePage() {
       return;
     }
 
+    const newMaterial: CourseMaterial = {
+      id: Date.now().toString(),
+      title: currentMaterial.title,
+      type: currentMaterial.type,
+      file: currentMaterial.file,
+      duration: currentMaterial.duration
+        ? parseInt(currentMaterial.duration)
+        : undefined,
+      order: parseInt(currentMaterial.order),
+    };
+
+    setMaterials([...materials, newMaterial]);
+    setCurrentMaterial({
+      title: "",
+      type: "video",
+      file: null,
+      duration: "",
+      order: "",
+    });
+  };
+
+  const handleRemoveMaterial = (id: string) => {
+    setMaterials(materials.filter((m) => m.id !== id));
+  };
+
+  const handleSaveMaterials = async () => {
     if (!token || !courseId) return;
 
     setSubmitting(true);
-    setError(null);
-
     try {
-      const materialFormData = new FormData();
-      materialFormData.append("title", currentMaterial.title);
-      materialFormData.append("type", currentMaterial.type);
-      materialFormData.append("order", currentMaterial.order);
+      for (const material of materials) {
+        // Skip if material already has a URL (already uploaded)
+        if (material.url) continue;
 
-      if (currentMaterial.duration) {
-        materialFormData.append("duration", currentMaterial.duration);
-      }
+        if (!material.file) continue;
 
-      // Use correct field name based on type
-      materialFormData.append("video", currentMaterial.file);
+        const materialFormData = new FormData();
+        materialFormData.append("title", material.title);
+        materialFormData.append("type", material.type);
+        materialFormData.append(
+          "order",
+          materials.indexOf(material).toString()
+        );
 
-      const response = await fetch(
-        `${API_BASE_URL}/courses/${courseId}/content?type=${currentMaterial.type}`,
-        {
+        if (material.duration) {
+          materialFormData.append("duration", material.duration.toString());
+        }
+
+        materialFormData.append("video", material.file);
+
+        await fetch(`${API_BASE_URL}/courses/${courseId}/content`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
           },
           body: materialFormData,
-        },
-      );
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert("Material uploaded successfully!");
-        // Reset form
-        setCurrentMaterial({
-          title: "",
-          type: "video",
-          file: null,
-          duration: "",
-          order: "",
         });
-        // Reload materials list
-        await loadCourseMaterials();
-      } else {
-        setError(result.message || "Failed to upload material");
       }
+
+      alert("Materials saved successfully!");
+      loadCourseMaterials();
     } catch (error) {
-      console.error("Failed to upload material:", error);
-      setError("Failed to upload material. Please try again.");
+      console.error("Failed to save materials:", error);
+      alert("Failed to save some materials");
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleRemoveMaterial = async (id: string) => {
-    if (!token || !courseId) return;
-
-    if (
-      !confirm(
-        "Are you sure you want to delete this material? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/content/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert("Material deleted successfully!");
-        await loadCourseMaterials();
-      } else {
-        alert(result.message || "Failed to delete material");
-      }
-    } catch (error) {
-      console.error("Failed to delete material:", error);
-      alert("Failed to delete material. Please try again.");
     }
   };
 
@@ -362,8 +287,8 @@ export default function EditCoursePage() {
       formDataToSend.append("title", formData.title);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("price", formData.price);
-      formDataToSend.append("facultyId", formData.facultyId);
-      formDataToSend.append("year", formData.year);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("level", formData.level);
       formDataToSend.append("duration", formData.duration);
 
       // Add thumbnail file if selected
@@ -372,29 +297,22 @@ export default function EditCoursePage() {
       }
 
       // Use fetch directly for multipart/form-data
-      const response = await fetch(`${API_BASE_URL}/courses/${courseId}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formDataToSend,
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/courses/${courseId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formDataToSend,
+        }
+      );
 
       const result = await response.json();
 
       if (result.success) {
         alert("Course updated successfully!");
-        // Reload the course data to show updated information
-        await loadCourse();
-        // Clear the thumbnail preview if it was changed
-        if (thumbnailFile) {
-          setThumbnailFile(null);
-          setThumbnailPreview(null);
-        }
-        // Optionally redirect to dashboard after a short delay
-        setTimeout(() => {
-          router.push("/tutor/dashboard");
-        }, 1500);
+        router.push("/tutor/dashboard");
       } else {
         setError(result.message || "Failed to update course");
       }
@@ -515,85 +433,39 @@ export default function EditCoursePage() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm font-semibold text-gray-700">
-                        Faculty <span className="text-red-500">*</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setAddingFaculty(!addingFaculty)}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                      >
-                        ➕ Add Faculty
-                      </button>
-                    </div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Category <span className="text-red-500">*</span>
+                    </label>
                     <select
-                      name="facultyId"
+                      name="category"
                       required
-                      value={formData.facultyId}
+                      value={formData.category}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="">Select a faculty</option>
-                      {faculties.map((faculty) => (
-                        <option key={faculty.id} value={faculty.id}>
-                          {faculty.name}
+                      <option value="">Select a category</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
                         </option>
                       ))}
                     </select>
-                    {addingFaculty && (
-                      <div className="mt-3 p-4 bg-gray-50 rounded-lg space-y-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Faculty Name
-                          </label>
-                          <input
-                            type="text"
-                            value={newFacultyName}
-                            onChange={(e) => setNewFacultyName(e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="e.g., Faculty of Computing"
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={handleAddFaculty}
-                            className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                          >
-                            Add
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setAddingFaculty(false);
-                              setNewFacultyName("");
-                            }}
-                            className="flex-1 px-3 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Year Level <span className="text-red-500">*</span>
+                      Difficulty Level <span className="text-red-500">*</span>
                     </label>
                     <select
-                      name="year"
+                      name="level"
                       required
-                      value={formData.year}
+                      value={formData.level}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="">Select year</option>
-                      <option value="1">1st Year</option>
-                      <option value="2">2nd Year</option>
-                      <option value="3">3rd Year</option>
-                      <option value="4">4th Year</option>
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
                     </select>
                   </div>
                 </div>
@@ -609,11 +481,11 @@ export default function EditCoursePage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Price (LKR) <span className="text-red-500">*</span>
+                    Price (USD) <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-3.5 text-gray-500">
-                      Rs.
+                      $
                     </span>
                     <input
                       type="number"
@@ -623,8 +495,8 @@ export default function EditCoursePage() {
                       step="0.01"
                       value={formData.price}
                       onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="9999.99"
+                      className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="99.99"
                     />
                   </div>
                 </div>
@@ -742,295 +614,76 @@ export default function EditCoursePage() {
             {/* Existing Materials */}
             {materials.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    Course Materials
-                  </h2>
-                  <span className="text-sm text-gray-600">
-                    {materials.length}{" "}
-                    {materials.length === 1 ? "item" : "items"}
-                  </span>
-                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  Existing Materials
+                </h2>
                 <div className="space-y-4">
-                  {materials
-                    .filter((material) => material && material.type) // Safety check
-                    .map((material, index) => (
-                      <div
-                        key={material.id || index}
-                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors bg-gray-50"
-                      >
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className="flex-shrink-0">
-                            {material.type === "video" ? (
-                              <svg
-                                className="w-10 h-10 text-blue-500"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                />
-                              </svg>
-                            ) : (
-                              <svg
-                                className="w-10 h-10 text-red-500"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                                />
-                              </svg>
+                  {materials.map((material, index) => (
+                    <div
+                      key={material.id || index}
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors"
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="flex-shrink-0">
+                          {material.type === "video" ? (
+                            <svg
+                              className="w-10 h-10 text-blue-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-10 h-10 text-red-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900">
+                            {material.title}
+                          </h4>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-sm text-gray-500 capitalize">
+                              {material.type}
+                            </span>
+                            {material.duration && (
+                              <>
+                                <span className="text-gray-300">•</span>
+                                <span className="text-sm text-gray-500">
+                                  {material.duration} min
+                                </span>
+                              </>
                             )}
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">
-                              {material.title}
-                            </h4>
-                            <div className="flex items-center gap-3 mt-1">
-                              <span className="text-sm text-gray-500 capitalize">
-                                {material.type}
-                              </span>
-                              {material.duration && (
-                                <>
-                                  <span className="text-gray-300">•</span>
-                                  <span className="text-sm text-gray-500">
-                                    {material.duration} min
-                                  </span>
-                                </>
-                              )}
-                              <span className="text-gray-300">•</span>
-                              <span className="text-sm text-gray-500">
-                                Order: {material.order}
-                              </span>
-                              <span className="text-gray-300">•</span>
-                              <span className="text-sm text-green-600 font-medium flex items-center gap-1">
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                Uploaded
-                              </span>
-                            </div>
+                            <span className="text-gray-300">•</span>
+                            <span className="text-sm text-gray-500">
+                              Order: {material.order}
+                            </span>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveMaterial(material.id!)}
-                          className="ml-4 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete material"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
                       </div>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {/* Add New Material */}
-            <div className="bg-white rounded-xl shadow-sm p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Upload New Material
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Add videos or PDF documents to your course. Materials will be
-                uploaded immediately.
-              </p>
-
-              <div className="space-y-6">
-                {/* Material Type - First */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Material Type <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={currentMaterial.type}
-                    onChange={(e) =>
-                      handleMaterialChange(
-                        "type",
-                        e.target.value as "video" | "pdf",
-                      )
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                  >
-                    <option value="video">Video Lesson</option>
-                    <option value="pdf">PDF Document</option>
-                  </select>
-                  <p className="text-sm text-gray-500 mt-2">
-                    {currentMaterial.type === "video"
-                      ? "Upload video lessons for your course"
-                      : "Upload PDF documents, slides, or reading materials"}
-                  </p>
-                </div>
-
-                {/* Material Title */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Material Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={currentMaterial.title}
-                    onChange={(e) =>
-                      handleMaterialChange("title", e.target.value)
-                    }
-                    placeholder={
-                      currentMaterial.type === "video"
-                        ? "e.g., Introduction to React Hooks"
-                        : "e.g., Course Syllabus and Resources"
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* File Upload */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {currentMaterial.type === "video"
-                      ? "Upload Video"
-                      : "Upload PDF"}{" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="file"
-                    accept={
-                      currentMaterial.type === "video"
-                        ? "video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv"
-                        : "application/pdf"
-                    }
-                    onChange={handleMaterialFileChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {currentMaterial.file && (
-                    <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMaterial(material.id!)}
+                        className="ml-4 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove material"
                       >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      File selected: {currentMaterial.file.name}
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-500 mt-2">
-                    {currentMaterial.type === "video"
-                      ? "Accepted: MP4, MOV, AVI, WMV. Max: 500MB"
-                      : "Accepted: PDF only. Max: 10MB"}
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Duration (for videos) */}
-                  {currentMaterial.type === "video" && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Duration (minutes)
-                      </label>
-                      <input
-                        type="number"
-                        value={currentMaterial.duration || ""}
-                        onChange={(e) =>
-                          handleMaterialChange("duration", e.target.value)
-                        }
-                        placeholder="e.g., 15"
-                        min="1"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  )}
-
-                  {/* Order */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Display Order <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      value={currentMaterial.order || ""}
-                      onChange={(e) =>
-                        handleMaterialChange("order", e.target.value)
-                      }
-                      placeholder="e.g., 1"
-                      min="1"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <p className="text-sm text-gray-500 mt-2">
-                      Order in which materials appear (1 = first)
-                    </p>
-                  </div>
-                </div>
-
-                {/* Upload Material Button */}
-                <div className="border-t border-gray-200 pt-6">
-                  <button
-                    type="button"
-                    onClick={handleAddMaterial}
-                    disabled={
-                      submitting ||
-                      !currentMaterial.title ||
-                      !currentMaterial.file ||
-                      !currentMaterial.order
-                    }
-                    className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 font-semibold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {submitting ? (
-                      <>
-                        <svg
-                          className="animate-spin h-5 w-5"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
                         <svg
                           className="w-5 h-5"
                           fill="none"
@@ -1041,32 +694,147 @@ export default function EditCoursePage() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                           />
                         </svg>
-                        Upload{" "}
-                        {currentMaterial.type === "video" ? "Video" : "PDF"} to
-                        Course
-                      </>
-                    )}
-                  </button>
-                  <p className="text-xs text-gray-500 text-center mt-3">
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Add New Material */}
+            <div className="bg-white rounded-xl shadow-sm p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Add New Material
+              </h2>
+
+              <div className="space-y-6">
+                {/* Material Title */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Material Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={currentMaterial.title}
+                    onChange={(e) =>
+                      handleMaterialChange("title", e.target.value)
+                    }
+                    placeholder="e.g., Introduction to React Hooks"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Material Type */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Material Type *
+                  </label>
+                  <select
+                    value={currentMaterial.type}
+                    onChange={(e) =>
+                      handleMaterialChange(
+                        "type",
+                        e.target.value as "video" | "pdf"
+                      )
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="video">Video</option>
+                    <option value="pdf">PDF Document</option>
+                  </select>
+                </div>
+
+                {/* File Upload */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Upload File *
+                  </label>
+                  <input
+                    type="file"
+                    accept={
+                      currentMaterial.type === "video"
+                        ? "video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv"
+                        : "application/pdf"
+                    }
+                    onChange={handleMaterialFileChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-sm text-gray-500 mt-2">
                     {currentMaterial.type === "video"
-                      ? "Video will be uploaded to YouTube and embedded in your course"
-                      : "PDF will be available for students to view and download"}
+                      ? "Accepted formats: MP4, MOV, AVI, WMV. Max size: 500MB"
+                      : "Accepted format: PDF. Max size: 10MB"}
                   </p>
                 </div>
+
+                {/* Duration (for videos) */}
+                {currentMaterial.type === "video" && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Duration (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      value={currentMaterial.duration || ""}
+                      onChange={(e) =>
+                        handleMaterialChange("duration", e.target.value)
+                      }
+                      placeholder="e.g., 15"
+                      min="1"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                )}
+
+                {/* Order */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Display Order *
+                  </label>
+                  <input
+                    type="number"
+                    value={currentMaterial.order || ""}
+                    onChange={(e) =>
+                      handleMaterialChange("order", e.target.value)
+                    }
+                    placeholder="e.g., 1"
+                    min="1"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-sm text-gray-500 mt-2">
+                    Materials will be displayed in this order in the course
+                  </p>
+                </div>
+
+                {/* Add Material Button */}
+                <button
+                  type="button"
+                  onClick={handleAddMaterial}
+                  className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors"
+                >
+                  Add to Materials List
+                </button>
               </div>
             </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex gap-4 justify-start pt-4">
+            {/* Save Materials Button */}
+            <div className="flex gap-4 justify-end pt-4">
               <button
                 type="button"
                 onClick={() => setActiveTab("details")}
                 className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
               >
-                ← Back to Course Details
+                Back to Details
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveMaterials}
+                disabled={materials.filter((m) => !m.id).length === 0}
+                className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 font-semibold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save Materials
               </button>
             </div>
           </div>

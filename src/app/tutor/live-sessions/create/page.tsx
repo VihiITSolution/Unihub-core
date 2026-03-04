@@ -40,11 +40,8 @@ export default function CreateLiveSessionPage() {
         throw new Error("Please log in to create a live session");
       }
 
-      const response = await liveSessionService.createSession(
-        formData,
-        token ?? undefined,
-      );
-
+      const response = await liveSessionService.createSession(formData, token);
+      
       setStreamInfo({
         streamUrl: response.data.streaming.streamUrl,
         streamKey: response.data.streaming.streamKey,
@@ -63,25 +60,17 @@ export default function CreateLiveSessionPage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-
+    
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
     } else if (name === "tags") {
-      setFormData((prev) => ({
-        ...prev,
-        tags: value.split(",").map((t) => t.trim()),
-      }));
+      setFormData((prev) => ({ ...prev, tags: value.split(",").map(t => t.trim()) }));
     } else if (name === "price" || name === "maxAttendees") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value ? Number(value) : undefined,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: value ? Number(value) : undefined }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -94,12 +83,10 @@ export default function CreateLiveSessionPage() {
           <h2 className="text-2xl font-bold text-green-800 mb-4">
             ✅ Live Session Created Successfully!
           </h2>
-
+          
           <div className="space-y-4">
             <div>
-              <h3 className="font-semibold text-gray-700 mb-2">
-                Stream Settings for OBS/Streamlabs:
-              </h3>
+              <h3 className="font-semibold text-gray-700 mb-2">Stream Settings for OBS/Streamlabs:</h3>
               <div className="bg-white p-4 rounded border">
                 <p className="text-sm text-gray-600 mb-2">Stream URL:</p>
                 <code className="block bg-gray-100 p-2 rounded text-sm break-all">
@@ -129,14 +116,9 @@ export default function CreateLiveSessionPage() {
             <div className="bg-blue-50 p-4 rounded border border-blue-200">
               <h4 className="font-semibold text-blue-800 mb-2">Next Steps:</h4>
               <ol className="list-decimal list-inside space-y-1 text-sm text-blue-900">
-                <li>
-                  Configure your streaming software (OBS/Streamlabs) with the
-                  above settings
-                </li>
+                <li>Configure your streaming software (OBS/Streamlabs) with the above settings</li>
                 <li>Start streaming in your software</li>
-                <li>
-                  Click "Start Session" in the dashboard when ready to go live
-                </li>
+                <li>Click "Start Session" in the dashboard when ready to go live</li>
                 <li>Students can join and watch your live stream</li>
               </ol>
             </div>
@@ -163,10 +145,7 @@ export default function CreateLiveSessionPage() {
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 bg-white p-6 rounded-lg shadow"
-      >
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Session Title *
@@ -236,9 +215,7 @@ export default function CreateLiveSessionPage() {
                 onChange={handleChange}
                 className="w-4 h-4 text-blue-600"
               />
-              <span className="text-sm font-medium text-gray-700">
-                Free Session
-              </span>
+              <span className="text-sm font-medium text-gray-700">Free Session</span>
             </label>
           </div>
 
@@ -316,9 +293,7 @@ export default function CreateLiveSessionPage() {
               onChange={handleChange}
               className="w-4 h-4 text-blue-600"
             />
-            <span className="text-sm font-medium text-gray-700">
-              Allow Recording
-            </span>
+            <span className="text-sm font-medium text-gray-700">Allow Recording</span>
           </label>
 
           <label className="flex items-center space-x-2">
@@ -329,9 +304,7 @@ export default function CreateLiveSessionPage() {
               onChange={handleChange}
               className="w-4 h-4 text-blue-600"
             />
-            <span className="text-sm font-medium text-gray-700">
-              Enable Live Chat
-            </span>
+            <span className="text-sm font-medium text-gray-700">Enable Live Chat</span>
           </label>
         </div>
 

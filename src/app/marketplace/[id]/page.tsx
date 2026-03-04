@@ -12,7 +12,7 @@ export default function ProductDetailsPage() {
   const router = useRouter();
   const { user, token } = useAuth();
   const productId = parseInt(params.id as string);
-
+  
   const [product, setProduct] = useState<MarketplaceItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -27,7 +27,7 @@ export default function ProductDetailsPage() {
     try {
       setLoading(true);
       const response = await marketplaceService.getItemById(productId);
-
+      
       if (response.success && response.data) {
         setProduct(response.data.item);
       } else {
@@ -43,12 +43,12 @@ export default function ProductDetailsPage() {
 
   const handleBuyNow = async () => {
     if (!user || !token) {
-      router.push("/auth/login");
+      router.push('/auth/login');
       return;
     }
 
     if (!product || product.stock < quantity) {
-      setError("Insufficient stock available");
+      setError('Insufficient stock available');
       return;
     }
 
@@ -62,31 +62,29 @@ export default function ProductDetailsPage() {
           quantity: quantity,
           shippingAddress: "User's default address", // TODO: Add address selection
         },
-        token,
+        token
       );
 
       if (response.success) {
-        alert("Order placed successfully! Check your orders page for details.");
-        router.push("/student/orders"); // TODO: Create orders page
+        alert('Order placed successfully! Check your orders page for details.');
+        router.push('/student/orders'); // TODO: Create orders page
       } else {
-        setError(response.error || "Failed to place order");
+        setError(response.error || 'Failed to place order');
       }
     } catch (err: any) {
-      setError(err.message || "Failed to place order");
+      setError(err.message || 'Failed to place order');
     } finally {
       setPurchasing(false);
     }
   };
 
-  const isOwnListing = user && product && product.sellerId === Number(user.id);
+  const isOwnListing = user && product && product.sellerId === user.id;
 
   if (loading) {
     return (
       <div className="container-custom py-12">
         <div className="text-center">
-          <div className="animate-pulse text-lg">
-            Loading product details...
-          </div>
+          <div className="animate-pulse text-lg">Loading product details...</div>
         </div>
       </div>
     );
@@ -98,9 +96,7 @@ export default function ProductDetailsPage() {
         <div className="card text-center py-12">
           <div className="text-6xl mb-4">🛍️</div>
           <h3 className="text-xl font-semibold mb-2">Product not found</h3>
-          <p className="text-gray-600 mb-6">
-            {error || "The product you are looking for does not exist"}
-          </p>
+          <p className="text-gray-600 mb-6">{error || 'The product you are looking for does not exist'}</p>
           <Link href="/marketplace" className="btn-primary inline-block">
             Back to Marketplace
           </Link>
@@ -113,13 +109,9 @@ export default function ProductDetailsPage() {
     <div className="container-custom py-8">
       {/* Breadcrumb */}
       <div className="mb-6 text-sm text-gray-600">
-        <Link href="/" className="hover:text-primary-600">
-          Home
-        </Link>
+        <Link href="/" className="hover:text-primary-600">Home</Link>
         <span className="mx-2">/</span>
-        <Link href="/marketplace" className="hover:text-primary-600">
-          Marketplace
-        </Link>
+        <Link href="/marketplace" className="hover:text-primary-600">Marketplace</Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900">{product.title}</span>
       </div>
@@ -136,10 +128,7 @@ export default function ProductDetailsPage() {
                 <div
                   key={i}
                   className="aspect-square bg-gray-200 rounded-lg cursor-pointer hover:opacity-80 transition"
-                  style={{
-                    backgroundImage: `url(${img})`,
-                    backgroundSize: "cover",
-                  }}
+                  style={{ backgroundImage: `url(${img})`, backgroundSize: 'cover' }}
                 ></div>
               ))}
             </div>
@@ -153,17 +142,14 @@ export default function ProductDetailsPage() {
               {product.category}
             </span>
             <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full font-medium">
-              {product.condition
-                ?.split("-")
-                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                .join(" ")}
+              {product.condition?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
             </span>
           </div>
 
           <h1 className="text-4xl font-bold mb-4">{product.title}</h1>
 
           <div className="text-5xl font-bold text-primary-600 mb-6">
-            Rs. {Number(product.price).toFixed(2)}
+            ${product.price.toFixed(2)}
           </div>
 
           <p className="text-gray-600 mb-6 leading-relaxed text-lg">
@@ -175,12 +161,8 @@ export default function ProductDetailsPage() {
             <div className="flex justify-between items-center">
               <span className="text-gray-600 font-medium">Availability:</span>
               {product.stock > 0 ? (
-                <span
-                  className={`font-semibold ${product.stock > 10 ? "text-green-600" : "text-orange-600"}`}
-                >
-                  {product.stock > 10
-                    ? `In Stock (${product.stock} available)`
-                    : `Only ${product.stock} left!`}
+                <span className={`font-semibold ${product.stock > 10 ? 'text-green-600' : 'text-orange-600'}`}>
+                  {product.stock > 10 ? `In Stock (${product.stock} available)` : `Only ${product.stock} left!`}
                 </span>
               ) : (
                 <span className="text-red-600 font-semibold">Out of Stock</span>
@@ -189,17 +171,13 @@ export default function ProductDetailsPage() {
             <div className="flex justify-between items-center">
               <span className="text-gray-600 font-medium">Seller:</span>
               <span className="font-semibold">
-                {product.seller
-                  ? `${product.seller.firstName} ${product.seller.lastName}`
-                  : "Unknown Seller"}
+                {product.seller?.vendorProfile?.shopName || product.seller?.name || 'Unknown Seller'}
               </span>
             </div>
             {product.soldCount > 0 && (
               <div className="flex justify-between items-center">
                 <span className="text-gray-600 font-medium">Total Sold:</span>
-                <span className="font-semibold text-primary-600">
-                  {product.soldCount} units
-                </span>
+                <span className="font-semibold text-primary-600">{product.soldCount} units</span>
               </div>
             )}
             <div className="flex justify-between items-center">
@@ -224,16 +202,14 @@ export default function ProductDetailsPage() {
                     {quantity}
                   </span>
                   <button
-                    onClick={() =>
-                      setQuantity(Math.min(product.stock, quantity + 1))
-                    }
+                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                     className="px-4 py-2 hover:bg-gray-100 font-bold text-lg"
                   >
                     +
                   </button>
                 </div>
                 <span className="text-gray-600 text-sm">
-                  Total: Rs. {(Number(product.price) * quantity).toFixed(2)}
+                  Total: ${(product.price * quantity).toFixed(2)}
                 </span>
               </div>
 
@@ -248,17 +224,14 @@ export default function ProductDetailsPage() {
                 disabled={purchasing}
                 className="btn-primary w-full py-4 text-lg font-semibold"
               >
-                {purchasing ? "Processing..." : "Buy Now"}
+                {purchasing ? 'Processing...' : 'Buy Now'}
               </button>
-
+              
               {!user && (
                 <p className="text-center text-sm text-gray-600">
-                  <Link
-                    href="/auth/login"
-                    className="text-primary-600 hover:underline font-medium"
-                  >
+                  <Link href="/auth/login" className="text-primary-600 hover:underline font-medium">
                     Sign in
-                  </Link>{" "}
+                  </Link>{' '}
                   to purchase this item
                 </p>
               )}
@@ -266,13 +239,8 @@ export default function ProductDetailsPage() {
           ) : isOwnListing ? (
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700">
               <p className="font-medium">This is your own listing</p>
-              <p className="text-sm mt-1">
-                You cannot purchase your own products
-              </p>
-              <Link
-                href="/vendor/listings"
-                className="btn-outline mt-3 inline-block"
-              >
+              <p className="text-sm mt-1">You cannot purchase your own products</p>
+              <Link href="/vendor/listings" className="btn-outline mt-3 inline-block">
                 Manage Your Listings
               </Link>
             </div>
@@ -282,11 +250,11 @@ export default function ProductDetailsPage() {
               <p className="text-sm mt-1">This item is currently unavailable</p>
             </div>
           )}
+                  </button>
+                </div>
           {/* Features */}
           <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <h3 className="font-semibold text-green-900 mb-3">
-              Buyer Protection
-            </h3>
+            <h3 className="font-semibold text-green-900 mb-3">Buyer Protection</h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-green-700 text-sm">
                 <span>✓</span>
@@ -311,9 +279,7 @@ export default function ProductDetailsPage() {
         <div className="prose max-w-none">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                Item Information
-              </h3>
+              <h3 className="font-semibold text-gray-900 mb-2">Item Information</h3>
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Category:</dt>
@@ -322,20 +288,34 @@ export default function ProductDetailsPage() {
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Condition:</dt>
                   <dd className="font-medium">
-                    {product.condition
-                      ?.split("-")
-                      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                      .join(" ")}
+                    {product.condition?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                   </dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Listed:</dt>
-                  <dd className="font-medium">
-                    {new Date(product.createdAt).toLocaleDateString()}
-                  </dd>
+                  <dd className="font-medium">{new Date(product.createdAt).toLocaleDateString()}</dd>
                 </div>
               </dl>
             </div>
+            {product.seller?.vendorProfile && (
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Seller Information</h3>
+                <dl className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Shop:</dt>
+                    <dd className="font-medium">{product.seller.vendorProfile.shopName}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Total Sales:</dt>
+                    <dd className="font-medium">{product.seller.vendorProfile.totalSales || 0} items</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Business Type:</dt>
+                    <dd className="font-medium capitalize">{product.seller.vendorProfile.businessType}</dd>
+                  </div>
+                </dl>
+              </div>
+            )}
           </div>
         </div>
       </div>

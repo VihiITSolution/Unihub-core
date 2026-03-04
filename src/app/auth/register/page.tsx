@@ -38,10 +38,10 @@ interface FormData {
   password: string;
   confirmPassword: string;
   phoneNumber: string;
-
+  
   // Account Type Selection
-  accountType: "student" | "vendor";
-
+  accountType: 'student' | 'vendor';
+  
   // Student Profile (only for students)
   universityName: string;
   department: string;
@@ -75,7 +75,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
   const dashboardPath = useDashboardPath();
-
+  
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [loading, setLoading] = useState(false);
@@ -85,16 +85,14 @@ export default function RegisterPage() {
   const totalSteps = 3;
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError(null);
   };
 
-  const handleAccountTypeSelect = (accountType: "student" | "vendor") => {
+  const handleAccountTypeSelect = (accountType: 'student' | 'vendor') => {
     setFormData((prev) => ({ ...prev, accountType }));
     setError(null);
   };
@@ -104,10 +102,7 @@ export default function RegisterPage() {
       setError("Please enter your full name");
       return false;
     }
-    if (
-      !formData.email.trim() ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-    ) {
+    if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       setError("Please enter a valid email address");
       return false;
     }
@@ -151,10 +146,10 @@ export default function RegisterPage() {
 
   const handleNext = () => {
     setError(null);
-
+    
     if (step === 1 && !validateStep1()) return;
     if (step === 2 && !validateStep2()) return;
-
+    
     setStep((prev) => Math.min(prev + 1, totalSteps));
   };
 
@@ -177,36 +172,34 @@ export default function RegisterPage() {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        roles: ["student"] as ("student" | "tutor" | "vendor" | "admin")[], // Everyone starts as student in DB
-        primaryRole: "student" as UserRole,
+        roles: [formData.accountType === 'student' ? 'student' : 'student'], // Everyone starts as student in DB
+        primaryRole: 'student' as UserRole,
         phoneNumber: formData.phoneNumber || undefined,
-        studentProfile:
-          formData.accountType === "student"
-            ? {
-                universityName: formData.universityName,
-                department: formData.department,
-                degreeOrCourse: formData.degreeOrCourse,
-                studyingArea: formData.studyingArea || undefined,
-                currentYear: formData.currentYear,
-                currentSemester: formData.currentSemester,
-                studentIdNumber: formData.studentIdNumber || undefined,
-                currentAddress: formData.currentAddress || undefined,
-                phoneNumber: formData.phoneNumber || undefined,
-              }
-            : undefined,
+        studentProfile: formData.accountType === "student"
+          ? {
+              universityName: formData.universityName,
+              department: formData.department,
+              degreeOrCourse: formData.degreeOrCourse,
+              studyingArea: formData.studyingArea || undefined,
+              currentYear: formData.currentYear,
+              currentSemester: formData.currentSemester,
+              studentIdNumber: formData.studentIdNumber || undefined,
+              currentAddress: formData.currentAddress || undefined,
+              phoneNumber: formData.phoneNumber || undefined,
+            }
+          : undefined,
       };
 
       const result = await register(registerData);
 
       if (result.success) {
         // If vendor account, redirect to vendor profile completion
-        if (formData.accountType === "vendor") {
-          router.push("/student/become-vendor");
+        if (formData.accountType === 'vendor') {
+          router.push('/student/become-vendor');
         } else {
           // Student - go to dashboard
-          const redirectPath =
-            sessionStorage.getItem("redirectAfterLogin") || dashboardPath;
-          sessionStorage.removeItem("redirectAfterLogin");
+          const redirectPath = sessionStorage.getItem('redirectAfterLogin') || dashboardPath;
+          sessionStorage.removeItem('redirectAfterLogin');
           router.push(redirectPath);
         }
       } else {
@@ -242,16 +235,12 @@ export default function RegisterPage() {
                   s < step
                     ? "bg-ocean-500 text-white"
                     : s === step
-                      ? "bg-amber-500 text-navy-900"
-                      : "bg-navy-800 text-gray-400"
+                    ? "bg-amber-500 text-navy-900"
+                    : "bg-navy-800 text-gray-400"
                 }`}
               >
                 {s < step ? (
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -285,22 +274,14 @@ export default function RegisterPage() {
           <h2 className="text-2xl font-bold text-white mb-2">
             {step === 1 && "Create Your Account"}
             {step === 2 && "Choose Account Type"}
-            {step === 3 &&
-              formData.accountType === "student" &&
-              "Complete Student Profile"}
-            {step === 3 &&
-              formData.accountType === "vendor" &&
-              "Review & Create Account"}
+            {step === 3 && formData.accountType === 'student' && "Complete Student Profile"}
+            {step === 3 && formData.accountType === 'vendor' && "Review & Create Account"}
           </h2>
           <p className="text-gray-400 mb-6">
             {step === 1 && "Enter your basic information to get started"}
             {step === 2 && "Select whether you're a student or vendor"}
-            {step === 3 &&
-              formData.accountType === "student" &&
-              "Tell us about your university studies"}
-            {step === 3 &&
-              formData.accountType === "vendor" &&
-              "You'll set up your shop after registration"}
+            {step === 3 && formData.accountType === 'student' && "Tell us about your university studies"}
+            {step === 3 && formData.accountType === 'vendor' && "You'll set up your shop after registration"}
           </p>
 
           {error && (
@@ -309,25 +290,13 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form
-            onSubmit={
-              step === totalSteps
-                ? handleSubmit
-                : (e) => {
-                    e.preventDefault();
-                    handleNext();
-                  }
-            }
-          >
+          <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }}>
             {/* Step 1: Basic Info */}
             {step === 1 && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label
-                      htmlFor="firstName"
-                      className="block text-sm font-medium text-gray-300 mb-1"
-                    >
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-1">
                       First Name
                     </label>
                     <input
@@ -342,10 +311,7 @@ export default function RegisterPage() {
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="lastName"
-                      className="block text-sm font-medium text-gray-300 mb-1"
-                    >
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-1">
                       Last Name
                     </label>
                     <input
@@ -362,10 +328,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-300 mb-1"
-                  >
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
                     Email Address
                   </label>
                   <input
@@ -382,12 +345,8 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="phoneNumber"
-                    className="block text-sm font-medium text-gray-300 mb-1"
-                  >
-                    Phone Number{" "}
-                    <span className="text-gray-500">(optional)</span>
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300 mb-1">
+                    Phone Number <span className="text-gray-500">(optional)</span>
                   </label>
                   <input
                     id="phoneNumber"
@@ -401,10 +360,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-300 mb-1"
-                  >
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
                     Password
                   </label>
                   <input
@@ -418,16 +374,11 @@ export default function RegisterPage() {
                     className="w-full px-4 py-3 bg-navy-800 border border-navy-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
                     placeholder="••••••••"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Must be at least 8 characters
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-gray-300 mb-1"
-                  >
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
                     Confirm Password
                   </label>
                   <input
@@ -449,8 +400,7 @@ export default function RegisterPage() {
             {step === 2 && (
               <div className="space-y-4">
                 <p className="text-gray-400 text-sm mb-4">
-                  Choose your account type. You can access marketplace features
-                  regardless of your choice.
+                  Choose your account type. You can access marketplace features regardless of your choice.
                 </p>
                 <div className="space-y-3">
                   {/* Student Account */}
@@ -463,34 +413,19 @@ export default function RegisterPage() {
                         : "border-navy-700 bg-navy-800 hover:border-navy-600"
                     }`}
                   >
-                    <div
-                      className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
-                        formData.accountType === "student"
-                          ? "bg-ocean-500"
-                          : "bg-navy-700"
-                      }`}
-                    >
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
+                      formData.accountType === "student" ? "bg-ocean-500" : "bg-navy-700"
+                    }`}>
                       {formData.accountType === "student" && (
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       )}
                     </div>
                     <div className="text-left">
-                      <h3 className="text-white font-semibold text-lg mb-1">
-                        🎓 Student
-                      </h3>
+                      <h3 className="text-white font-semibold text-lg mb-1">🎓 Student</h3>
                       <p className="text-gray-400 text-sm">
-                        I'm a university student looking to learn, attend Kuppi
-                        sessions, and shop on the marketplace
+                        I'm a university student looking to learn, attend Kuppi sessions, and shop on the marketplace
                       </p>
                       <ul className="mt-2 space-y-1 text-xs text-gray-500">
                         <li>• Enroll in courses and sessions</li>
@@ -510,34 +445,19 @@ export default function RegisterPage() {
                         : "border-navy-700 bg-navy-800 hover:border-navy-600"
                     }`}
                   >
-                    <div
-                      className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
-                        formData.accountType === "vendor"
-                          ? "bg-amber-500"
-                          : "bg-navy-700"
-                      }`}
-                    >
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
+                      formData.accountType === "vendor" ? "bg-amber-500" : "bg-navy-700"
+                    }`}>
                       {formData.accountType === "vendor" && (
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       )}
                     </div>
                     <div className="text-left">
-                      <h3 className="text-white font-semibold text-lg mb-1">
-                        🏪 Vendor
-                      </h3>
+                      <h3 className="text-white font-semibold text-lg mb-1">🏪 Vendor</h3>
                       <p className="text-gray-400 text-sm">
-                        I want to sell products on the UniHub marketplace (I'm
-                        not a student)
+                        I want to sell products on the UniHub marketplace (I'm not a student)
                       </p>
                       <ul className="mt-2 space-y-1 text-xs text-gray-500">
                         <li>• Create and manage shop listings</li>
@@ -556,10 +476,7 @@ export default function RegisterPage() {
                 {formData.accountType === "student" ? (
                   <>
                     <div>
-                      <label
-                        htmlFor="universityName"
-                        className="block text-sm font-medium text-gray-300 mb-1"
-                      >
+                      <label htmlFor="universityName" className="block text-sm font-medium text-gray-300 mb-1">
                         University
                       </label>
                       <select
@@ -581,10 +498,7 @@ export default function RegisterPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label
-                          htmlFor="department"
-                          className="block text-sm font-medium text-gray-300 mb-1"
-                        >
+                        <label htmlFor="department" className="block text-sm font-medium text-gray-300 mb-1">
                           Department
                         </label>
                         <input
@@ -599,10 +513,7 @@ export default function RegisterPage() {
                         />
                       </div>
                       <div>
-                        <label
-                          htmlFor="degreeOrCourse"
-                          className="block text-sm font-medium text-gray-300 mb-1"
-                        >
+                        <label htmlFor="degreeOrCourse" className="block text-sm font-medium text-gray-300 mb-1">
                           Degree/Course
                         </label>
                         <input
@@ -619,12 +530,8 @@ export default function RegisterPage() {
                     </div>
 
                     <div>
-                      <label
-                        htmlFor="studyingArea"
-                        className="block text-sm font-medium text-gray-300 mb-1"
-                      >
-                        Studying Area{" "}
-                        <span className="text-gray-500">(optional)</span>
+                      <label htmlFor="studyingArea" className="block text-sm font-medium text-gray-300 mb-1">
+                        Studying Area <span className="text-gray-500">(optional)</span>
                       </label>
                       <input
                         id="studyingArea"
@@ -639,10 +546,7 @@ export default function RegisterPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label
-                          htmlFor="currentYear"
-                          className="block text-sm font-medium text-gray-300 mb-1"
-                        >
+                        <label htmlFor="currentYear" className="block text-sm font-medium text-gray-300 mb-1">
                           Current Year
                         </label>
                         <select
@@ -660,10 +564,7 @@ export default function RegisterPage() {
                         </select>
                       </div>
                       <div>
-                        <label
-                          htmlFor="currentSemester"
-                          className="block text-sm font-medium text-gray-300 mb-1"
-                        >
+                        <label htmlFor="currentSemester" className="block text-sm font-medium text-gray-300 mb-1">
                           Current Semester
                         </label>
                         <select
@@ -680,12 +581,8 @@ export default function RegisterPage() {
                     </div>
 
                     <div>
-                      <label
-                        htmlFor="studentIdNumber"
-                        className="block text-sm font-medium text-gray-300 mb-1"
-                      >
-                        Student ID{" "}
-                        <span className="text-gray-500">(optional)</span>
+                      <label htmlFor="studentIdNumber" className="block text-sm font-medium text-gray-300 mb-1">
+                        Student ID <span className="text-gray-500">(optional)</span>
                       </label>
                       <input
                         id="studentIdNumber"
@@ -699,12 +596,8 @@ export default function RegisterPage() {
                     </div>
 
                     <div>
-                      <label
-                        htmlFor="currentAddress"
-                        className="block text-sm font-medium text-gray-300 mb-1"
-                      >
-                        Current Address{" "}
-                        <span className="text-gray-500">(optional)</span>
+                      <label htmlFor="currentAddress" className="block text-sm font-medium text-gray-300 mb-1">
+                        Current Address <span className="text-gray-500">(optional)</span>
                       </label>
                       <textarea
                         id="currentAddress"
@@ -726,14 +619,10 @@ export default function RegisterPage() {
                         Vendor Account Setup
                       </h3>
                       <p className="text-gray-400 mb-4">
-                        After creating your account, you'll be redirected to
-                        complete your vendor shop profile with business details,
-                        contact information, and payment settings.
+                        After creating your account, you'll be redirected to complete your vendor shop profile with business details, contact information, and payment settings.
                       </p>
                       <div className="text-left max-w-sm mx-auto bg-navy-800/50 p-4 rounded-lg">
-                        <p className="text-sm font-medium text-gray-300 mb-2">
-                          You'll need to provide:
-                        </p>
+                        <p className="text-sm font-medium text-gray-300 mb-2">You'll need to provide:</p>
                         <ul className="text-sm text-gray-400 space-y-1">
                           <li>• Shop name and description</li>
                           <li>• Business contact details</li>
@@ -757,17 +646,11 @@ export default function RegisterPage() {
                   />
                   <label htmlFor="terms" className="ml-3 text-sm text-gray-300">
                     I agree to the{" "}
-                    <Link
-                      href="/terms"
-                      className="text-ocean-400 hover:underline"
-                    >
+                    <Link href="/terms" className="text-ocean-400 hover:underline">
                       Terms and Conditions
                     </Link>{" "}
                     and{" "}
-                    <Link
-                      href="/privacy"
-                      className="text-ocean-400 hover:underline"
-                    >
+                    <Link href="/privacy" className="text-ocean-400 hover:underline">
                       Privacy Policy
                     </Link>
                   </label>
@@ -798,8 +681,8 @@ export default function RegisterPage() {
                 {loading
                   ? "Creating account..."
                   : step === totalSteps
-                    ? "Create Account"
-                    : "Continue"}
+                  ? "Create Account"
+                  : "Continue"}
               </button>
             </div>
           </form>
@@ -808,10 +691,7 @@ export default function RegisterPage() {
         {/* Login Link */}
         <p className="mt-6 text-center text-gray-400">
           Already have an account?{" "}
-          <Link
-            href="/auth/login"
-            className="text-ocean-400 hover:underline font-medium"
-          >
+          <Link href="/auth/login" className="text-ocean-400 hover:underline font-medium">
             Sign in
           </Link>
         </p>

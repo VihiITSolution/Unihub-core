@@ -1,12 +1,8 @@
-import {
-  BoardingPlace,
-  BoardingPlaceFilters,
-  BoardingPlaceFormData,
-} from "@/types";
-import { apiClient } from "@/lib/api-client";
+import { BoardingPlace, BoardingPlaceFilters, BoardingPlaceFormData } from '@/types';
+import { apiClient } from '@/lib/api-client';
 
 class BoardingService {
-  private baseUrl = "/boarding";
+  private baseUrl = '/boarding';
 
   // Create a new boarding place listing
   async createListing(data: BoardingPlaceFormData): Promise<BoardingPlace> {
@@ -16,7 +12,7 @@ class BoardingService {
   // Pay for a boarding listing
   async payForListing(
     id: number,
-    paymentData: { paymentMethod: string; transactionId?: string },
+    paymentData: { paymentMethod: string; transactionId?: string }
   ): Promise<BoardingPlace> {
     return apiClient.post(`${this.baseUrl}/places/${id}/pay`, paymentData);
   }
@@ -49,16 +45,14 @@ class BoardingService {
 
   // Get my boarding listings (vendor only)
   async getMyListings(): Promise<BoardingPlace[]> {
-    const response = await apiClient.get<{ places: BoardingPlace[] }>(
-      `${this.baseUrl}/my-listings`,
-    );
+    const response = await apiClient.get(`${this.baseUrl}/my-listings`);
     return response.places;
   }
 
   // Update boarding listing
   async updateListing(
     id: number,
-    data: Partial<BoardingPlaceFormData>,
+    data: Partial<BoardingPlaceFormData>
   ): Promise<BoardingPlace> {
     return apiClient.patch(`${this.baseUrl}/places/${id}`, data);
   }

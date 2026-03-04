@@ -12,7 +12,7 @@ export default function VendorListingsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [listings, setListings] = useState<MarketplaceItem[]>([]);
-  const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
+  const [filter, setFilter] = useState<"all" | "active" | "inactive" | "pending">("all");
 
   useEffect(() => {
     if (!user?.isVendorProfileComplete) {
@@ -39,8 +39,7 @@ export default function VendorListingsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!token || !confirm("Are you sure you want to delete this listing?"))
-      return;
+    if (!token || !confirm("Are you sure you want to delete this listing?")) return;
 
     try {
       await marketplaceService.deleteListing(id, token);
@@ -51,11 +50,67 @@ export default function VendorListingsPage() {
     }
   };
 
-  const filteredListings = listings.filter((item) => {
-    if (filter === "active") return item.isAvailable;
+  const getPaymentStatusBadge = (item: MarketplaceItem) => {
+    if (!item.requiresPayment) {
+      return null;
+    }
+
+    if (!item.isPaid) {
+      return (
+        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+          Payment Required
+        </span>
+      );
+    }
+
+    if (item.approvalStatus === 'pending') {
+      return (
+        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+          Pending Approval
+        </span>
+      );
+    }
+
+    if (item.approvalStatus === 'rejected') {
+      return (
+        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+          Rejected
+        </span>
+      );
+    }
+
+    if (item.approvalStatus === 'approved') {
+      return (
+        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+          Approved
+        </span>
+      );
+    }
+
+    return null;
+  };
+
+  const getRemainingDays = (expiresAt?: string) => {
+    if (!expiresAt) return null;
+    
+    const now = new Date();
+    const expiry = new Date(expiresAt);
+    const diffTime = expiry.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return <span className="text-red-600">Expired</span>;
+    if (diffDays <= 7) return <span className="text-orange-600">{diffDays} days left</span>;
+    return <span className="text-gray-600">{diffDays} days left</span>;
+  };
+
+  const filteredListings = listings.filter(item => {
+    if (filter === "active") return item.isAvailable && item.isPaid && item.approvalStatus === 'approved';
     if (filter === "inactive") return !item.isAvailable;
+    if (filter === "pending") return item.requiresPayment && (!item.isPaid || item.approvalStatus === 'pending');
     return true;
   });
+
+  const pendingCount = listings.filter(l => l.requiresPayment && (!l.isPaid || l.approvalStatus === 'pending')).length;
 
   if (loading) {
     return (
@@ -97,7 +152,17 @@ export default function VendorListingsPage() {
               : "border-transparent text-gray-600 hover:text-gray-900"
           }`}
         >
-          Active ({listings.filter((l) => l.isAvailable).length})
+          Active ({listings.filter(l => l.isAvailable && l.isPaid && l.approvalStatus === 'approved').length})
+        </button>
+        <button
+          onClick={() => setFilter("pending")}
+          className={`px-4 py-2 font-medium border-b-2 ${
+            filter === "pending"
+              ? "border-primary-600 text-primary-600"
+              : "border-transparent text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          Pending ({pendingCount})
         </button>
         <button
           onClick={() => setFilter("inactive")}
@@ -107,7 +172,7 @@ export default function VendorListingsPage() {
               : "border-transparent text-gray-600 hover:text-gray-900"
           }`}
         >
-          Inactive ({listings.filter((l) => !l.isAvailable).length})
+          Inactive ({listings.filter(l => !l.isAvailable).length})
         </button>
       </div>
 
@@ -128,30 +193,14 @@ export default function VendorListingsPage() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Product
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Category
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Price
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Stock
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Sold
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Views
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Actions
-                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Product</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Category</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Price</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Stock</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Sold</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Expires</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -164,47 +213,64 @@ export default function VendorListingsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm">{item.category}</td>
-                  <td className="px-4 py-3 font-semibold">Rs. {item.price}</td>
                   <td className="px-4 py-3">
-                    <span
-                      className={
-                        item.stock > 10
-                          ? "text-green-600"
-                          : item.stock > 0
-                            ? "text-orange-600"
-                            : "text-red-600"
-                      }
-                    >
+                    <div className="font-semibold">${item.price}</div>
+                    {item.requiresPayment && item.adFee && (
+                      <div className="text-xs text-gray-500">Fee: ${item.adFee}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={item.stock > 10 ? "text-green-600" : item.stock > 0 ? "text-orange-600" : "text-red-600"}>
                       {item.stock}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm">{item.soldCount}</td>
-                  <td className="px-4 py-3 text-sm">{item.viewCount}</td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        item.isAvailable
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {item.isAvailable ? "Active" : "Inactive"}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                          item.isAvailable
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {item.isAvailable ? "Active" : "Inactive"}
+                      </span>
+                      {getPaymentStatusBadge(item)}
+                      {item.approvalStatus === 'rejected' && item.rejectionReason && (
+                        <div className="text-xs text-red-600 mt-1" title={item.rejectionReason}>
+                          See reason
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {getRemainingDays(item.expiresAt)}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <Link
-                        href={`/vendor/listings/${item.id}`}
-                        className="text-primary-600 hover:text-primary-800 text-sm font-medium"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-800 text-sm font-medium"
-                      >
-                        Delete
-                      </button>
+                    <div className="flex flex-col gap-2">
+                      {item.requiresPayment && !item.isPaid && (
+                        <Link
+                          href={`/vendor/listings/${item.id}/pay`}
+                          className="text-white bg-primary-600 hover:bg-primary-700 px-3 py-1 rounded text-sm font-medium text-center"
+                        >
+                          Pay Now
+                        </Link>
+                      )}
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/vendor/listings/${item.id}`}
+                          className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </td>
                 </tr>

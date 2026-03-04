@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
-import reviewService, { Review } from "@/services/review.service";
 import type { Course } from "@/types";
 
 export default function TutorDashboard() {
@@ -15,12 +14,6 @@ export default function TutorDashboard() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCourseReviews, setSelectedCourseReviews] = useState<{
-    [key: string]: Review[];
-  }>({});
-  const [showReviews, setShowReviews] = useState<{ [key: string]: boolean }>(
-    {},
-  );
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -57,39 +50,12 @@ export default function TutorDashboard() {
     }
   };
 
-  const loadCourseReviews = async (courseId: string) => {
-    try {
-      const result = await reviewService.getCourseReviews(parseInt(courseId));
-      if (result.success && result.data) {
-        setSelectedCourseReviews((prev) => ({
-          ...prev,
-          [courseId]: result.data!.reviews,
-        }));
-      }
-    } catch (error) {
-      console.error("Failed to load course reviews:", error);
-    }
-  };
-
-  const toggleReviews = async (courseId: string) => {
-    const isCurrentlyShown = showReviews[courseId];
-
-    if (!isCurrentlyShown && !selectedCourseReviews[courseId]) {
-      await loadCourseReviews(courseId);
-    }
-
-    setShowReviews((prev) => ({
-      ...prev,
-      [courseId]: !isCurrentlyShown,
-    }));
-  };
-
   const handleDeleteCourse = async (courseId: string, courseTitle: string) => {
     if (!token) return;
 
     if (
       !confirm(
-        `Are you sure you want to delete "${courseTitle}"? This action cannot be undone.`,
+        `Are you sure you want to delete "${courseTitle}"? This action cannot be undone.`
       )
     ) {
       return;
@@ -174,7 +140,7 @@ export default function TutorDashboard() {
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">
-            {courses.reduce((acc, c) => acc + (c.enrollmentCount || 0), 0)}
+            {courses.reduce((acc, c) => acc + (c.enrolledCount || 0), 0)}
           </div>
           <div className="text-sm text-gray-500">Total Students</div>
         </div>
@@ -193,7 +159,7 @@ export default function TutorDashboard() {
           <div className="text-3xl font-bold text-gray-900 mb-1">
             {courses.length > 0
               ? (
-                  courses.reduce((acc, c) => acc + (Number(c.rating) || 0), 0) /
+                  courses.reduce((acc, c) => acc + (c.rating || 0), 0) /
                   courses.length
                 ).toFixed(1)
               : "0.0"}
@@ -221,7 +187,7 @@ export default function TutorDashboard() {
           <div className="text-3xl font-bold text-gray-900 mb-1">
             $
             {courses
-              .reduce((acc, c) => acc + (c.enrollmentCount || 0) * c.price, 0)
+              .reduce((acc, c) => acc + (c.enrolledCount || 0) * c.price, 0)
               .toFixed(2)}
           </div>
           <div className="text-sm text-gray-500">Total Revenue</div>
@@ -374,7 +340,10 @@ export default function TutorDashboard() {
                         >
                           <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                         </svg>
-                        <span>{course.enrollmentCount || 0} students</span>
+                        <span>
+                          {course.enrolledCount || course.enrollmentCount || 0}{" "}
+                          students
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <svg
@@ -403,108 +372,60 @@ export default function TutorDashboard() {
                             d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Rs. {course.price}</span>
+                        <span>${course.price}</span>
                       </div>
-                      <button
-                        onClick={() => toggleReviews(course.id)}
-                        className="flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                          />
-                        </svg>
-                        <span>
-                          {showReviews[course.id]
-                            ? "Hide Reviews"
-                            : `View Reviews (${course.reviewCount || 0})`}
-                        </span>
-                      </button>
                     </div>
-
-                    {/* Reviews Section */}
-                    {showReviews[course.id] && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <h4 className="font-semibold mb-3">Student Reviews</h4>
-                        {selectedCourseReviews[course.id]?.length > 0 ? (
-                          <div className="space-y-3 max-h-96 overflow-y-auto">
-                            {selectedCourseReviews[course.id].map((review) => (
-                              <div
-                                key={review.id}
-                                className="p-4 bg-gray-50 rounded-lg"
-                              >
-                                <div className="flex items-start justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold overflow-hidden">
-                                      {review.user?.profileImage ? (
-                                        <img
-                                          src={review.user.profileImage}
-                                          alt={`${review.user.firstName} ${review.user.lastName}`}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      ) : (
-                                        <>
-                                          {review.user?.firstName?.charAt(0)}
-                                          {review.user?.lastName?.charAt(0)}
-                                        </>
-                                      )}
-                                    </div>
-                                    <div>
-                                      <p className="font-medium text-sm">
-                                        {review.user?.firstName}{" "}
-                                        {review.user?.lastName}
-                                      </p>
-                                      <div className="flex gap-1">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                          <span
-                                            key={star}
-                                            className={`text-sm ${
-                                              star <= review.rating
-                                                ? "text-yellow-400"
-                                                : "text-gray-300"
-                                            }`}
-                                          >
-                                            ★
-                                          </span>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <span className="text-xs text-gray-500">
-                                    {new Date(
-                                      review.createdAt,
-                                    ).toLocaleDateString()}
-                                  </span>
-                                </div>
-                                {review.comment && (
-                                  <p className="text-sm text-gray-700 mt-2">
-                                    {review.comment}
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-gray-500 text-sm">
-                            No reviews yet
-                          </p>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
+      </div>
+
+      {/* Recent Activity */}
+      <div className="mt-16">
+        <h2 className="text-3xl font-bold mb-6">Recent Activity</h2>
+        <div className="card">
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 pb-4 border-b">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600">✓</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold">New enrollment</p>
+                <p className="text-sm text-gray-600">
+                  Student enrolled in &quot;Web Development Bootcamp&quot;
+                </p>
+              </div>
+              <span className="text-sm text-gray-500">2 hours ago</span>
+            </div>
+            <div className="flex items-center gap-4 pb-4 border-b">
+              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                <span className="text-yellow-600">⭐</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold">New review</p>
+                <p className="text-sm text-gray-600">
+                  5-star review on &quot;Web Development Bootcamp&quot;
+                </p>
+              </div>
+              <span className="text-sm text-gray-500">5 hours ago</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600">💰</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold">Payment received</p>
+                <p className="text-sm text-gray-600">
+                  Earned $99.99 from course enrollment
+                </p>
+              </div>
+              <span className="text-sm text-gray-500">1 day ago</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

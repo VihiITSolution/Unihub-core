@@ -5,18 +5,16 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
-import { useAuth, useDashboardPath } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const profileRef = useRef<HTMLDivElement>(null);
-
-  const { user, isAuthenticated, logout, switchRole } = useAuth();
-  const dashboardPath = useDashboardPath();
+  const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
+  const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,26 +27,22 @@ export default function Header() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        profileRef.current &&
-        !profileRef.current.contains(event.target as Node)
-      ) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
       }
     };
 
     if (isProfileOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isProfileOpen]);
 
   const navLinks = [
-    { href: "/courses", label: "Courses" },
-    { href: "/marketplace", label: "Marketplace" },
-    { href: "/tutor/dashboard", label: "Teach" },
-    { href: "/student/dashboard", label: "My Learning" },
+    { href: "/courses", label: "Courses", icon: "📚" },
+    { href: "/marketplace", label: "Marketplace", icon: "🛍️" },
+    { href: "/tutor/dashboard", label: "Teach", icon: "🎓" },
+    { href: "/student/dashboard", label: "My Learning", icon: "📖" },
   ];
 
   return (
@@ -56,6 +50,7 @@ export default function Header() {
       className={`bg-white sticky top-0 z-50 transition-all duration-300 ${
         isScrolled ? "shadow-lg backdrop-blur-sm bg-white/95" : "shadow-md"
       }`}
+      suppressHydrationWarning
     >
       <nav className="container-custom">
         <div className="flex justify-between items-center h-20">
@@ -116,6 +111,7 @@ export default function Header() {
                 href={link.href}
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all duration-200 font-medium"
               >
+                <span>{link.icon}</span>
                 <span>{link.label}</span>
               </Link>
             ))}
@@ -143,271 +139,57 @@ export default function Header() {
               {isAuthenticated && user ? (
                 <div className="relative" ref={profileRef}>
                   <button
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    onClick={() => {
+                      console.log('Profile clicked, current state:', isProfileOpen);
+                      setIsProfileOpen(!isProfileOpen);
+                    }}
+                    className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-ocean-500 to-ocean-600 rounded-full flex items-center justify-center text-white text-sm font-medium overflow-hidden">
-                      {user.profileImage ? (
-                        <img
-                          src={user.profileImage}
-                          alt={`${user.firstName} ${user.lastName}`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <>
-                          {user.firstName?.[0]}
-                          {user.lastName?.[0]}
-                        </>
-                      )}
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-ocean-500 to-ocean-600 flex items-center justify-center text-white font-semibold">
+                      {user.firstName?.[0]}{user.lastName?.[0]}
                     </div>
-                    <span className="text-sm font-medium text-gray-700">
-                      {user.firstName}
-                    </span>
-                    <svg
-                      className={`w-4 h-4 text-gray-500 transition-transform ${
-                        isProfileOpen ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
+                    <div className="hidden md:block text-left">
+                      <div className="text-sm font-medium text-gray-900">
+                        {user.firstName} {user.lastName}
+                      </div>
+                      <div className="text-xs text-gray-500 capitalize">{user.primaryRole}</div>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
                   {/* Dropdown Menu */}
                   {isProfileOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                      <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ocean-500 to-ocean-600 flex items-center justify-center text-white text-sm font-medium overflow-hidden flex-shrink-0">
-                          {user.profileImage ? (
-                            <img
-                              src={user.profileImage}
-                              alt={`${user.firstName} ${user.lastName}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <>
-                              {user.firstName?.[0]}
-                              {user.lastName?.[0]}
-                            </>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {user.firstName} {user.lastName}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {user.email}
-                          </p>
-                          <p className="text-xs text-ocean-600 mt-1 capitalize">
-                            {user.primaryRole}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Role Switcher - Show only if user has multiple roles */}
-                      {user.roles.length > 1 && (
-                        <>
-                          <div className="px-4 py-2 border-b border-gray-100">
-                            <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                              Switch Mode
-                            </p>
-                            <div className="space-y-1">
-                              {user.roles.includes("student") && (
-                                <button
-                                  onClick={async () => {
-                                    if (user.primaryRole !== "student") {
-                                      const result =
-                                        await switchRole("student");
-                                      if (result.success) {
-                                        router.push("/student/dashboard");
-                                        setIsProfileOpen(false);
-                                      }
-                                    }
-                                  }}
-                                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors ${
-                                    user.primaryRole === "student"
-                                      ? "bg-blue-50 text-blue-700 font-medium"
-                                      : "text-gray-700 hover:bg-gray-50"
-                                  }`}
-                                >
-                                  <span className="flex items-center gap-2">
-                                    <svg
-                                      className="w-4 h-4"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                      />
-                                    </svg>
-                                    Student Mode
-                                  </span>
-                                  {user.primaryRole === "student" && (
-                                    <svg
-                                      className="w-4 h-4 text-blue-600"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                  )}
-                                </button>
-                              )}
-                              {user.roles.includes("tutor") && (
-                                <button
-                                  onClick={async () => {
-                                    if (user.primaryRole !== "tutor") {
-                                      const result = await switchRole("tutor");
-                                      if (result.success) {
-                                        router.push("/tutor/dashboard");
-                                        setIsProfileOpen(false);
-                                      }
-                                    }
-                                  }}
-                                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors ${
-                                    user.primaryRole === "tutor"
-                                      ? "bg-green-50 text-green-700 font-medium"
-                                      : "text-gray-700 hover:bg-gray-50"
-                                  }`}
-                                >
-                                  <span className="flex items-center gap-2">
-                                    <svg
-                                      className="w-4 h-4"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                                      />
-                                    </svg>
-                                    Tutor Mode
-                                  </span>
-                                  {user.primaryRole === "tutor" && (
-                                    <svg
-                                      className="w-4 h-4 text-green-600"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                  )}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      <Link
-                        href={dashboardPath}
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        <svg
-                          className="w-4 h-4 mr-3"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                          />
-                        </svg>
-                        Dashboard
-                      </Link>
-
-                      <Link
-                        href="/student/learn"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        <svg
-                          className="w-4 h-4 mr-3"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                          />
-                        </svg>
-                        My Learning
-                      </Link>
-
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                       <Link
                         href="/settings"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       >
-                        <svg
-                          className="w-4 h-4 mr-3"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
-                        Settings
+                        <span className="flex items-center">
+                          <svg className="w-4 h-4 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          Settings
+                        </span>
                       </Link>
-
+                      <div className="border-t border-gray-200 my-1"></div>
                       <button
-                        onClick={logout}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          logout();
+                          router.push('/');
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                       >
-                        <svg
-                          className="w-4 h-4 mr-3"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                          />
-                        </svg>
-                        Logout
+                        <span className="flex items-center">
+                          <svg className="w-4 h-4 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          Log Out
+                        </span>
                       </button>
                     </div>
                   )}
@@ -415,20 +197,12 @@ export default function Header() {
               ) : (
                 <>
                   <Link href="/auth/login">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-navy-800 hover:text-ocean-600"
-                    >
+                    <Button variant="ghost" size="sm" className="text-navy-800 hover:text-ocean-600">
                       Login
                     </Button>
                   </Link>
                   <Link href="/auth/register">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0"
-                    >
+                    <Button variant="primary" size="sm" className="bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0">
                       Sign Up
                     </Button>
                   </Link>
@@ -498,189 +272,23 @@ export default function Header() {
                   className="flex items-center space-x-3 py-3 px-4 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all"
                   onClick={() => setIsMenuOpen(false)}
                 >
+                  <span className="text-xl">{link.icon}</span>
                   <span className="font-medium">{link.label}</span>
                 </Link>
               ))}
             </div>
 
             <div className="mt-4 pt-4 border-t space-y-3">
-              {isAuthenticated && user ? (
-                <>
-                  <div className="px-4 py-2 bg-gray-50 rounded-lg flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ocean-500 to-ocean-600 flex items-center justify-center text-white text-sm font-medium overflow-hidden flex-shrink-0">
-                      {user.profileImage ? (
-                        <img
-                          src={user.profileImage}
-                          alt={`${user.firstName} ${user.lastName}`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <>
-                          {user.firstName?.[0]}
-                          {user.lastName?.[0]}
-                        </>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {user.firstName} {user.lastName}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {user.email}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Role Switcher for Mobile - Show only if user has multiple roles */}
-                  {user.roles.length > 1 && (
-                    <div className="px-4 py-3 bg-gray-50 rounded-lg">
-                      <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                        Switch Mode
-                      </p>
-                      <div className="space-y-2">
-                        {user.roles.includes("student") && (
-                          <button
-                            onClick={async () => {
-                              if (user.primaryRole !== "student") {
-                                const result = await switchRole("student");
-                                if (result.success) {
-                                  router.push("/student/dashboard");
-                                  setIsMenuOpen(false);
-                                }
-                              }
-                            }}
-                            className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors ${
-                              user.primaryRole === "student"
-                                ? "bg-blue-50 text-blue-700 font-medium"
-                                : "bg-white text-gray-700 hover:bg-gray-50"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                />
-                              </svg>
-                              Student Mode
-                            </span>
-                            {user.primaryRole === "student" && (
-                              <svg
-                                className="w-4 h-4 text-blue-600"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            )}
-                          </button>
-                        )}
-                        {user.roles.includes("tutor") && (
-                          <button
-                            onClick={async () => {
-                              if (user.primaryRole !== "tutor") {
-                                const result = await switchRole("tutor");
-                                if (result.success) {
-                                  router.push("/tutor/dashboard");
-                                  setIsMenuOpen(false);
-                                }
-                              }
-                            }}
-                            className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors ${
-                              user.primaryRole === "tutor"
-                                ? "bg-green-50 text-green-700 font-medium"
-                                : "bg-white text-gray-700 hover:bg-gray-50"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                                />
-                              </svg>
-                              Tutor Mode
-                            </span>
-                            {user.primaryRole === "tutor" && (
-                              <svg
-                                className="w-4 h-4 text-green-600"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <Link
-                    href={dashboardPath}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Button variant="outline" className="w-full">
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Link href="/settings" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="outline" className="w-full">
-                      Settings
-                    </Button>
-                  </Link>
-                  <button
-                    onClick={logout}
-                    className="w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                    <Button
-                      variant="outline"
-                      className="w-full border-ocean-400 text-ocean-600 hover:bg-ocean-50"
-                    >
-                      Login
-                    </Button>
-                  </Link>
-                  <Link
-                    href="/auth/register"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Button
-                      variant="primary"
-                      className="w-full bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0"
-                    >
-                      Sign Up
-                    </Button>
-                  </Link>
-                </>
-              )}
+              <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="outline" className="w-full border-ocean-400 text-ocean-600 hover:bg-ocean-50">
+                  Login
+                </Button>
+              </Link>
+              <Link href="/auth/register" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="primary" className="w-full bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0">
+                  Sign Up
+                </Button>
+              </Link>
             </div>
           </div>
         )}
@@ -688,3 +296,4 @@ export default function Header() {
     </header>
   );
 }
+

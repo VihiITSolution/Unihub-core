@@ -36,14 +36,11 @@ export default function WatchLiveSessionPage() {
         return;
       }
 
-      const response = await liveSessionService.joinSession(
-        sessionId,
-        token ?? undefined,
-      );
-
+      const response = await liveSessionService.joinSession(sessionId, token);
+      
       setSession(response.data.session);
       setEmbedUrl(response.data.embedUrl);
-      setChatUrl(response.data.chatUrl ?? null);
+      setChatUrl(response.data.chatUrl);
       setHasJoined(true);
     } catch (err: any) {
       setError(err.message || "Failed to join session");
@@ -57,7 +54,7 @@ export default function WatchLiveSessionPage() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      await liveSessionService.leaveSession(sessionId, token ?? undefined);
+      await liveSessionService.leaveSession(sessionId, token);
     } catch (err: any) {
       console.error("Failed to leave session:", err);
     }

@@ -26,10 +26,7 @@ export default function SessionEnrollmentsPage() {
         return;
       }
 
-      const response = await liveSessionService.getSessionEnrollments(
-        sessionId,
-        token ?? undefined,
-      );
+      const response = await liveSessionService.getSessionEnrollments(sessionId, token);
       setEnrollments(response.data || []);
     } catch (err: any) {
       setError(err.message || "Failed to load enrollments");
@@ -139,26 +136,21 @@ export default function SessionEnrollmentsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <p className="font-medium text-gray-900">
-                        {enrollment.student?.firstName}{" "}
-                        {enrollment.student?.lastName}
+                        {enrollment.student?.firstName} {enrollment.student?.lastName}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        {enrollment.student?.email}
-                      </p>
+                      <p className="text-sm text-gray-500">{enrollment.student?.email}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <p className="font-medium">
-                        ${enrollment.amountPaid.toFixed(2)}
-                      </p>
+                      <p className="font-medium">${enrollment.amountPaid.toFixed(2)}</p>
                       <span
                         className={`text-xs px-2 py-1 rounded ${
                           enrollment.paymentStatus === "completed"
                             ? "bg-green-100 text-green-800"
                             : enrollment.paymentStatus === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
                         {enrollment.paymentStatus}
@@ -178,9 +170,7 @@ export default function SessionEnrollmentsPage() {
                       enrollment.leftAt ? (
                         <span className="text-gray-600">Left</span>
                       ) : (
-                        <span className="text-green-600 font-medium">
-                          Active
-                        </span>
+                        <span className="text-green-600 font-medium">Active</span>
                       )
                     ) : (
                       <span className="text-gray-400">Not joined</span>

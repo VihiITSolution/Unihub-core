@@ -38,6 +38,34 @@ export interface UpdateOrderData {
   sellerNotes?: string;
 }
 
+export interface PaymentInfo {
+  requiresPayment: boolean;
+  adFee?: number;
+  paymentMethods: {
+    payhere: boolean;
+    helapay: boolean;
+    bankTransfer: boolean;
+  };
+  bankDetails?: {
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+    branch: string;
+  };
+}
+
+export interface PaymentData {
+  method: 'payhere' | 'helapay' | 'bank_transfer';
+  returnUrl: string;
+  cancelUrl: string;
+}
+
+export interface BankTransferProofData {
+  proofImage: string; // Base64 string or URL
+  transactionDate: string;
+  transactionReference?: string;
+}
+
 export const marketplaceService = {
   /**
    * Get all marketplace items with filters
@@ -188,6 +216,49 @@ export const marketplaceService = {
   ): Promise<ApiResponse<{ order: Order }>> {
     return apiClient.put<ApiResponse<{ order: Order }>>(
       `/marketplace/orders/${orderId}`,
+      data,
+      { token }
+    );
+  },
+
+  /**
+   * Get payment information for a listing
+   */
+  async getPaymentInfo(
+    itemId: number,
+    token: string
+  ): Promise<ApiResponse<PaymentInfo>> {
+    return apiClient.get<ApiResponse<PaymentInfo>>(
+      `/marketplace/${itemId}/payment-info`,
+      { token }
+    );
+  },
+
+  /**
+   * Initiate payment for a listing
+   */
+  async initiatePayment(
+    itemId: number,
+    data: PaymentData,
+    token: string
+  ): Promise<ApiResponse<{ paymentUrl?: string; formData?: any; paymentId: number }>> {
+    return apiClient.post<ApiResponse<any>>(
+      `/marketplace/${itemId}/pay`,
+      data,
+      { token }
+    );
+  },
+
+  /**
+   * Submit bank transfer proof
+   */
+  async submitBankTransferProof(
+    itemId: number,
+    data: BankTransferProofData,
+    token: string
+  ): Promise<ApiResponse<{ payment: any }>> {
+    return apiClient.post<ApiResponse<any>>(
+      `/marketplace/${itemId}/bank-transfer`,
       data,
       { token }
     );

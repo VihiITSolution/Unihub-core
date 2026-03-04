@@ -5,28 +5,23 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
-import { courseService } from "@/services/course.service";
 import type { Course, CourseContent } from "@/types";
-import PaymentModal, { PaymentData } from "@/components/ui/PaymentModal";
 
 export default function CourseDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { isAuthenticated, user, token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const courseId = params?.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [enrollmentError, setEnrollmentError] = useState<string | null>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [isEnrolling, setIsEnrolling] = useState(false);
 
   useEffect(() => {
     if (courseId) {
       loadCourseDetails();
     }
-  }, [courseId, isAuthenticated]);
+  }, [courseId]);
 
   const loadCourseDetails = async () => {
     if (!courseId) {
@@ -40,14 +35,8 @@ export default function CourseDetailsPage() {
       setError(null);
 
       // Fetch real course data
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
       const courseResponse = await fetch(
-        `${API_BASE_URL}/courses/${courseId}`,
-        { headers },
+        `${API_BASE_URL}/courses/${courseId}`
       );
 
       if (!courseResponse.ok) {
@@ -64,7 +53,7 @@ export default function CourseDetailsPage() {
 
       // Fetch course content
       const contentResponse = await fetch(
-        `${API_BASE_URL}/courses/${courseId}/content`,
+        `${API_BASE_URL}/courses/${courseId}/content`
       );
 
       if (contentResponse.ok) {
@@ -76,7 +65,7 @@ export default function CourseDetailsPage() {
     } catch (error) {
       console.error("Failed to load course:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to load course",
+        error instanceof Error ? error.message : "Failed to load course"
       );
     } finally {
       setLoading(false);
@@ -84,68 +73,14 @@ export default function CourseDetailsPage() {
   };
 
   const handleEnroll = () => {
-    // Check if user is the tutor of this course
-    if (user && course && course.tutorId === user.id) {
-      router.push(`/tutor/courses`);
-      return;
-    }
-
     // Check if user is logged in
-    if (!isAuthenticated || !token) {
-      router.push("/auth/login?redirect=/courses/" + courseId);
+    if (!isAuthenticated) {
+      router.push("/auth/login");
       return;
     }
 
-    // If already enrolled, go to learning page
-    if (course?.isEnrolled) {
-      router.push(`/student/learn/${courseId}`);
-      return;
-    }
-
-    // Show payment modal for paid courses
-    if (course && course.price > 0) {
-      setShowPaymentModal(true);
-    } else {
-      // For free courses, enroll directly
-      handlePaymentSubmit({
-        cardNumber: "",
-        cardName: "",
-        expiryDate: "",
-        cvv: "",
-        paymentMethod: "free",
-      });
-    }
-  };
-
-  const handlePaymentSubmit = async (paymentData: PaymentData) => {
-    if (!course) return;
-
-    try {
-      setIsEnrolling(true);
-      setEnrollmentError(null);
-
-      // TODO: Process payment with payment gateway
-      // For now, just proceed with enrollment
-
-      const response = await courseService.enrollInCourse(courseId, token!);
-
-      if (response.success) {
-        setShowPaymentModal(false);
-        // Redirect to learning player on success
-        router.push(`/student/learn/${courseId}`);
-      } else {
-        setEnrollmentError(
-          response.message || "Enrollment failed. Please try again.",
-        );
-      }
-    } catch (err: any) {
-      console.error("Enrollment error:", err);
-      setEnrollmentError(
-        err.message || "Failed to enroll. Please try again later.",
-      );
-    } finally {
-      setIsEnrolling(false);
-    }
+    // Skip payment for now - go directly to player
+    router.push(`/student/learn/${courseId}`);
   };
 
   if (loading) {
@@ -187,14 +122,7 @@ export default function CourseDetailsPage() {
       {/* Course Header */}
       <div className="grid md:grid-cols-3 gap-8 mb-12">
         <div className="md:col-span-2">
-          <div className="flex items-center gap-3 mb-4">
-            <h1 className="text-4xl font-bold">{course.title}</h1>
-            {course.isEnrolled && (
-              <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-                ✓ Enrolled
-              </span>
-            )}
-          </div>
+          <h1 className="text-4xl font-bold mb-4">{course.title}</h1>
           <p className="text-xl text-gray-600 mb-6">{course.description}</p>
 
           <div className="flex items-center gap-4 mb-4">
@@ -206,57 +134,28 @@ export default function CourseDetailsPage() {
               </span>
             </div>
             <div className="text-gray-600">
-              {course.enrollmentCount || 0} students enrolled
+              {course.enrolledCount || course.enrollmentCount || 0} students
+              enrolled
             </div>
           </div>
 
           <div className="flex items-center gap-4 mb-6">
-            {course.facultyId && course.faculty && course.year ? (
-              <>
-                <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full font-medium">
-                  {course.faculty.name}
-                </span>
-                <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full font-medium">
-                  Year {course.year}
-                </span>
-              </>
-            ) : (
-              <>
-                {course.level && (
-                  <span className="px-4 py-2 bg-primary-100 text-primary-700 rounded-full">
-                    {course.level.charAt(0).toUpperCase() +
-                      course.level.slice(1)}
-                  </span>
-                )}
-                {course.category && (
-                  <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full">
-                    {course.category}
-                  </span>
-                )}
-              </>
-            )}
-            {course.duration > 0 && (
-              <span className="text-gray-600">
-                {course.duration} {course.duration === 1 ? "hour" : "hours"}
-              </span>
-            )}
+            <span className="px-4 py-2 bg-primary-100 text-primary-700 rounded-full">
+              {course.level}
+            </span>
+            <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full">
+              {course.category}
+            </span>
+            <span className="text-gray-600">
+              ⏱️ {Math.floor((course.duration || 0) / 60)} hours
+            </span>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
-              {course.tutor?.profileImage ? (
-                <img
-                  src={course.tutor.profileImage}
-                  alt={`${course.tutor.firstName} ${course.tutor.lastName}`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <>
-                  {course.tutor?.firstName
-                    ? course.tutor.firstName.charAt(0)
-                    : course.tutorName?.charAt(0) || "T"}
-                </>
-              )}
+            <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white font-bold">
+              {course.tutor?.firstName
+                ? course.tutor.firstName.charAt(0)
+                : course.tutorName?.charAt(0) || "T"}
             </div>
             <div>
               <p className="text-sm text-gray-600">Instructor</p>
@@ -270,7 +169,7 @@ export default function CourseDetailsPage() {
         </div>
 
         {/* Enrollment Card */}
-        <div className="card p-5">
+        <div className="card">
           {course.thumbnail ? (
             <img
               src={
@@ -287,32 +186,10 @@ export default function CourseDetailsPage() {
             </div>
           )}
           <div className="text-3xl font-bold text-primary-600 mb-4">
-            Rs. {course.price}
+            ${course.price}
           </div>
-          {enrollmentError && (
-            <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
-              {enrollmentError}
-            </div>
-          )}
-          <button
-            onClick={handleEnroll}
-            className={`w-full mb-4 ${
-              user && course && course.tutorId === user.id
-                ? "btn-secondary"
-                : course.isEnrolled
-                  ? "bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200"
-                  : "btn-primary"
-            }`}
-          >
-            {user && course && course.tutorId === user.id
-              ? "Manage Course"
-              : course.isEnrolled
-                ? course.price === 0
-                  ? "View Course"
-                  : "Continue Learning"
-                : isAuthenticated
-                  ? "Enroll Now"
-                  : "Login to Enroll"}
+          <button onClick={handleEnroll} className="btn-primary w-full mb-4">
+            Enroll Now
           </button>
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex items-center gap-2">
@@ -331,20 +208,6 @@ export default function CourseDetailsPage() {
         </div>
       </div>
 
-      {/* Payment Modal */}
-      {course && (
-        <PaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          onSubmit={handlePaymentSubmit}
-          course={{
-            title: course.title,
-            price: course.price,
-          }}
-          isProcessing={isEnrolling}
-        />
-      )}
-
       {/* Course Content */}
       <div className="mb-12">
         <h2 className="text-3xl font-bold mb-6">Course Content</h2>
@@ -352,10 +215,10 @@ export default function CourseDetailsPage() {
           {contents.map((content, index) => (
             <div
               key={content.id}
-              className="card p-6 flex items-center justify-between gap-4"
+              className="card flex items-center justify-between"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center font-semibold text-lg">
+                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-semibold">
                   {index + 1}
                 </div>
                 <div>
@@ -374,66 +237,6 @@ export default function CourseDetailsPage() {
           ))}
         </div>
       </div>
-
-      {/* Reviews Section */}
-      {course.reviews && course.reviews.length > 0 && (
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Student Reviews</h2>
-          <div className="space-y-4">
-            {course.reviews.map((review) => (
-              <div key={review.id} className="card p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
-                    {review.user?.profileImage ? (
-                      <img
-                        src={review.user.profileImage}
-                        alt={`${review.user.firstName} ${review.user.lastName}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      review.user?.firstName?.charAt(0) || "?"
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="font-semibold">
-                          {review.user
-                            ? `${review.user.firstName} ${review.user.lastName}`
-                            : "Anonymous"}
-                        </p>
-                        <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <span
-                              key={i}
-                              className={
-                                i < review.rating
-                                  ? "text-yellow-500"
-                                  : "text-gray-300"
-                              }
-                            >
-                              ⭐
-                            </span>
-                          ))}
-                          <span className="text-gray-600 text-sm ml-2">
-                            {review.rating}/5
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-sm text-gray-500">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    {review.comment && (
-                      <p className="text-gray-700 mt-2">{review.comment}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
