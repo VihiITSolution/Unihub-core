@@ -250,8 +250,6 @@ export default function ProductDetailsPage() {
               <p className="text-sm mt-1">This item is currently unavailable</p>
             </div>
           )}
-                  </button>
-                </div>
           {/* Features */}
           <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg">
             <h3 className="font-semibold text-green-900 mb-3">Buyer Protection</h3>
