@@ -46,7 +46,7 @@ class BoardingService {
   // Get my boarding listings (vendor only)
   async getMyListings(): Promise<BoardingPlace[]> {
     const response = await apiClient.get(`${this.baseUrl}/my-listings`);
-    return response.places;
+    return (response as any).places || (response as unknown as { data: { places: BoardingPlace[] } }).data?.places;
   }
 
   // Update boarding listing

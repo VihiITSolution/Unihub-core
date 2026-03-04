@@ -52,7 +52,7 @@ export default function VendorDashboardPage() {
       }
       
       // Load listings
-      let listings = { success: true, data: { items: [] } };
+      let listings: any = { success: true, data: { items: [] } };
       try {
         listings = await marketplaceService.getMyListings(token);
       } catch (error) {
@@ -60,7 +60,7 @@ export default function VendorDashboardPage() {
       }
       
       // Load sales - handle if there are none
-      let sales = { success: true, data: [] };
+      let sales: any = { success: true, data: [] };
       try {
         sales = await marketplaceService.getMySales({ status: 'pending' }, token);
       } catch (error) {

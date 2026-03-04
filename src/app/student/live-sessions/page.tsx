@@ -31,8 +31,9 @@ export default function StudentLiveSessionsPage() {
         filters.isFree = false;
       }
 
-      const response = await liveSessionService.getSessions(filters, token);
-      setSessions(response.data?.sessions || []);
+      const response = await liveSessionService.getSessions(filters, token || undefined);
+      const sessionsData = Array.isArray(response.data) ? response.data : (response.data as any)?.sessions || [];
+      setSessions(sessionsData);
     } catch (err: any) {
       setError(err.message || "Failed to load sessions");
     } finally {

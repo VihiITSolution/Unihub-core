@@ -1,0 +1,37 @@
+src/app/courses/page.tsx(465,38): error TS2339: Property 'isEnrolled' does not exist on type 'Course'.
+src/app/marketplace/[id]/page.tsx(81,43): error TS2367: This comparison appears to be unintentional because the types 'number' and 'string' have no overlap.
+src/app/marketplace/[id]/page.tsx(174,34): error TS2339: Property 'vendorProfile' does not exist on type '{ id: number; firstName: string; lastName: string; email: string; profileImage?: string | undefined; }'.
+src/app/marketplace/[id]/page.tsx(174,77): error TS2339: Property 'name' does not exist on type '{ id: number; firstName: string; lastName: string; email: string; profileImage?: string | undefined; }'.
+src/app/marketplace/[id]/page.tsx(298,30): error TS2339: Property 'vendorProfile' does not exist on type '{ id: number; firstName: string; lastName: string; email: string; profileImage?: string | undefined; }'.
+src/app/marketplace/[id]/page.tsx(304,65): error TS2339: Property 'vendorProfile' does not exist on type '{ id: number; firstName: string; lastName: string; email: string; profileImage?: string | undefined; }'.
+src/app/marketplace/[id]/page.tsx(308,65): error TS2339: Property 'vendorProfile' does not exist on type '{ id: number; firstName: string; lastName: string; email: string; profileImage?: string | undefined; }'.
+src/app/marketplace/[id]/page.tsx(312,76): error TS2339: Property 'vendorProfile' does not exist on type '{ id: number; firstName: string; lastName: string; email: string; profileImage?: string | undefined; }'.
+src/app/marketplace/page.tsx(31,35): error TS2339: Property 'items' does not exist on type 'MarketplaceItem[]'.
+src/app/marketplace/page.tsx(130,76): error TS2339: Property 'vendorProfile' does not exist on type '{ id: number; firstName: string; lastName: string; email: string; profileImage?: string | undefined; }'.
+src/app/marketplace/page.tsx(130,119): error TS2339: Property 'name' does not exist on type '{ id: number; firstName: string; lastName: string; email: string; profileImage?: string | undefined; }'.
+src/app/page.tsx(333,36): error TS2339: Property 'isEnrolled' does not exist on type 'Course'.
+src/app/student/live-sessions/[id]/watch/page.tsx(44,18): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'SetStateAction<string | null>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<string | null>'.
+src/app/student/live-sessions/page.tsx(34,70): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/app/student/live-sessions/page.tsx(35,34): error TS2339: Property 'sessions' does not exist on type 'LiveSession[]'.
+src/app/tutor/live-sessions/page.tsx(37,34): error TS2339: Property 'sessions' does not exist on type 'LiveSession[]'.
+src/app/vendor/dashboard/page.tsx(57,9): error TS2322: Type 'ApiResponse<{ items: MarketplaceItem[]; }>' is not assignable to type '{ success: boolean; data: { items: never[]; }; }'.
+  Types of property 'data' are incompatible.
+    Type '{ items: MarketplaceItem[]; } | undefined' is not assignable to type '{ items: never[]; }'.
+      Type 'undefined' is not assignable to type '{ items: never[]; }'.
+src/app/vendor/dashboard/page.tsx(65,9): error TS2322: Type 'PaginatedResponse<Order>' is not assignable to type '{ success: boolean; data: never[]; }'.
+  Types of property 'data' are incompatible.
+    Type 'Order[]' is not assignable to type 'never[]'.
+      Type 'Order' is not assignable to type 'never'.
+src/app/vendor/sales/page.tsx(53,59): error TS2345: Argument of type 'string' is not assignable to parameter of type 'UpdateOrderData'.
+  Type '"pending"' has no properties in common with type 'UpdateOrderData'.
+src/app/vendor/sales/page.tsx(141,29): error TS2339: Property 'totalAmount' does not exist on type 'Order'.
+src/app/vendor/sales/page.tsx(161,33): error TS2339: Property 'name' does not exist on type '{ id: number; firstName: string; lastName: string; email: string; }'.
+src/app/vendor/shop/page.tsx(24,5): error TS2353: Object literal may only specify known properties, and 'state' does not exist in type 'Partial<VendorProfile> | (() => Partial<VendorProfile>)'.
+src/app/vendor/shop/page.tsx(47,35): error TS2339: Property 'profile' does not exist on type '{ vendorProfile: VendorProfile; }'.
+src/app/vendor/shop/page.tsx(216,34): error TS2339: Property 'state' does not exist on type 'Partial<VendorProfile>'.
+src/app/vendor/shop/page.tsx(258,32): error TS2339: Property 'bankAccountName' does not exist on type 'Partial<VendorProfile>'.
+src/app/vendor/shop/page.tsx(269,32): error TS2339: Property 'bankAccountNumber' does not exist on type 'Partial<VendorProfile>'.
+src/app/vendor/shop/page.tsx(280,32): error TS2339: Property 'bankName' does not exist on type 'Partial<VendorProfile>'.
+src/services/boarding.service.ts(49,12): error TS18046: 'response' is of type 'unknown'.

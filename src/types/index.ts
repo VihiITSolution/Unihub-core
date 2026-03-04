@@ -77,6 +77,10 @@ export interface VendorProfile {
   averageRating: number;
   totalReviews: number;
   isProfileComplete: boolean;
+  state?: string;
+  bankAccountName?: string;
+  bankAccountNumber?: string;
+  bankName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -109,11 +113,19 @@ export interface Course {
   category: string;
   level: "beginner" | "intermediate" | "advanced";
   duration: number; // in minutes
+  year?: number;
+  faculty?: {
+    id: number;
+    name: string;
+    icon?: string;
+  };
   enrolledCount?: number;
   enrollmentCount?: number;
   rating?: number;
   reviewCount?: number;
-  isPublished?: boolean;
+  isEnrolled?: boolean;
+  approvalStatus?: "pending" | "approved" | "rejected" | "draft";
+  rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -166,11 +178,13 @@ export interface MarketplaceItem {
   expiresAt?: string;
   requiresPayment: boolean;
   seller?: {
-    id: number;
+    id: number | string;
     firstName: string;
     lastName: string;
     email: string;
     profileImage?: string;
+    vendorProfile?: any;
+    name?: string;
   };
   createdAt: string;
   updatedAt: string;

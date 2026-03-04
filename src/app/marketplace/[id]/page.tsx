@@ -78,7 +78,7 @@ export default function ProductDetailsPage() {
     }
   };
 
-  const isOwnListing = user && product && product.sellerId === user.id;
+  const isOwnListing = user && product && String(product.sellerId) === String(user.id);
 
   if (loading) {
     return (

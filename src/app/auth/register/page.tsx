@@ -172,7 +172,7 @@ export default function RegisterPage() {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        roles: [formData.accountType === 'student' ? 'student' : 'student'], // Everyone starts as student in DB
+        roles: [formData.accountType === 'student' ? 'student' : 'student'] as UserRole[], // Everyone starts as student in DB
         primaryRole: 'student' as UserRole,
         phoneNumber: formData.phoneNumber || undefined,
         studentProfile: formData.accountType === "student"
