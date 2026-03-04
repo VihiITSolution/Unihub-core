@@ -43,31 +43,38 @@ export default function VendorDashboardPage() {
     try {
       setLoading(true);
       
-      // Load vendor stats
-      const vendorStats = await vendorService.getStats(token);
+      // Load vendor stats - handle if profile doesn't exist yet
+      let vendorStats = null;
+      try {
+        vendorStats = await vendorService.getStats(token);
+      } catch (error) {
+        console.log('Vendor stats not available (profile may not exist yet)');
+      }
       
       // Load listings
-      const listings = await marketplaceService.getMyListings(token);
+      let listings = { success: true, data: { items: [] } };
+      try {
+        listings = await marketplaceService.getMyListings(token);
+      } catch (error) {
+        console.log('No listings found');
+      }
       
       // Load sales - handle if there are none
       let sales = { success: true, data: [] };
       try {
         sales = await marketplaceService.getMySales({ status: 'pending' }, token);
       } catch (error) {
-        // Ignore errors for empty sales
         console.log('No sales found (expected for new vendors)');
       }
 
-      if (vendorStats.success && vendorStats.data) {
-        setStats({
-          totalListings: listings.data?.items?.length || 0,
-          activeListings: listings.data?.items?.filter((item: any) => item.isAvailable).length || 0,
-          totalSales: vendorStats.data.stats.totalSales,
-          totalRevenue: vendorStats.data.stats.totalRevenue,
-          pendingOrders: sales.data?.length || 0,
-          averageRating: vendorStats.data.stats.averageRating
-        });
-      }
+      setStats({
+        totalListings: listings.data?.items?.length || 0,
+        activeListings: listings.data?.items?.filter((item: any) => item.isAvailable).length || 0,
+        totalSales: vendorStats?.data?.stats?.totalSales || 0,
+        totalRevenue: vendorStats?.data?.stats?.totalRevenue || 0,
+        pendingOrders: sales.data?.length || 0,
+        averageRating: vendorStats?.data?.stats?.averageRating || 0
+      });
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     } finally {
