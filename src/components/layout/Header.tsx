@@ -43,11 +43,11 @@ export default function Header() {
   }, [isProfileOpen]);
 
   const navLinks = [
-    { href: "/courses", label: "Courses", icon: "📚" },
-    { href: "/tutor/dashboard", label: "Teach", icon: "🎓" },
-    { href: "/marketplace", label: "Marketplace", icon: "🛍️" },
-    { href: "/boarding", label: "Boarding", icon: "🏠" },
-    { href: "/student/dashboard", label: "My Learning", icon: "📖" },
+    { href: "/courses", label: "Courses" },
+    { href: "/tutor/dashboard", label: "Teach" },
+    { href: "/marketplace", label: "Marketplace" },
+    { href: "/boarding", label: "Boarding" },
+    { href: "/student/dashboard", label: "My Learning" },
   ];
 
   return (
@@ -114,10 +114,9 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all duration-200 font-medium"
+                className="px-4 py-2 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all duration-200 font-medium"
               >
-                <span>{link.icon}</span>
-                <span>{link.label}</span>
+                {link.label}
               </Link>
             ))}
 
@@ -323,11 +322,10 @@ export default function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center space-x-3 py-3 px-4 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all"
+                  className="block py-3 px-4 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <span className="text-xl">{link.icon}</span>
-                  <span className="font-medium">{link.label}</span>
+                  {link.label}
                 </Link>
               ))}
             </div>
