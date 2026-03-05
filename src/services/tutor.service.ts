@@ -3,16 +3,28 @@ import type { ApiResponse, TutorProfile } from "@/types";
 
 export interface ApplyAsTutorData {
   qualifications?: string;
+  graduationStatus?: "graduate" | "undergraduate";
   expertiseAreas: string[];
+  coursesSubjects?: string[];
   bio?: string;
   yearsOfExperience?: number;
+  youtubeLink?: string;
+  blogLink?: string;
+  linkedinLink?: string;
+  remarks?: string;
 }
 
 export interface UpdateTutorProfileData {
   qualifications?: string;
+  graduationStatus?: "graduate" | "undergraduate";
   expertiseAreas?: string[];
+  coursesSubjects?: string[];
   bio?: string;
   yearsOfExperience?: number;
+  youtubeLink?: string;
+  blogLink?: string;
+  linkedinLink?: string;
+  remarks?: string;
 }
 
 export const tutorService = {
