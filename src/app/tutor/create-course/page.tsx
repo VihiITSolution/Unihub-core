@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { courseService } from "@/services/course.service";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
+import { useRoleCheck } from "@/hooks/useRoleCheck";
+import { Loading } from "@/components/ui";
 
 interface CourseMaterial {
   id: string;
@@ -17,6 +19,10 @@ interface CourseMaterial {
 export default function CreateCoursePage() {
   const router = useRouter();
   const { token, isAuthenticated, hasRole } = useAuth();
+  const { isChecking, roleError } = useRoleCheck({
+    requiredRole: "tutor",
+    requireApproval: true,
+  });
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +74,7 @@ export default function CreateCoursePage() {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -117,7 +123,7 @@ export default function CreateCoursePage() {
   };
 
   const handleMaterialChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setCurrentMaterial((prev) => ({ ...prev, [name]: value }));
@@ -201,7 +207,7 @@ export default function CreateCoursePage() {
   const handleFinish = async () => {
     if (materials.length === 0) {
       const confirm = window.confirm(
-        "You haven't added any materials. Do you want to add them later?"
+        "You haven't added any materials. Do you want to add them later?",
       );
       if (confirm) {
         router.push("/tutor/dashboard");
@@ -218,7 +224,7 @@ export default function CreateCoursePage() {
         materialFormData.append("type", material.type);
         materialFormData.append(
           "order",
-          materials.indexOf(material).toString()
+          materials.indexOf(material).toString(),
         );
 
         if (material.duration) {
@@ -229,16 +235,13 @@ export default function CreateCoursePage() {
           materialFormData.append("video", material.file);
         }
 
-        await fetch(
-          `${API_BASE_URL}/courses/${createdCourseId}/content`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: materialFormData,
-          }
-        );
+        await fetch(`${API_BASE_URL}/courses/${createdCourseId}/content`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: materialFormData,
+        });
       }
 
       alert("Course and materials created successfully!");
@@ -251,6 +254,14 @@ export default function CreateCoursePage() {
       setLoading(false);
     }
   };
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -648,8 +659,8 @@ export default function CreateCoursePage() {
                 {loading
                   ? "Saving..."
                   : materials.length > 0
-                  ? "Finish & Save All"
-                  : "Skip Materials"}
+                    ? "Finish & Save All"
+                    : "Skip Materials"}
               </button>
             </div>
           </div>

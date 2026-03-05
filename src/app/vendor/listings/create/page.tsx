@@ -4,22 +4,33 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { marketplaceService } from "@/services/marketplace.service";
+import { useRoleCheck } from "@/hooks/useRoleCheck";
+import { Loading } from "@/components/ui";
 import type { MarketplaceItem } from "@/types";
 
 export default function CreateListingPage() {
   const { user, token } = useAuth();
   const router = useRouter();
+  const { isChecking } = useRoleCheck({
+    requiredRole: "vendor",
+    requireApproval: true,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     category: "books",
-    itemType: "book" as "book" | "notes" | "equipment" | "electronics" | "other",
+    itemType: "book" as
+      | "book"
+      | "notes"
+      | "equipment"
+      | "electronics"
+      | "other",
     price: "",
     stock: "1",
     condition: "new",
-    images: [] as string[]
+    images: [] as string[],
   });
 
   useEffect(() => {
@@ -44,15 +55,20 @@ export default function CreateListingPage() {
           itemType: formData.itemType,
           price: parseFloat(formData.price),
           stock: parseInt(formData.stock),
-          condition: formData.condition as 'new' | 'like_new' | 'good' | 'fair' | 'poor',
-          images: formData.images
+          condition: formData.condition as
+            | "new"
+            | "like_new"
+            | "good"
+            | "fair"
+            | "poor",
+          images: formData.images,
         },
-        token
+        token,
       );
 
       if (response.success && response.data) {
         const item = response.data.item;
-        
+
         // Check if payment is required
         if (item.requiresPayment && !item.isPaid) {
           // Redirect to payment page
@@ -71,12 +87,24 @@ export default function CreateListingPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
+
+  if (isChecking) {
+    return (
+      <div className="container-custom py-8 flex items-center justify-center min-h-screen">
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <div className="container-custom py-8 max-w-3xl">
@@ -95,7 +123,7 @@ export default function CreateListingPage() {
         {/* Product Information */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Product Information</h2>
-          
+
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">
               Product Title <span className="text-red-500">*</span>
@@ -173,7 +201,7 @@ export default function CreateListingPage() {
         {/* Pricing & Inventory */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Pricing & Inventory</h2>
-          
+
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">
@@ -217,7 +245,9 @@ export default function CreateListingPage() {
             <div className="text-gray-500">
               <div className="text-4xl mb-2">📷</div>
               <p>Image upload coming soon</p>
-              <p className="text-sm mt-1">For now, listings will use default images</p>
+              <p className="text-sm mt-1">
+                For now, listings will use default images
+              </p>
             </div>
           </div>
         </div>

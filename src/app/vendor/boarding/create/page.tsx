@@ -1,53 +1,74 @@
-'use client';
+"use client";
 
-import { useState, FormEvent, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { boardingService } from '@/services/boarding.service';
-import { universityService, type University } from '@/services/university.service';
-import { BoardingPlaceFormData, RoomType, GenderPreference } from '@/types';
+import { useState, FormEvent, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { boardingService } from "@/services/boarding.service";
+import {
+  universityService,
+  type University,
+} from "@/services/university.service";
+import { useRoleCheck } from "@/hooks/useRoleCheck";
+import { Loading } from "@/components/ui";
+import { BoardingPlaceFormData, RoomType, GenderPreference } from "@/types";
 
 const AMENITIES_OPTIONS = [
-  'WiFi', 'Parking', 'Meals Included', 'Laundry', 'Air Conditioning',
-  'Study Room', 'Kitchen Access', 'Hot Water', 'Security', 'Furnished'
+  "WiFi",
+  "Parking",
+  "Meals Included",
+  "Laundry",
+  "Air Conditioning",
+  "Study Room",
+  "Kitchen Access",
+  "Hot Water",
+  "Security",
+  "Furnished",
 ];
 
 export default function CreateBoardingListing() {
   const router = useRouter();
   const { user } = useAuth();
+  const { isChecking } = useRoleCheck({
+    requiredRole: "vendor",
+    requireApproval: true,
+  });
   const [loading, setLoading] = useState(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [universities, setUniversities] = useState<University[]>([]);
   const [showCustomUniversity, setShowCustomUniversity] = useState(false);
-  const [selectedUniversityId, setSelectedUniversityId] = useState<number | null>(null);
-  
+  const [selectedUniversityId, setSelectedUniversityId] = useState<
+    number | null
+  >(null);
+
   const [formData, setFormData] = useState<BoardingPlaceFormData>({
-    title: '',
-    description: '',
-    address: '',
-    city: '',
-    district: '',
-    nearestUniversity: '',
+    title: "",
+    description: "",
+    address: "",
+    city: "",
+    district: "",
+    nearestUniversity: "",
     distanceToUniversity: undefined,
-    roomType: 'single',
-    genderPreference: 'any',
+    roomType: "single",
+    genderPreference: "any",
     capacity: 1,
     monthlyRent: 0,
     securityDeposit: 0,
     amenities: [],
-    rules: '',
+    rules: "",
     images: [],
-    contactPhone: user?.phoneNumber || '',
-    contactEmail: user?.email || ''
+    contactPhone: user?.phoneNumber || "",
+    contactEmail: user?.email || "",
   });
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value
+      [name]: type === "number" ? parseFloat(value) || 0 : value,
     }));
   };
 
@@ -60,19 +81,26 @@ export default function CreateBoardingListing() {
         latitude: position.latitude,
         longitude: position.longitude,
         radius: 50,
-        limit: 20
+        limit: 20,
       });
 
       if (response.success && response.data.universities.length > 0) {
         setUniversities(response.data.universities);
-        alert(`Found ${response.count} universities within 50km of your location`);
+        alert(
+          `Found ${response.count} universities within 50km of your location`,
+        );
       } else {
-        alert('No universities found nearby. You can enter a custom university name.');
+        alert(
+          "No universities found nearby. You can enter a custom university name.",
+        );
         setShowCustomUniversity(true);
       }
     } catch (error: any) {
-      console.error('Location error:', error);
-      alert(error.message || 'Failed to get location. You can enter a custom university name.');
+      console.error("Location error:", error);
+      alert(
+        error.message ||
+          "Failed to get location. You can enter a custom university name.",
+      );
       setShowCustomUniversity(true);
     } finally {
       setLoadingLocation(false);
@@ -88,7 +116,7 @@ export default function CreateBoardingListing() {
           setUniversities(response.data.universities);
         }
       } catch (error) {
-        console.error('Failed to load universities:', error);
+        console.error("Failed to load universities:", error);
       }
     };
     loadUniversities();
@@ -97,54 +125,54 @@ export default function CreateBoardingListing() {
   // Handle university selection from dropdown
   const handleUniversitySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    
-    if (value === 'custom') {
+
+    if (value === "custom") {
       setShowCustomUniversity(true);
       setSelectedUniversityId(null);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        nearestUniversity: '',
-        distanceToUniversity: undefined
+        nearestUniversity: "",
+        distanceToUniversity: undefined,
       }));
     } else if (value) {
       const universityId = parseInt(value);
-      const selectedUni = universities.find(u => u.id === universityId);
-      
+      const selectedUni = universities.find((u) => u.id === universityId);
+
       if (selectedUni) {
         setSelectedUniversityId(universityId);
         setShowCustomUniversity(false);
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           nearestUniversity: selectedUni.name,
-          distanceToUniversity: selectedUni.distance || undefined
+          distanceToUniversity: selectedUni.distance || undefined,
         }));
       }
     }
   };
 
   const handleAmenityToggle = (amenity: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       amenities: prev.amenities?.includes(amenity)
-        ? prev.amenities.filter(a => a !== amenity)
-        : [...(prev.amenities || []), amenity]
+        ? prev.amenities.filter((a) => a !== amenity)
+        : [...(prev.amenities || []), amenity],
     }));
   };
 
   const handleImageAdd = () => {
-    const url = prompt('Enter image URL:');
+    const url = prompt("Enter image URL:");
     if (url) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        images: [...(prev.images || []), url]
+        images: [...(prev.images || []), url],
       }));
     }
   };
 
   const handleImageRemove = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      images: prev.images?.filter((_, i) => i !== index) || []
+      images: prev.images?.filter((_, i) => i !== index) || [],
     }));
   };
 
@@ -157,8 +185,8 @@ export default function CreateBoardingListing() {
       alert(`Listing created! Please pay $${result.adFee} to activate.`);
       router.push(`/vendor/boarding/${result.id}/pay`);
     } catch (error: any) {
-      console.error('Error creating listing:', error);
-      alert(error.message || 'Failed to create listing');
+      console.error("Error creating listing:", error);
+      alert(error.message || "Failed to create listing");
     } finally {
       setLoading(false);
     }
@@ -167,10 +195,14 @@ export default function CreateBoardingListing() {
   if (!user?.isVendorProfileComplete) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Vendor Profile Required</h2>
-        <p className="text-gray-600 mb-6">Complete your vendor profile to list boarding places</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          Vendor Profile Required
+        </h2>
+        <p className="text-gray-600 mb-6">
+          Complete your vendor profile to list boarding places
+        </p>
         <button
-          onClick={() => router.push('/become-vendor')}
+          onClick={() => router.push("/become-vendor")}
           className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700"
         >
           Complete Profile
@@ -179,15 +211,30 @@ export default function CreateBoardingListing() {
     );
   }
 
+  if (isChecking) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+        <Loading />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Create Boarding Place Listing</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">
+        Create Boarding Place Listing
+      </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg shadow-md p-6">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 bg-white rounded-lg shadow-md p-6"
+      >
         {/* Basic Information */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
-          
+          <h2 className="text-xl font-semibold text-gray-900">
+            Basic Information
+          </h2>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Title *
@@ -222,7 +269,7 @@ export default function CreateBoardingListing() {
         {/* Location */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">Location</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -279,12 +326,11 @@ export default function CreateBoardingListing() {
                 >
                   {loadingLocation ? (
                     <>
-                      <span className="animate-spin">⏳</span> Getting location...
+                      <span className="animate-spin">⏳</span> Getting
+                      location...
                     </>
                   ) : (
-                    <>
-                      📍 Find nearest universities
-                    </>
+                    <>📍 Find nearest universities</>
                   )}
                 </button>
               </div>
@@ -292,21 +338,24 @@ export default function CreateBoardingListing() {
               {!showCustomUniversity ? (
                 <div className="space-y-2">
                   <select
-                    value={selectedUniversityId || ''}
+                    value={selectedUniversityId || ""}
                     onChange={handleUniversitySelect}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                   >
                     <option value="">Select a university</option>
-                    {universities.map(uni => (
+                    {universities.map((uni) => (
                       <option key={uni.id} value={uni.id}>
-                        {uni.name} {uni.city && `- ${uni.city}`} 
+                        {uni.name} {uni.city && `- ${uni.city}`}
                         {uni.distance && ` (${uni.distance.toFixed(1)}km away)`}
                       </option>
                     ))}
-                    <option value="custom">➕ Enter custom university name</option>
+                    <option value="custom">
+                      ➕ Enter custom university name
+                    </option>
                   </select>
                   <p className="text-xs text-gray-500">
-                    Select from the list or click "Find nearest" to see universities near you
+                    Select from the list or click "Find nearest" to see
+                    universities near you
                   </p>
                 </div>
               ) : (
@@ -323,7 +372,10 @@ export default function CreateBoardingListing() {
                     type="button"
                     onClick={() => {
                       setShowCustomUniversity(false);
-                      setFormData(prev => ({ ...prev, nearestUniversity: '' }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        nearestUniversity: "",
+                      }));
                     }}
                     className="text-sm text-amber-600 hover:text-amber-700"
                   >
@@ -341,7 +393,7 @@ export default function CreateBoardingListing() {
                 type="number"
                 name="distanceToUniversity"
                 step="0.1"
-                value={formData.distanceToUniversity || ''}
+                value={formData.distanceToUniversity || ""}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
               />
@@ -352,7 +404,7 @@ export default function CreateBoardingListing() {
         {/* Room Details */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">Room Details</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -409,7 +461,7 @@ export default function CreateBoardingListing() {
         {/* Pricing */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">Pricing</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -448,7 +500,7 @@ export default function CreateBoardingListing() {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">Amenities</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {AMENITIES_OPTIONS.map(amenity => (
+            {AMENITIES_OPTIONS.map((amenity) => (
               <label key={amenity} className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -491,7 +543,11 @@ export default function CreateBoardingListing() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {formData.images.map((url, index) => (
                 <div key={index} className="relative">
-                  <img src={url} alt={`Image ${index + 1}`} className="w-full h-32 object-cover rounded" />
+                  <img
+                    src={url}
+                    alt={`Image ${index + 1}`}
+                    className="w-full h-32 object-cover rounded"
+                  />
                   <button
                     type="button"
                     onClick={() => handleImageRemove(index)}
@@ -507,8 +563,10 @@ export default function CreateBoardingListing() {
 
         {/* Contact */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900">Contact Information</h2>
-          
+          <h2 className="text-xl font-semibold text-gray-900">
+            Contact Information
+          </h2>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -553,13 +611,16 @@ export default function CreateBoardingListing() {
             disabled={loading}
             className="flex-1 bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 font-medium disabled:opacity-50"
           >
-            {loading ? 'Creating...' : 'Create Listing'}
+            {loading ? "Creating..." : "Create Listing"}
           </button>
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
           <p className="font-medium">📋 Note:</p>
-          <p>After creating the listing, you will need to pay $50 to activate it for 30 days.</p>
+          <p>
+            After creating the listing, you will need to pay $50 to activate it
+            for 30 days.
+          </p>
         </div>
       </form>
     </div>

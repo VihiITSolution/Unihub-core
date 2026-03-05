@@ -3,11 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { liveSessionService } from "@/services/live-session.service";
+import { useRoleCheck } from "@/hooks/useRoleCheck";
+import { Loading } from "@/components/ui";
 import type { CreateLiveSessionData } from "@/types";
 import { TOKEN_KEY } from "@/lib/constants";
 
 export default function CreateLiveSessionPage() {
   const router = useRouter();
+  const { isChecking } = useRoleCheck({
+    requiredRole: "tutor",
+    requireApproval: true,
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [streamInfo, setStreamInfo] = useState<{
@@ -42,7 +48,7 @@ export default function CreateLiveSessionPage() {
       }
 
       const response = await liveSessionService.createSession(formData, token);
-      
+
       setStreamInfo({
         streamUrl: response.data.streaming.streamUrl,
         streamKey: response.data.streaming.streamKey,
@@ -61,17 +67,25 @@ export default function CreateLiveSessionPage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value, type } = e.target;
-    
+
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
     } else if (name === "tags") {
-      setFormData((prev) => ({ ...prev, tags: value.split(",").map(t => t.trim()) }));
+      setFormData((prev) => ({
+        ...prev,
+        tags: value.split(",").map((t) => t.trim()),
+      }));
     } else if (name === "price" || name === "maxAttendees") {
-      setFormData((prev) => ({ ...prev, [name]: value ? Number(value) : undefined }));
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value ? Number(value) : undefined,
+      }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -84,10 +98,12 @@ export default function CreateLiveSessionPage() {
           <h2 className="text-2xl font-bold text-green-800 mb-4">
             ✅ Live Session Created Successfully!
           </h2>
-          
+
           <div className="space-y-4">
             <div>
-              <h3 className="font-semibold text-gray-700 mb-2">Stream Settings for OBS/Streamlabs:</h3>
+              <h3 className="font-semibold text-gray-700 mb-2">
+                Stream Settings for OBS/Streamlabs:
+              </h3>
               <div className="bg-white p-4 rounded border">
                 <p className="text-sm text-gray-600 mb-2">Stream URL:</p>
                 <code className="block bg-gray-100 p-2 rounded text-sm break-all">
@@ -117,9 +133,14 @@ export default function CreateLiveSessionPage() {
             <div className="bg-blue-50 p-4 rounded border border-blue-200">
               <h4 className="font-semibold text-blue-800 mb-2">Next Steps:</h4>
               <ol className="list-decimal list-inside space-y-1 text-sm text-blue-900">
-                <li>Configure your streaming software (OBS/Streamlabs) with the above settings</li>
+                <li>
+                  Configure your streaming software (OBS/Streamlabs) with the
+                  above settings
+                </li>
                 <li>Start streaming in your software</li>
-                <li>Click "Start Session" in the dashboard when ready to go live</li>
+                <li>
+                  Click "Start Session" in the dashboard when ready to go live
+                </li>
                 <li>Students can join and watch your live stream</li>
               </ol>
             </div>
@@ -136,6 +157,14 @@ export default function CreateLiveSessionPage() {
     );
   }
 
+  if (isChecking) {
+    return (
+      <div className="max-w-4xl mx-auto p-6 flex items-center justify-center min-h-screen">
+        <Loading />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Schedule Live Session</h1>
@@ -146,7 +175,10 @@ export default function CreateLiveSessionPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 bg-white p-6 rounded-lg shadow"
+      >
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Session Title *
@@ -216,7 +248,9 @@ export default function CreateLiveSessionPage() {
                 onChange={handleChange}
                 className="w-4 h-4 text-blue-600"
               />
-              <span className="text-sm font-medium text-gray-700">Free Session</span>
+              <span className="text-sm font-medium text-gray-700">
+                Free Session
+              </span>
             </label>
           </div>
 
@@ -294,7 +328,9 @@ export default function CreateLiveSessionPage() {
               onChange={handleChange}
               className="w-4 h-4 text-blue-600"
             />
-            <span className="text-sm font-medium text-gray-700">Allow Recording</span>
+            <span className="text-sm font-medium text-gray-700">
+              Allow Recording
+            </span>
           </label>
 
           <label className="flex items-center space-x-2">
@@ -305,7 +341,9 @@ export default function CreateLiveSessionPage() {
               onChange={handleChange}
               className="w-4 h-4 text-blue-600"
             />
-            <span className="text-sm font-medium text-gray-700">Enable Live Chat</span>
+            <span className="text-sm font-medium text-gray-700">
+              Enable Live Chat
+            </span>
           </label>
         </div>
 

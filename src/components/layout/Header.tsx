@@ -4,14 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui";
+import { Button, RoleUpgradeModal } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
+import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [requiredRole, setRequiredRole] = useState<RoleType | null>(null);
   const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
   const profileRef = useRef<HTMLDivElement>(null);
@@ -43,12 +46,46 @@ export default function Header() {
   }, [isProfileOpen]);
 
   const navLinks = [
-    { href: "/courses", label: "Courses" },
-    { href: "/tutor/dashboard", label: "Teach" },
-    { href: "/marketplace", label: "Marketplace" },
-    { href: "/boarding", label: "Boarding" },
-    { href: "/student/dashboard", label: "My Learning" },
+    { href: "/courses", label: "Courses", requiresRole: null },
+    {
+      href: "/tutor/dashboard",
+      label: "Teach",
+      requiresRole: "tutor" as RoleType,
+    },
+    { href: "/marketplace", label: "Marketplace", requiresRole: null },
+    { href: "/boarding", label: "Boarding", requiresRole: null },
+    { href: "/student/dashboard", label: "My Learning", requiresRole: null },
   ];
+
+  const handleNavClick = (e: React.MouseEvent, link: (typeof navLinks)[0]) => {
+    if (!isAuthenticated) {
+      // Not logged in - proceed to page (auth will redirect to login)
+      return;
+    }
+
+    // Check if this link requires a specific role
+    if (link.requiresRole) {
+      const userRoles = user?.roles || [];
+      const hasRole = userRoles.includes(link.requiresRole);
+
+      if (!hasRole) {
+        e.preventDefault();
+        setRequiredRole(link.requiresRole);
+        setRoleModalOpen(true);
+        return;
+      }
+
+      // Tutor-specific check: must be approved
+      if (link.requiresRole === "tutor") {
+        const isApproved = user?.tutorProfile?.isApproved;
+        if (!isApproved) {
+          e.preventDefault();
+          router.push("/student/become-tutor");
+          return;
+        }
+      }
+    }
+  };
 
   return (
     <header
@@ -114,6 +151,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={(e) => handleNavClick(e, link)}
                 className="px-4 py-2 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all duration-200 font-medium"
               >
                 {link.label}
@@ -323,7 +361,10 @@ export default function Header() {
                   key={link.href}
                   href={link.href}
                   className="block py-3 px-4 rounded-lg text-gray-700 hover:bg-ocean-50 hover:text-ocean-600 transition-all font-medium"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    handleNavClick(e, link);
+                    setIsMenuOpen(false);
+                  }}
                 >
                   {link.label}
                 </Link>
@@ -351,6 +392,18 @@ export default function Header() {
           </div>
         )}
       </nav>
+
+      {/* Role Upgrade Modal */}
+      {requiredRole && (
+        <RoleUpgradeModal
+          isOpen={roleModalOpen}
+          onClose={() => setRoleModalOpen(false)}
+          roleType={requiredRole}
+          featureName={
+            navLinks.find((l) => l.requiresRole === requiredRole)?.label
+          }
+        />
+      )}
     </header>
   );
 }
