@@ -39,10 +39,11 @@ export default function Header() {
   }, [isProfileOpen]);
 
   const navLinks = [
-    { href: "/courses", label: "Courses", icon: "📚" },
-    { href: "/marketplace", label: "Marketplace", icon: "🛍️" },
-    { href: "/tutor/dashboard", label: "Teach", icon: "🎓" },
-    { href: "/student/dashboard", label: "My Learning", icon: "📖" },
+    { href: "/courses", label: "Courses" },    
+    { href: "/tutor/dashboard", label: "Teach" },
+    { href: "/marketplace", label: "Marketplace" },
+    { href: "/tutor/dashboard", label: "Boarding" },
+    { href: "/student/dashboard", label: "My Learning" },
   ];
 
   return (
