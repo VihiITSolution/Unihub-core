@@ -110,6 +110,27 @@ export default function Home() {
                 peer-led kuppi sessions, master complex modules, and buy/sell
                 academic supplies - all in one platform.
               </p>
+              <div className="mb-8 rounded-xl border border-primary-100 bg-white/80 p-4">
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  UniHub is a web platform for Sri Lankan university students to
+                  learn through peer-led kuppi sessions, teach and earn as tutors,
+                  and buy or sell academic essentials in one place.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-4 text-sm">
+                  <Link
+                    href="/privacy"
+                    className="text-primary-700 hover:text-primary-800 underline"
+                  >
+                    Privacy Policy
+                  </Link>
+                  <Link
+                    href="/terms"
+                    className="text-primary-700 hover:text-primary-800 underline"
+                  >
+                    Terms of Service
+                  </Link>
+                </div>
+              </div>
               <div className="flex gap-4 flex-wrap">
                 <Link href="/courses">
                   <Button variant="primary" size="lg">
