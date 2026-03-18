@@ -32,7 +32,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/unihub-core:latest
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/unihub-core:latest
+            ${{ secrets.DOCKER_USERNAME }}/unihub-core:${{ github.sha }}
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/unihub-core:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/unihub-core:buildcache,mode=max
           build-args: |
@@ -50,12 +52,26 @@ jobs:
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
             docker stop unihub-core || true
             docker rm unihub-core || true
-            docker pull ${{ secrets.DOCKER_USERNAME }}/unihub-core:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/unihub-core:${{ github.sha }}
             docker run -d \
               --name unihub-core \
               --network unihub-network \
               --restart unless-stopped \
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL=${{ secrets.API_BASE_URL }} \
-              ${{ secrets.DOCKER_USERNAME }}/unihub-core:latest
+              ${{ secrets.DOCKER_USERNAME }}/unihub-core:${{ github.sha }}
+
+            sleep 5
+            RUNNING_IMAGE=$(docker inspect --format='{{.Config.Image}}' unihub-core)
+            EXPECTED_IMAGE='${{ secrets.DOCKER_USERNAME }}/unihub-core:${{ github.sha }}'
+
+            echo "Expected image: ${EXPECTED_IMAGE}"
+            echo "Running image:  ${RUNNING_IMAGE}"
+
+            if [ "${RUNNING_IMAGE}" != "${EXPECTED_IMAGE}" ]; then
+              echo "Deployment verification failed: container is not using the expected image"
+              exit 1
+            fi
+
+            docker ps --filter name=unihub-core --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
             docker image prune -f
