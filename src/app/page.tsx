@@ -483,6 +483,31 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Footer Links */}
+      <footer className="bg-gray-900 text-gray-400 py-8">
+        <div className="container-custom flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>
+            <p className="text-sm">
+              &copy; 2026 UniHub. All rights reserved.
+            </p>
+          </div>
+          <div className="flex gap-6">
+            <Link href="/privacy" className="hover:text-white transition">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-white transition">
+              Terms of Service
+            </Link>
+            <a 
+              href="mailto:support@unihub.lk" 
+              className="hover:text-white transition"
+            >
+              Contact
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
