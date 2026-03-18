@@ -1,103 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { marketplaceService } from "@/services/marketplace.service";
-import type { MarketplaceItem } from "@/types";
+import ComingSoonPage from "@/components/ComingSoonPage";
 
 export default function MarketplacePage() {
-  const [products, setProducts] = useState<MarketplaceItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    search: "",
-    category: "",
-    condition: "",
-  });
-
-  useEffect(() => {
-    loadProducts();
-  }, [filters]);
-
-  const loadProducts = async () => {
-    try {
-      setLoading(true);
-      const response = await marketplaceService.getItems({
-        search: filters.search || undefined,
-        category: filters.category || undefined,
-        condition: filters.condition || undefined,
-      });
-      
-      if (response.success && response.data) {
-        setProducts(response.data || []);
-      }
-    } catch (error) {
-      console.error("Failed to load products:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleEmailSubmit = async (email: string) => {
+    // TODO: Save email to database for notifications
+    console.log("Email for marketplace notifications:", email);
   };
 
-  const categories = ["books", "electronics", "stationery", "accessories", "furniture", "clothing", "sports", "other"];
-  const conditions = ["new", "like-new", "good", "fair", "poor"];
-
   return (
-    <div className="container-custom py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Marketplace</h1>
-        <p className="text-gray-600">Buy and sell items within the UniHub community</p>
-      </div>
-
-      {/* Filters */}
-      <div className="mb-8 grid md:grid-cols-4 gap-4">
-        <input
-          type="text"
-          placeholder="Search products..."
-          className="input"
-          value={filters.search}
-          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-        />
-        <select
-          className="input"
-          value={filters.category}
-          onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-        >
-          <option value="">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </option>
-          ))}
-        </select>
-        <select
-          className="input"
-          value={filters.condition}
-          onChange={(e) => setFilters({ ...filters, condition: e.target.value })}
-        >
-          <option value="">All Conditions</option>
-          {conditions.map((cond) => (
-            <option key={cond} value={cond}>
-              {cond.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-            </option>
-          ))}
-        </select>
-        <button
-          className="btn-outline"
-          onClick={() => setFilters({ search: "", category: "", condition: "" })}
-        >
-          Clear Filters
-        </button>
-      </div>
-
-      {/* Products Grid */}
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-pulse">Loading products...</div>
-        </div>
-      ) : products.length === 0 ? (
-        <div className="card text-center py-12">
-          <div className="text-6xl mb-4">🛍️</div>
-          <h3 className="text-xl font-semibold mb-2">No products found</h3>
-          <p className="text-gray-600">Try adjusting your filters or check back later</p>
+    <ComingSoonPage
+      title="UniHub Marketplace"
+      description="Buy, sell, and trade items with other students. From textbooks to electronics, find everything you need to enhance your university experience."
+      onEmailSubmit={handleEmailSubmit}
+    />
+  );
+}
         </div>
       ) : (
         <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
