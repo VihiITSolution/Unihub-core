@@ -59,6 +59,8 @@ jobs:
               --restart unless-stopped \
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL=${{ secrets.API_BASE_URL }} \
+              -e NEXT_PUBLIC_API_BASE_URL=${{ secrets.API_BASE_URL_BASE }} \
+              -e NEXT_PUBLIC_BACKEND_URL=${{ secrets.BACKEND_URL }} \
               ${{ secrets.DOCKER_USERNAME }}/unihub-core:${{ github.sha }}
 
             sleep 5
