@@ -47,6 +47,10 @@ export default function CreateCoursePage() {
     duration: "",
   });
 
+  const MAX_VIDEO_UPLOAD_MB = Number(
+    process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 95,
+  );
+
   const categories = [
     "Programming",
     "Web Development",
@@ -112,9 +116,10 @@ export default function CreateCoursePage() {
           alert("Please select a valid video file");
           return;
         }
-        // Max 500MB for videos
-        if (file.size > 500 * 1024 * 1024) {
-          alert("Video file size must be less than 500MB");
+        if (file.size > MAX_VIDEO_UPLOAD_MB * 1024 * 1024) {
+          alert(
+            `Video file size must be less than ${MAX_VIDEO_UPLOAD_MB}MB (current server limit).`,
+          );
           return;
         }
       }
@@ -235,21 +240,42 @@ export default function CreateCoursePage() {
           materialFormData.append("video", material.file);
         }
 
-        await fetch(`${API_BASE_URL}/courses/${createdCourseId}/content`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const uploadResponse = await fetch(
+          `${API_BASE_URL}/courses/${createdCourseId}/content`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: materialFormData,
           },
-          body: materialFormData,
-        });
+        );
+
+        if (!uploadResponse.ok) {
+          let errorMessage = `Failed to upload material "${material.title}"`;
+          try {
+            const errorData = await uploadResponse.json();
+            if (errorData?.message) {
+              errorMessage = errorData.message;
+            }
+          } catch {
+            if (uploadResponse.status === 413) {
+              errorMessage = `Upload too large. Keep video files under ${MAX_VIDEO_UPLOAD_MB}MB.`;
+            }
+          }
+          throw new Error(errorMessage);
+        }
       }
 
       alert("Course and materials created successfully!");
       router.push("/tutor/dashboard");
     } catch (error) {
       console.error("Failed to save materials:", error);
-      alert("Course created but failed to save some materials");
-      router.push("/tutor/dashboard");
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Course created but failed to save some materials";
+      alert(message);
     } finally {
       setLoading(false);
     }
@@ -542,7 +568,7 @@ export default function CreateCoursePage() {
                   {currentMaterial.type === "video" && (
                     <p className="text-sm text-gray-500 mt-2">
                       🎥 Video will be automatically uploaded to YouTube as
-                      unlisted. Max size: 500MB
+                      unlisted. Max size: {MAX_VIDEO_UPLOAD_MB}MB
                     </p>
                   )}
                   {currentMaterial.type === "pdf" && (

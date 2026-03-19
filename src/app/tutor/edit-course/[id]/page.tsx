@@ -49,6 +49,9 @@ export default function EditCoursePage() {
     duration: "",
     order: "",
   });
+  const MAX_VIDEO_UPLOAD_MB = Number(
+    process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 95,
+  );
 
   const categories = [
     "Web Development",
@@ -189,9 +192,28 @@ export default function EditCoursePage() {
 
   const handleMaterialFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setCurrentMaterial((prev) => ({ ...prev, file }));
+    if (!file) return;
+
+    if (currentMaterial.type === "video") {
+      if (!file.type.startsWith("video/")) {
+        alert("Please select a valid video file");
+        return;
+      }
+
+      if (file.size > MAX_VIDEO_UPLOAD_MB * 1024 * 1024) {
+        alert(
+          `Video file size must be less than ${MAX_VIDEO_UPLOAD_MB}MB (current server limit).`,
+        );
+        return;
+      }
     }
+
+    if (currentMaterial.type === "pdf" && file.size > 10 * 1024 * 1024) {
+      alert("PDF file size must be less than 10MB");
+      return;
+    }
+
+    setCurrentMaterial((prev) => ({ ...prev, file }));
   };
 
   const handleAddMaterial = () => {
@@ -255,20 +277,42 @@ export default function EditCoursePage() {
 
         materialFormData.append("video", material.file);
 
-        await fetch(`${API_BASE_URL}/courses/${courseId}/content`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const uploadResponse = await fetch(
+          `${API_BASE_URL}/courses/${courseId}/content`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: materialFormData,
           },
-          body: materialFormData,
-        });
+        );
+
+        if (!uploadResponse.ok) {
+          let errorMessage = `Failed to upload material "${material.title}"`;
+          try {
+            const errorData = await uploadResponse.json();
+            if (errorData?.message) {
+              errorMessage = errorData.message;
+            }
+          } catch {
+            if (uploadResponse.status === 413) {
+              errorMessage = `Upload too large. Keep video files under ${MAX_VIDEO_UPLOAD_MB}MB.`;
+            }
+          }
+          throw new Error(errorMessage);
+        }
       }
 
       alert("Materials saved successfully!");
       loadCourseMaterials();
     } catch (error) {
       console.error("Failed to save materials:", error);
-      alert("Failed to save some materials");
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to save some materials";
+      alert(message);
     } finally {
       setSubmitting(false);
     }
@@ -768,7 +812,7 @@ export default function EditCoursePage() {
                   />
                   <p className="text-sm text-gray-500 mt-2">
                     {currentMaterial.type === "video"
-                      ? "Accepted formats: MP4, MOV, AVI, WMV. Max size: 500MB"
+                      ? `Accepted formats: MP4, MOV, AVI, WMV. Max size: ${MAX_VIDEO_UPLOAD_MB}MB`
                       : "Accepted format: PDF. Max size: 10MB"}
                   </p>
                 </div>
