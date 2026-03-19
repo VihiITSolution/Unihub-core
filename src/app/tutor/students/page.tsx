@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { BACKEND_URL } from "@/lib/constants";
 import enrollmentService from "@/services/enrollment.service";
 
 interface StudentEnrollment {

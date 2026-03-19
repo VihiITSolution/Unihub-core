@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
 import reviewService, { Review } from "@/services/review.service";
 import type { Course } from "@/types";

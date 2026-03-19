@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import enrollmentService, { Enrollment } from "@/services/enrollment.service";
+import { BACKEND_URL } from "@/lib/constants";
 
 export default function StudentDashboard() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
