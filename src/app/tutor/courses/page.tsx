@@ -160,7 +160,7 @@ export default function TutorCoursesPage() {
                     src={
                       course.thumbnail.startsWith("http")
                         ? course.thumbnail
-                        : `http://localhost:5000${course.thumbnail}`
+                        : `${BACKEND_URL}${course.thumbnail}`
                     }
                     alt={course.title}
                     className="w-56 h-36 object-cover rounded-lg flex-shrink-0"

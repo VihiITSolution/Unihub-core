@@ -103,7 +103,7 @@ export default function StudentDashboard() {
                       src={
                         course.thumbnail.startsWith("http")
                           ? course.thumbnail
-                          : `http://localhost:5000${course.thumbnail}`
+                          : `${BACKEND_URL}${course.thumbnail}`
                       }
                       alt={course.title}
                       className="w-full h-40 object-cover rounded-lg mb-4"

@@ -280,7 +280,7 @@ export default function LearnPage() {
                         href={
                           currentContent.url.startsWith("http")
                             ? currentContent.url
-                            : `http://localhost:5000${currentContent.url}`
+                            : `${BACKEND_URL}${currentContent.url}`
                         }
                         target="_blank"
                         rel="noopener noreferrer"
@@ -292,7 +292,7 @@ export default function LearnPage() {
                         href={
                           currentContent.url.startsWith("http")
                             ? currentContent.url
-                            : `http://localhost:5000${currentContent.url}`
+                            : `${BACKEND_URL}${currentContent.url}`
                         }
                         download
                         className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 font-semibold"

@@ -408,7 +408,7 @@ export default function TutorStudentsPage() {
                                 src={
                                   enrollment.course.thumbnail.startsWith("http")
                                     ? enrollment.course.thumbnail
-                                    : `http://localhost:5000${enrollment.course.thumbnail}`
+                                    : `${BACKEND_URL}${enrollment.course.thumbnail}`
                                 }
                                 alt={enrollment.course.title}
                                 className="w-12 h-12 object-cover rounded-lg"
