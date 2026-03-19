@@ -50,7 +50,7 @@ export default function EditCoursePage() {
     order: "",
   });
   const MAX_VIDEO_UPLOAD_MB = Number(
-    process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 95,
+    process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 5000,
   );
 
   const categories = [
