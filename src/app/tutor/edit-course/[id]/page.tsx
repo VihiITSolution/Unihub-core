@@ -274,6 +274,10 @@ export default function EditCoursePage() {
     }
   };
 
+  const hasUnsavedMaterials = materials.some(
+    (material) => Boolean(material.file) && !material.url
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token || !courseId) return;
@@ -831,7 +835,7 @@ export default function EditCoursePage() {
               <button
                 type="button"
                 onClick={handleSaveMaterials}
-                disabled={materials.filter((m) => !m.id).length === 0}
+                disabled={!hasUnsavedMaterials || submitting}
                 className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 font-semibold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save Materials
