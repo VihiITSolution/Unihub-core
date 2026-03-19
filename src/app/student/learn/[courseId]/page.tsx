@@ -106,30 +106,25 @@ export default function LearnPage() {
     setCurrentContent(content);
   };
 
-  // Convert YouTube URL to privacy-enhanced embed format
-  const getEmbedUrl = (url: string) => {
-    if (!url) return "";
+  // Convert YouTube URL/ID to privacy-enhanced embed format.
+  const getEmbedUrl = (url?: string, youtubeVideoId?: string) => {
+    let videoId = youtubeVideoId || "";
 
-    // If it's already an embed URL, return it
-    if (url.includes("/embed/")) return url;
-
-    // Extract video ID from various YouTube URL formats
-    let videoId = "";
-    if (url.includes("youtube.com/watch?v=")) {
-      videoId = url.split("v=")[1]?.split("&")[0];
-    } else if (url.includes("youtu.be/")) {
-      videoId = url.split("youtu.be/")[1]?.split("?")[0];
-    } else if (url.includes("youtube.com/v/")) {
-      videoId = url.split("/v/")[1]?.split("?")[0];
+    if (!videoId && url) {
+      if (url.includes("youtube.com/watch?v=")) {
+        videoId = url.split("v=")[1]?.split("&")[0] || "";
+      } else if (url.includes("youtu.be/")) {
+        videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
+      } else if (url.includes("youtube.com/v/")) {
+        videoId = url.split("/v/")[1]?.split("?")[0] || "";
+      } else if (url.includes("youtube.com/embed/") || url.includes("youtube-nocookie.com/embed/")) {
+        videoId = url.split("/embed/")[1]?.split("?")[0] || "";
+      }
     }
 
-    // Use youtube-nocookie.com for privacy-enhanced mode
-    // Add parameters to hide related videos, info, and controls branding
-    if (videoId) {
-      return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&showinfo=0`;
-    }
+    if (!videoId) return url || "";
 
-    return url;
+    return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&cc_load_policy=0`;
   };
 
   if (loading) {
@@ -253,7 +248,7 @@ export default function LearnPage() {
                 <div className="bg-black rounded-lg overflow-hidden mb-6">
                   <div className="aspect-video">
                     <iframe
-                      src={getEmbedUrl(currentContent.url)}
+                      src={getEmbedUrl(currentContent.url, currentContent.youtubeVideoId)}
                       className="w-full h-full"
                       allowFullScreen
                       title={currentContent.title}
