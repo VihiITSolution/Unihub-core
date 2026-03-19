@@ -278,7 +278,7 @@ export default function EditCoursePage() {
         materialFormData.append("video", material.file);
 
         const uploadResponse = await fetch(
-          `${API_BASE_URL}/courses/${courseId}/content`,
+          `${API_BASE_URL}/courses/${courseId}/content?type=${encodeURIComponent(material.type)}`,
           {
             method: "POST",
             headers: {

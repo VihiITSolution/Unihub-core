@@ -241,7 +241,7 @@ export default function CreateCoursePage() {
         }
 
         const uploadResponse = await fetch(
-          `${API_BASE_URL}/courses/${createdCourseId}/content`,
+          `${API_BASE_URL}/courses/${createdCourseId}/content?type=${encodeURIComponent(material.type)}`,
           {
             method: "POST",
             headers: {
