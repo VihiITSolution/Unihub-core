@@ -14,6 +14,7 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [alreadyTutorModalOpen, setAlreadyTutorModalOpen] = useState(false);
   const [requiredRole, setRequiredRole] = useState<RoleType | null>(null);
   const { user, logout, isAuthenticated, switchRole } = useAuth();
   const router = useRouter();
@@ -72,11 +73,16 @@ export default function Header() {
 
   const navLinks = [
     { href: "/courses", label: "Courses", requiresRole: null },
-    {
-      href: "/tutor/dashboard",
-      label: "Teach",
-      requiresRole: "tutor" as RoleType,
-    },
+    // Only show "Teach" tab if user is NOT already a tutor
+    ...(user?.roles?.includes("tutor")
+      ? []
+      : [
+          {
+            href: "/tutor/dashboard",
+            label: "Teach",
+            requiresRole: "tutor" as RoleType,
+          },
+        ]),
     { href: "/marketplace", label: "Marketplace", requiresRole: null },
     { href: "/boarding", label: "Boarding", requiresRole: null },
     getDashboardLink(),
@@ -100,8 +106,17 @@ export default function Header() {
         return;
       }
 
-      // Tutor-specific check: must be approved
+      // Tutor-specific check
       if (link.requiresRole === "tutor") {
+        // User already has tutor role but might be in student mode
+        // Check if they're already a tutor but in student mode
+        if (user?.primaryRole === "student" && user?.roles?.includes("tutor")) {
+          e.preventDefault();
+          setAlreadyTutorModalOpen(true);
+          return;
+        }
+
+        // Check if tutor profile is approved
         const isApproved = user?.tutorProfile?.isApproved;
         if (!isApproved) {
           e.preventDefault();
@@ -525,6 +540,63 @@ export default function Header() {
             navLinks.find((l) => l.requiresRole === requiredRole)?.label
           }
         />
+      )}
+
+      {/* Already a Tutor Modal */}
+      {alreadyTutorModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-center mb-2 text-gray-900">
+              You're Already a Tutor!
+            </h2>
+            <p className="text-center text-gray-600 mb-6">
+              You're registered as a tutor. Switch to{" "}
+              <span className="font-semibold">Tutor Mode</span> from your
+              profile dropdown to access your tutor dashboard and manage your
+              courses.
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setAlreadyTutorModalOpen(false);
+                  if (switchRole && user) {
+                    switchRole("tutor").then((result) => {
+                      if (result.success) {
+                        router.push("/tutor/dashboard");
+                      }
+                    });
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md"
+              >
+                Switch to Tutor Mode
+              </button>
+              <button
+                onClick={() => setAlreadyTutorModalOpen(false)}
+                className="w-full px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </header>
   );
