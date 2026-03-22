@@ -14,6 +14,7 @@ export default function Home() {
   const { user, token, isAuthenticated } = useAuth();
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showBecomeYourTutorModal, setShowBecomeYourTutorModal] = useState(false);
 
   useEffect(() => {
     loadFeaturedCourses();
@@ -62,8 +63,8 @@ export default function Home() {
       // User is a tutor - go to create course
       router.push("/tutor/create-course");
     } else {
-      // User is not a tutor - go to become tutor form
-      router.push("/student/become-tutor");
+      // User is not a tutor - show modal
+      setShowBecomeYourTutorModal(true);
     }
   };
 
@@ -530,5 +531,53 @@ export default function Home() {
         </div>
       </section>
     </div>
-  );
-}
+
+    {/* Become Your Tutor Modal */}
+    {showBecomeYourTutorModal && (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747 10-4.992 10-10.747c0-5.002-4.5-10.747-10-10.747z"
+                />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-center mb-2 text-gray-900">
+            Ready to Create Kuppi?
+          </h2>
+          <p className="text-center text-gray-600 mb-6">
+            You'll need to become a tutor to create and publish kuppi sessions.
+            Apply now to start teaching and earning!
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                setShowBecomeYourTutorModal(false);
+                router.push("/student/become-tutor");
+              }}
+              className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-medium py-3 rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md"
+            >
+              Apply as Tutor
+            </button>
+            <button
+              onClick={() => setShowBecomeYourTutorModal(false)}
+              className="w-full px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  
