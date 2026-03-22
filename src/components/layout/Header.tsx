@@ -45,6 +45,31 @@ export default function Header() {
     }
   }, [isProfileOpen]);
 
+  // Dynamically determine the dashboard link based on user role
+  const getDashboardLink = () => {
+    if (!isAuthenticated || !user) {
+      return {
+        href: "/student/dashboard",
+        label: "My Learning",
+        requiresRole: null,
+      };
+    }
+
+    if (user.primaryRole === "tutor") {
+      return {
+        href: "/tutor/dashboard",
+        label: "My Teaching",
+        requiresRole: null,
+      };
+    }
+
+    return {
+      href: "/student/dashboard",
+      label: "My Learning",
+      requiresRole: null,
+    };
+  };
+
   const navLinks = [
     { href: "/courses", label: "Courses", requiresRole: null },
     {
@@ -54,7 +79,7 @@ export default function Header() {
     },
     { href: "/marketplace", label: "Marketplace", requiresRole: null },
     { href: "/boarding", label: "Boarding", requiresRole: null },
-    { href: "/student/dashboard", label: "My Learning", requiresRole: null },
+    getDashboardLink(),
   ];
 
   const handleNavClick = (e: React.MouseEvent, link: (typeof navLinks)[0]) => {
