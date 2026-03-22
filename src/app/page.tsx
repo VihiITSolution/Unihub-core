@@ -548,7 +548,7 @@ export default function Home() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747 10-4.992 10-10.747c0-5.002-4.5-10.747-10-10.747z"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
                   />
                 </svg>
               </div>
@@ -557,8 +557,8 @@ export default function Home() {
               Ready to Create Kuppi?
             </h2>
             <p className="text-center text-gray-600 mb-6">
-              You'll need to become a tutor to create and publish kuppi
-              sessions. Apply now to start teaching and earning!
+              You need to become a tutor to create and publish kuppi sessions.
+              Apply now to start teaching and earning!
             </p>
             <div className="space-y-3">
               <button
@@ -574,7 +574,7 @@ export default function Home() {
                 onClick={() => setShowBecomeYourTutorModal(false)}
                 className="w-full px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg transition-colors"
               >
-                Cancel
+                Close
               </button>
             </div>
           </div>
