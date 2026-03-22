@@ -10,10 +10,11 @@ import type { Course, CourseContent } from "@/types";
 export default function CourseDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token } = useAuth();
   const courseId = params?.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
+  const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +22,7 @@ export default function CourseDetailsPage() {
     if (courseId) {
       loadCourseDetails();
     }
-  }, [courseId]);
+  }, [courseId, token]);
 
   const loadCourseDetails = async () => {
     if (!courseId) {
@@ -35,9 +36,7 @@ export default function CourseDetailsPage() {
       setError(null);
 
       // Fetch real course data
-      const courseResponse = await fetch(
-        `${API_BASE_URL}/courses/${courseId}`
-      );
+      const courseResponse = await fetch(`${API_BASE_URL}/courses/${courseId}`);
 
       if (!courseResponse.ok) {
         throw new Error(`Failed to fetch course: ${courseResponse.status}`);
@@ -53,7 +52,7 @@ export default function CourseDetailsPage() {
 
       // Fetch course content
       const contentResponse = await fetch(
-        `${API_BASE_URL}/courses/${courseId}/content`
+        `${API_BASE_URL}/courses/${courseId}/content`,
       );
 
       if (contentResponse.ok) {
@@ -62,10 +61,36 @@ export default function CourseDetailsPage() {
           setContents(contentData.data.contents || []);
         }
       }
+
+      // Check if user is enrolled (if authenticated)
+      if (isAuthenticated && token) {
+        try {
+          const enrollmentResponse = await fetch(
+            `${API_BASE_URL}/enrollments`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          if (enrollmentResponse.ok) {
+            const enrollmentData = await enrollmentResponse.json();
+            if (enrollmentData.success && Array.isArray(enrollmentData.data)) {
+              const enrolled = enrollmentData.data.some(
+                (enrollment: any) => enrollment.courseId === parseInt(courseId),
+              );
+              setIsEnrolled(enrolled);
+            }
+          }
+        } catch (enrollmentError) {
+          console.error("Failed to check enrollment:", enrollmentError);
+        }
+      }
     } catch (error) {
       console.error("Failed to load course:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to load course"
+        error instanceof Error ? error.message : "Failed to load course",
       );
     } finally {
       setLoading(false);
@@ -116,6 +141,12 @@ export default function CourseDetailsPage() {
       </div>
     );
   }
+
+  // Separate preview and enrolled materials
+  const previewMaterials = contents.filter((content) => content.isPreview);
+  const enrolledOnlyMaterials = contents.filter(
+    (content) => !content.isPreview,
+  );
 
   return (
     <div className="container-custom py-8">
@@ -188,9 +219,23 @@ export default function CourseDetailsPage() {
           <div className="text-3xl font-bold text-primary-600 mb-4">
             ${course.price}
           </div>
-          <button onClick={handleEnroll} className="btn-primary w-full mb-4">
-            Enroll Now
-          </button>
+          {isEnrolled ? (
+            <div className="text-center">
+              <p className="text-green-600 font-semibold mb-4">
+                ✓ You're enrolled
+              </p>
+              <Link
+                href={`/student/learn/${courseId}`}
+                className="btn-primary w-full mb-4"
+              >
+                Continue Learning
+              </Link>
+            </div>
+          ) : (
+            <button onClick={handleEnroll} className="btn-primary w-full mb-4">
+              Enroll Now
+            </button>
+          )}
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <span>✓</span>
@@ -210,32 +255,105 @@ export default function CourseDetailsPage() {
 
       {/* Course Content */}
       <div className="mb-12">
-        <h2 className="text-3xl font-bold mb-6">Course Content</h2>
-        <div className="space-y-4">
-          {contents.map((content, index) => (
-            <div
-              key={content.id}
-              className="card flex items-center justify-between"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-semibold">
-                  {index + 1}
-                </div>
-                <div>
-                  <h3 className="font-semibold">{content.title}</h3>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>{content.type === "video" ? "🎥" : "📄"}</span>
-                    <span>{content.type.toUpperCase()}</span>
-                    {content.duration && <span>• {content.duration} min</span>}
-                  </div>
-                </div>
-              </div>
-              <button className="text-primary-600 hover:underline">
-                Preview
-              </button>
+        {/* Preview Section - Visible to everyone */}
+        {previewMaterials.length > 0 && (
+          <div className="mb-12">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+              <h2 className="text-2xl font-bold mb-2">🔓 Free Preview</h2>
+              <p className="text-gray-600">
+                Watch these materials for free to get a feel for the course
+              </p>
             </div>
-          ))}
-        </div>
+            <div className="space-y-4">
+              {previewMaterials.map((content, index) => (
+                <div
+                  key={content.id}
+                  className="card flex items-center justify-between hover:bg-gray-50 transition"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center font-semibold text-green-700">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold">{content.title}</h3>
+                        <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">
+                          FREE PREVIEW
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <span>{content.type === "video" ? "🎥" : "📄"}</span>
+                        <span>{content.type.toUpperCase()}</span>
+                        {content.duration && (
+                          <span>• {content.duration} min</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button className="text-green-600 hover:text-green-700 hover:underline font-semibold">
+                    Watch Free
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Enrolled Only Section */}
+        {enrolledOnlyMaterials.length > 0 && (
+          <div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+              <h2 className="text-2xl font-bold mb-2">📚 Course Content</h2>
+              {!isEnrolled && (
+                <p className="text-gray-600">
+                  Enroll to access all {enrolledOnlyMaterials.length} materials
+                </p>
+              )}
+            </div>
+            <div className="space-y-4">
+              {enrolledOnlyMaterials.map((content, index) => (
+                <div
+                  key={content.id}
+                  className={`card flex items-center justify-between ${
+                    isEnrolled ? "hover:bg-gray-50 transition" : "opacity-75"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center font-semibold text-blue-700">
+                      {previewMaterials.length + index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{content.title}</h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <span>{content.type === "video" ? "🎥" : "📄"}</span>
+                        <span>{content.type.toUpperCase()}</span>
+                        {content.duration && (
+                          <span>• {content.duration} min</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {isEnrolled ? (
+                    <button className="text-primary-600 hover:underline font-semibold">
+                      Continue
+                    </button>
+                  ) : (
+                    <span className="text-gray-400 font-semibold">
+                      🔒 Locked
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* No Content Message */}
+        {contents.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-600">No course content available yet</p>
+          </div>
+        )}
       </div>
     </div>
   );

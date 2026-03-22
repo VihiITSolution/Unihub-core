@@ -14,6 +14,7 @@ interface CourseMaterial {
   type: "video" | "pdf";
   file?: File;
   duration?: number;
+  isPreview?: boolean;
 }
 
 export default function CreateCoursePage() {
@@ -45,6 +46,7 @@ export default function CreateCoursePage() {
     type: "video" as "video" | "pdf",
     file: null as File | null,
     duration: "",
+    isPreview: false,
   });
 
   const MAX_VIDEO_UPLOAD_MB = Number(
@@ -148,10 +150,17 @@ export default function CreateCoursePage() {
       duration: currentMaterial.duration
         ? parseInt(currentMaterial.duration)
         : undefined,
+      isPreview: currentMaterial.isPreview,
     };
 
     setMaterials([...materials, newMaterial]);
-    setCurrentMaterial({ title: "", type: "video", file: null, duration: "" });
+    setCurrentMaterial({
+      title: "",
+      type: "video",
+      file: null,
+      duration: "",
+      isPreview: false,
+    });
   };
 
   const removeMaterial = (id: string) => {
@@ -234,6 +243,10 @@ export default function CreateCoursePage() {
 
         if (material.duration) {
           materialFormData.append("duration", material.duration.toString());
+        }
+
+        if (material.isPreview) {
+          materialFormData.append("isPreview", "true");
         }
 
         if (material.file) {
@@ -601,6 +614,28 @@ export default function CreateCoursePage() {
                   </div>
                 )}
 
+                <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="isPreview"
+                    checked={currentMaterial.isPreview}
+                    onChange={(e) =>
+                      setCurrentMaterial((prev) => ({
+                        ...prev,
+                        isPreview: e.target.checked,
+                      }))
+                    }
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="isPreview"
+                    className="text-sm font-semibold text-gray-700 cursor-pointer"
+                  >
+                    🔓 Make this material FREE PREVIEW - Students can watch
+                    without enrolling
+                  </label>
+                </div>
+
                 <button
                   type="button"
                   onClick={addMaterial}
@@ -622,12 +657,12 @@ export default function CreateCoursePage() {
                       key={material.id}
                       className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
                     >
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-4 flex-1">
                         <span className="text-lg font-bold text-gray-400">
                           {index + 1}
                         </span>
-                        <div>
-                          <div className="flex items-center space-x-2">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 flex-wrap gap-2">
                             <span
                               className={`px-2 py-1 text-xs font-semibold rounded ${
                                 material.type === "video"
@@ -642,6 +677,11 @@ export default function CreateCoursePage() {
                             <span className="font-semibold text-gray-900">
                               {material.title}
                             </span>
+                            {material.isPreview && (
+                              <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">
+                                🔓 FREE PREVIEW
+                              </span>
+                            )}
                           </div>
                           {material.file && (
                             <p className="text-sm text-gray-500 mt-1">
@@ -659,7 +699,7 @@ export default function CreateCoursePage() {
                       </div>
                       <button
                         onClick={() => removeMaterial(material.id)}
-                        className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-semibold transition"
+                        className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-semibold transition ml-4 flex-shrink-0"
                       >
                         Remove
                       </button>

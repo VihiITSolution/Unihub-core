@@ -139,6 +139,7 @@ export interface CourseContent {
   youtubeVideoId?: string;
   duration?: number;
   order: number;
+  isPreview?: boolean;
 }
 
 export interface Enrollment {
@@ -200,7 +201,13 @@ export interface Order {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled" | "refunded";
+  status:
+    | "pending"
+    | "confirmed"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
+    | "refunded";
   shippingAddress?: string;
   buyerNotes?: string;
   sellerNotes?: string;
@@ -229,7 +236,10 @@ export interface Order {
 }
 
 // Legacy Product type for compatibility (maps to MarketplaceItem)
-export interface Product extends Omit<MarketplaceItem, 'itemType' | 'condition' | 'soldCount'> {
+export interface Product extends Omit<
+  MarketplaceItem,
+  "itemType" | "condition" | "soldCount"
+> {
   sellerName?: string;
   rating?: number;
   reviewCount?: number;
@@ -268,7 +278,12 @@ export interface PaginatedResponse<T> {
 }
 
 // Live Session types
-export type LiveSessionStatus = "scheduled" | "cancelled" | "live" | "ended" | "recorded";
+export type LiveSessionStatus =
+  | "scheduled"
+  | "cancelled"
+  | "live"
+  | "ended"
+  | "recorded";
 export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
 export type InvitationStatus = "pending" | "accepted" | "declined";
 
