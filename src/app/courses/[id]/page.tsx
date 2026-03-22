@@ -258,9 +258,11 @@ export default function CourseDetailsPage() {
         {/* Preview Section - Visible to everyone */}
         {previewMaterials.length > 0 && (
           <div className="mb-12">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-              <h2 className="text-2xl font-bold mb-2">🔓 Free Preview</h2>
-              <p className="text-gray-600">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-8 mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Free Preview
+              </h2>
+              <p className="text-gray-700">
                 Watch these materials for free to get a feel for the course
               </p>
             </div>
@@ -276,21 +278,30 @@ export default function CourseDetailsPage() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">{content.title}</h3>
-                        <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded">
-                          FREE PREVIEW
+                        <h3 className="font-semibold text-gray-900">
+                          {content.title}
+                        </h3>
+                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded">
+                          FREE
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <span>{content.type === "video" ? "🎥" : "📄"}</span>
-                        <span>{content.type.toUpperCase()}</span>
+                      <div className="flex items-center gap-3 text-sm text-gray-600">
+                        <span className="font-medium">
+                          {content.type === "video" ? "VIDEO" : "PDF"}
+                        </span>
                         {content.duration && (
-                          <span>• {content.duration} min</span>
+                          <span className="flex items-center gap-1">
+                            <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                            {content.duration} min
+                          </span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <button className="text-green-600 hover:text-green-700 hover:underline font-semibold">
+                  <button
+                    onClick={() => router.push(`/student/learn/${courseId}`)}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition flex-shrink-0 ml-4"
+                  >
                     Watch Free
                   </button>
                 </div>
@@ -302,44 +313,55 @@ export default function CourseDetailsPage() {
         {/* Enrolled Only Section */}
         {enrolledOnlyMaterials.length > 0 && (
           <div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-              <h2 className="text-2xl font-bold mb-2">📚 Course Content</h2>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-8 mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Course Materials
+              </h2>
               {!isEnrolled && (
-                <p className="text-gray-600">
+                <p className="text-gray-700">
                   Enroll to access all {enrolledOnlyMaterials.length} materials
                 </p>
               )}
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {enrolledOnlyMaterials.map((content, index) => (
                 <div
                   key={content.id}
-                  className={`card flex items-center justify-between ${
-                    isEnrolled ? "hover:bg-gray-50 transition" : "opacity-75"
+                  className={`bg-white border border-gray-200 rounded-lg p-5 flex items-center justify-between ${
+                    isEnrolled ? "hover:shadow-md transition" : "opacity-60"
                   }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center font-semibold text-blue-700">
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-semibold text-gray-700 flex-shrink-0">
                       {previewMaterials.length + index + 1}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold">{content.title}</h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <span>{content.type === "video" ? "🎥" : "📄"}</span>
-                        <span>{content.type.toUpperCase()}</span>
+                      <h3 className="font-semibold text-gray-900 mb-2">
+                        {content.title}
+                      </h3>
+                      <div className="flex items-center gap-3 text-sm text-gray-600">
+                        <span className="font-medium">
+                          {content.type === "video" ? "VIDEO" : "PDF"}
+                        </span>
                         {content.duration && (
-                          <span>• {content.duration} min</span>
+                          <span className="flex items-center gap-1">
+                            <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                            {content.duration} min
+                          </span>
                         )}
                       </div>
                     </div>
                   </div>
                   {isEnrolled ? (
-                    <button className="text-primary-600 hover:underline font-semibold">
+                    <button
+                      onClick={() => router.push(`/student/learn/${courseId}`)}
+                      className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition flex-shrink-0 ml-4"
+                    >
                       Continue
                     </button>
                   ) : (
-                    <span className="text-gray-400 font-semibold">
-                      🔒 Locked
+                    <span className="text-gray-400 font-medium flex-shrink-0 ml-4">
+                      Locked
                     </span>
                   )}
                 </div>
