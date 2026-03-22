@@ -529,14 +529,6 @@ export default function Header() {
           }
         />
       )}
-
-      {/* Already a Tutor Modal */}
-      <RoleUpgradeModal
-        isOpen={roleModalOpen}
-        onClose={() => setRoleModalOpen(false)}
-        roleType={requiredRole as RoleType}
-        featureName="tutor"
-      />
     </header>
   );
 }
