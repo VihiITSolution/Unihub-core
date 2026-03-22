@@ -18,9 +18,9 @@ export default function LearnPage() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [completedContents, setCompletedContents] = useState<Set<number>>(
-    new Set(),
-  );
+  const [completedContents, setCompletedContents] = useState<
+    Set<string | number>
+  >(new Set());
   const [enrollment, setEnrollment] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [userReview, setUserReview] = useState<any>(null);
@@ -121,7 +121,9 @@ export default function LearnPage() {
                 setEnrollment(userEnrollment);
                 // Load completed contents if available
                 const completed = userEnrollment.completedContents || [];
-                setCompletedContents(new Set(completed));
+                setCompletedContents(
+                  new Set(completed.map((id) => String(id))),
+                );
               }
             }
           }
@@ -158,7 +160,10 @@ export default function LearnPage() {
           },
           body: JSON.stringify({
             progress: {
-              completedContents: [...completedContents, currentContent.id],
+              completedContents: [
+                ...Array.from(completedContents),
+                String(currentContent.id),
+              ],
             },
           }),
         },
@@ -171,7 +176,7 @@ export default function LearnPage() {
 
       // Update local state
       const newCompleted = new Set(completedContents);
-      newCompleted.add(currentContent.id);
+      newCompleted.add(String(currentContent.id));
       setCompletedContents(newCompleted);
 
       // Auto-navigate to next content
@@ -368,7 +373,7 @@ export default function LearnPage() {
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                      {completedContents.has(content.id) ? (
+                      {completedContents.has(String(content.id)) ? (
                         <span className="bg-green-500 text-white rounded-full w-full h-full flex items-center justify-center">
                           ✓
                         </span>
@@ -386,7 +391,7 @@ export default function LearnPage() {
                         {content.duration && (
                           <span>• {content.duration} min</span>
                         )}
-                        {completedContents.has(content.id) && (
+                        {completedContents.has(String(content.id)) && (
                           <span className="text-green-600 font-semibold">
                             • Completed
                           </span>
@@ -502,14 +507,14 @@ export default function LearnPage() {
 
                 <button
                   onClick={handleMarkAsComplete}
-                  disabled={completedContents.has(currentContent.id)}
+                  disabled={completedContents.has(String(currentContent.id))}
                   className={`px-6 py-2 rounded-lg font-semibold ${
-                    completedContents.has(currentContent.id)
+                    completedContents.has(String(currentContent.id))
                       ? "bg-green-200 text-green-600 cursor-not-allowed"
                       : "btn-primary"
                   }`}
                 >
-                  {completedContents.has(currentContent.id)
+                  {completedContents.has(String(currentContent.id))
                     ? "✓ Completed"
                     : "Mark as Complete"}
                 </button>
