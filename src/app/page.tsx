@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button, Card, Badge } from "@/components/ui";
 import { courseService } from "@/services/course.service";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +10,7 @@ import type { Course } from "@/types";
 import { API_BASE_URL } from "@/lib/constants";
 
 export default function Home() {
+  const router = useRouter();
   const { user, token, isAuthenticated } = useAuth();
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,26 @@ export default function Home() {
       console.error("Failed to load featured courses:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handler for Create Kuppi button
+  const handleCreateKuppi = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (!isAuthenticated) {
+      // Not logged in - go to registration
+      router.push("/auth/register");
+      return;
+    }
+
+    // Check if user is a tutor
+    if (user?.roles?.includes("tutor")) {
+      // User is a tutor - go to create course
+      router.push("/tutor/create-course");
+    } else {
+      // User is not a tutor - go to become tutor form
+      router.push("/student/become-tutor");
     }
   };
 
@@ -113,8 +135,8 @@ export default function Home() {
               <div className="mb-8 rounded-xl border border-primary-100 bg-white/80 p-4">
                 <p className="text-sm text-gray-700 leading-relaxed">
                   UniHub is a web platform for Sri Lankan university students to
-                  learn through peer-led kuppi sessions, teach and earn as tutors,
-                  and buy or sell academic essentials in one place.
+                  learn through peer-led kuppi sessions, teach and earn as
+                  tutors, and buy or sell academic essentials in one place.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-4 text-sm">
                   <Link
@@ -137,11 +159,12 @@ export default function Home() {
                     Browse Kuppi Sessions
                   </Button>
                 </Link>
-                <Link href="/tutor/dashboard">
-                  <Button variant="outline" size="lg">
-                    Create Kuppi
-                  </Button>
-                </Link>
+                <button
+                  onClick={handleCreateKuppi}
+                  className="inline-flex items-center justify-center px-8 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Create Kuppi
+                </button>
               </div>
 
               {/* Trust Indicators */}
@@ -483,15 +506,17 @@ export default function Home() {
             university students.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/auth/register">
-              <Button
-                variant="secondary"
-                size="lg"
-                className="bg-white text-primary-600 hover:bg-gray-100"
-              >
-                Join Free
-              </Button>
-            </Link>
+            {!isAuthenticated && (
+              <Link href="/auth/register">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="bg-white text-primary-600 hover:bg-gray-100"
+                >
+                  Join Free
+                </Button>
+              </Link>
+            )}
             <Link href="/courses">
               <Button
                 variant="outline"
@@ -504,31 +529,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Footer Links */}
-      <footer className="bg-gray-900 text-gray-400 py-8">
-        <div className="container-custom flex flex-col md:flex-row justify-between items-center gap-4">
-          <div>
-            <p className="text-sm">
-              &copy; 2026 UniHub. All rights reserved.
-            </p>
-          </div>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-white transition">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-white transition">
-              Terms of Service
-            </Link>
-            <a 
-              href="mailto:support@unihub.lk" 
-              className="hover:text-white transition"
-            >
-              Contact
-            </a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
