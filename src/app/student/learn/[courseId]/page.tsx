@@ -14,11 +14,18 @@ export default function LearnPage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
   const [currentContent, setCurrentContent] = useState<CourseContent | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [completedContents, setCompletedContents] = useState<Set<number>>(
+    new Set(),
+  );
+  const [enrollment, setEnrollment] = useState<any>(null);  const [reviews, setReviews] = useState<any[]>([]);
+  const [userReview, setUserReview] = useState<any>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/auth/login");
@@ -27,6 +34,7 @@ export default function LearnPage() {
 
     if (courseId) {
       loadCourseContent();
+      loadReviews();
     }
   }, [courseId, isAuthenticated]);
 
@@ -42,9 +50,7 @@ export default function LearnPage() {
       setError(null);
 
       // Fetch real course data
-      const courseResponse = await fetch(
-        `${API_BASE_URL}/courses/${courseId}`
-      );
+      const courseResponse = await fetch(`${API_BASE_URL}/courses/${courseId}`);
 
       if (!courseResponse.ok) {
         throw new Error(`Failed to fetch course: ${courseResponse.status}`);
@@ -63,7 +69,7 @@ export default function LearnPage() {
         // Later you can add enrollment check here
         const userRoles = user?.roles || [];
         const isAdmin = userRoles.includes("admin");
-        
+
         if (!isCourseOwner && !isAdmin) {
           // TODO: Add enrollment check
           // const isEnrolled = await checkEnrollment(courseId, user.id);
@@ -79,7 +85,7 @@ export default function LearnPage() {
 
       // Fetch course content
       const contentResponse = await fetch(
-        `${API_BASE_URL}/courses/${courseId}/content`
+        `${API_BASE_URL}/courses/${courseId}/content`,
       );
 
       if (contentResponse.ok) {
@@ -92,10 +98,40 @@ export default function LearnPage() {
           }
         }
       }
+      // Fetch user's enrollment for this course
+      if (isAuthenticated && token) {
+        try {
+          const enrollmentResponse = await fetch(
+            `${API_BASE_URL}/enrollments`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          if (enrollmentResponse.ok) {
+            const enrollmentData = await enrollmentResponse.json();
+            if (enrollmentData.success && Array.isArray(enrollmentData.data)) {
+              const userEnrollment = enrollmentData.data.find(
+                (e: any) => e.courseId === parseInt(courseId),
+              );
+              if (userEnrollment) {
+                setEnrollment(userEnrollment);
+                // Load completed contents if available
+                const completed = userEnrollment.completedContents || [];
+                setCompletedContents(new Set(completed));
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch enrollment:", err);
+        }
+      }
     } catch (error) {
       console.error("Failed to load course content:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to load course"
+        error instanceof Error ? error.message : "Failed to load course",
       );
     } finally {
       setLoading(false);
@@ -104,6 +140,126 @@ export default function LearnPage() {
 
   const handleContentSelect = (content: CourseContent) => {
     setCurrentContent(content);
+  };
+
+  const handleMarkAsComplete = async () => {
+    if (!currentContent || !enrollment) return;
+
+    try {
+      // Mark as complete via API
+      const response = await fetch(
+        `${API_BASE_URL}/enrollments/${enrollment.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            progress: {
+              completedContents: [...completedContents, currentContent.id],
+            },
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        console.error("Failed to mark as complete");
+        return;
+      }
+
+      // Update local state
+      const newCompleted = new Set(completedContents);
+      newCompleted.add(currentContent.id);
+      setCompletedContents(newCompleted);
+
+      // Auto-navigate to next content
+      const currentIndex = contents.findIndex(
+        (c) => c.id === currentContent.id,
+      );
+      if (currentIndex < contents.length - 1) {
+        setCurrentContent(contents[currentIndex + 1]);
+      } else {
+        // If last content, show completion message
+        alert("Congratulations! You've completed the course!");
+      }
+    } catch (error) {
+      console.error("Error marking as complete:", error);
+    }
+  };
+
+  const loadReviews = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/reviews/course/${courseId}?limit=10`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.data)) {
+          setReviews(data.data);
+          // Find user's review
+          const myReview = data.data.find(
+            (r: any) => r.userId === user?.id
+          );
+          if (myReview) {
+            setUserReview(myReview);
+            setReviewRating(myReview.rating);
+            setReviewComment(myReview.comment || "");
+          }
+        } else if (data.data?.reviews) {
+          setReviews(data.data.reviews);
+          const myReview = data.data.reviews.find(
+            (r: any) => r.userId === user?.id
+          );
+          if (myReview) {
+            setUserReview(myReview);
+            setReviewRating(myReview.rating);
+            setReviewComment(myReview.comment || "");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load reviews:", error);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (reviewRating < 1 || reviewRating > 5) {
+      alert("Please select a rating between 1 and 5");
+      return;
+    }
+
+    try {
+      setSubmittingReview(true);
+      const response = await fetch(`${API_BASE_URL}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          courseId: parseInt(courseId),
+          rating: reviewRating,
+          comment: reviewComment,
+        }),
+      });
+
+      if (!response.ok) {
+        alert("Failed to submit review");
+        return;
+      }
+
+      // Reload reviews
+      await loadReviews();
+      setReviewComment("");
+      alert("Review submitted successfully!");
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      alert("Error submitting review");
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   // Convert YouTube URL/ID to privacy-enhanced embed format.
@@ -117,7 +273,10 @@ export default function LearnPage() {
         videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
       } else if (url.includes("youtube.com/v/")) {
         videoId = url.split("/v/")[1]?.split("?")[0] || "";
-      } else if (url.includes("youtube.com/embed/") || url.includes("youtube-nocookie.com/embed/")) {
+      } else if (
+        url.includes("youtube.com/embed/") ||
+        url.includes("youtube-nocookie.com/embed/")
+      ) {
         videoId = url.split("/embed/")[1]?.split("?")[0] || "";
       }
     }
@@ -172,10 +331,18 @@ export default function LearnPage() {
             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary-600"
-                style={{ width: "25%" }}
+                style={{
+                  width: `${
+                    contents.length > 0
+                      ? (completedContents.size / contents.length) * 100
+                      : 0
+                  }%`,
+                }}
               ></div>
             </div>
-            <div className="text-sm text-gray-600 mt-1">25% Complete</div>
+            <div className="text-sm text-gray-600 mt-1">
+              {completedContents.size} of {contents.length} completed
+            </div>
           </div>
         </div>
 
@@ -202,7 +369,13 @@ export default function LearnPage() {
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                      {index + 1}
+                      {completedContents.has(content.id) ? (
+                        <span className="bg-green-500 text-white rounded-full w-full h-full flex items-center justify-center">
+                          ✓
+                        </span>
+                      ) : (
+                        index + 1
+                      )}
                     </div>
                     <div className="flex-1">
                       <div className="font-medium text-sm mb-1">
@@ -214,11 +387,16 @@ export default function LearnPage() {
                         {content.duration && (
                           <span>• {content.duration} min</span>
                         )}
+                        {completedContents.has(content.id) && (
+                          <span className="text-green-600 font-semibold">
+                            • Completed
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
                 </button>
-              ))
+              )))
             )}
           </div>
         </div>
@@ -248,7 +426,10 @@ export default function LearnPage() {
                 <div className="bg-black rounded-lg overflow-hidden mb-6">
                   <div className="aspect-video">
                     <iframe
-                      src={getEmbedUrl(currentContent.url, currentContent.youtubeVideoId)}
+                      src={getEmbedUrl(
+                        currentContent.url,
+                        currentContent.youtubeVideoId,
+                      )}
                       className="w-full h-full"
                       allowFullScreen
                       title={currentContent.title}
@@ -304,7 +485,7 @@ export default function LearnPage() {
                 <button
                   onClick={() => {
                     const currentIndex = contents.findIndex(
-                      (c) => c.id === currentContent.id
+                      (c) => c.id === currentContent.id,
                     );
                     if (currentIndex > 0) {
                       setCurrentContent(contents[currentIndex - 1]);
@@ -320,12 +501,24 @@ export default function LearnPage() {
                   ← Previous
                 </button>
 
-                <button className="btn-primary">Mark as Complete</button>
+                <button
+                  onClick={handleMarkAsComplete}
+                  disabled={completedContents.has(currentContent.id)}
+                  className={`px-6 py-2 rounded-lg font-semibold ${
+                    completedContents.has(currentContent.id)
+                      ? "bg-green-200 text-green-600 cursor-not-allowed"
+                      : "btn-primary"
+                  }`}
+                >
+                  {completedContents.has(currentContent.id)
+                    ? "✓ Completed"
+                    : "Mark as Complete"}
+                </button>
 
                 <button
                   onClick={() => {
                     const currentIndex = contents.findIndex(
-                      (c) => c.id === currentContent.id
+                      (c) => c.id === currentContent.id,
                     );
                     if (currentIndex < contents.length - 1) {
                       setCurrentContent(contents[currentIndex + 1]);
@@ -354,6 +547,117 @@ export default function LearnPage() {
                   understand the fundamentals of the topic. Take notes and
                   practice along with the video to maximize your learning.
                 </p>
+              </div>
+
+              {/* Course Reviews Section */}
+              <div className="mt-8 p-6 bg-white border border-gray-200 rounded-lg">
+                <h3 className="text-lg font-semibold mb-6">Course Reviews</h3>
+
+                {/* User's Review Form */}
+                {isAuthenticated && (
+                  <div className="mb-8 pb-8 border-b">
+                    <h4 className="font-semibold mb-4">
+                      {userReview ? "Edit Your Review" : "Leave a Review"}
+                    </h4>
+                    <div className="space-y-4">
+                      {/* Rating Stars */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Rating
+                        </label>
+                        <div className="flex gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => setReviewRating(star)}
+                              className={`text-3xl transition ${
+                                star <= reviewRating
+                                  ? "text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            >
+                              ★
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Comment */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Comment
+                        </label>
+                        <textarea
+                          value={reviewComment}
+                          onChange={(e) => setReviewComment(e.target.value)}
+                          placeholder="Share your thoughts about this course..."
+                          rows={4}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                      </div>
+
+                      <button
+                        onClick={handleSubmitReview}
+                        disabled={submittingReview}
+                        className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 font-semibold"
+                      >
+                        {submittingReview
+                          ? "Submitting..."
+                          : userReview
+                            ? "Update Review"
+                            : "Submit Review"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* All Reviews */}
+                <div>
+                  <h4 className="font-semibold mb-4">
+                    Reviews ({reviews.length})
+                  </h4>
+                  {reviews.length === 0 ? (
+                    <p className="text-gray-500 text-sm">
+                      No reviews yet. Be the first to review this course!
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {reviews.map((review: any, idx: number) => (
+                        <div key={idx} className="p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <p className="font-semibold">
+                                {review.user?.firstName} {review.user?.lastName}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {new Date(
+                                  review.createdAt
+                                ).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <span
+                                  key={star}
+                                  className={
+                                    star <= review.rating
+                                      ? "text-yellow-400"
+                                      : "text-gray-300"
+                                  }
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          {review.comment && (
+                            <p className="text-gray-700">{review.comment}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </>

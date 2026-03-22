@@ -97,15 +97,39 @@ export default function CourseDetailsPage() {
     }
   };
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     // Check if user is logged in
     if (!isAuthenticated) {
       router.push("/auth/login");
       return;
     }
 
-    // Skip payment for now - go directly to player
-    router.push(`/student/learn/${courseId}`);
+    try {
+      // Save enrollment to backend
+      const enrollResponse = await fetch(`${API_BASE_URL}/enrollments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          courseId: parseInt(courseId),
+        }),
+      });
+
+      if (!enrollResponse.ok) {
+        const errorData = await enrollResponse.json();
+        alert(errorData.message || "Failed to enroll in course");
+        return;
+      }
+
+      // Update state and navigate
+      setIsEnrolled(true);
+      router.push(`/student/learn/${courseId}`);
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      alert("An error occurred during enrollment");
+    }
   };
 
   if (loading) {
