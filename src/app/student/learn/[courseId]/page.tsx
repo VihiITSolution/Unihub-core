@@ -122,7 +122,7 @@ export default function LearnPage() {
                 // Load completed contents if available
                 const completed = userEnrollment.completedContents || [];
                 setCompletedContents(
-                  new Set(completed.map((id) => String(id))),
+                  new Set(completed.map((id: any) => String(id))),
                 );
               }
             }
