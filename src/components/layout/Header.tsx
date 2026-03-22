@@ -14,7 +14,6 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
-  const [alreadyTutorModalOpen, setAlreadyTutorModalOpen] = useState(false);
   const [requiredRole, setRequiredRole] = useState<RoleType | null>(null);
   const { user, logout, isAuthenticated, switchRole } = useAuth();
   const router = useRouter();
@@ -106,23 +105,12 @@ export default function Header() {
         return;
       }
 
-      // Tutor-specific check
+      // Tutor-specific check - show modal for both "not approved yet" and "already tutor" scenarios
       if (link.requiresRole === "tutor") {
-        // User already has tutor role but might be in student mode
-        // Check if they're already a tutor but in student mode
-        if (user?.primaryRole === "student" && user?.roles?.includes("tutor")) {
-          e.preventDefault();
-          setAlreadyTutorModalOpen(true);
-          return;
-        }
-
-        // Check if tutor profile is approved
-        const isApproved = user?.tutorProfile?.isApproved;
-        if (!isApproved) {
-          e.preventDefault();
-          router.push("/student/become-tutor");
-          return;
-        }
+        e.preventDefault();
+        setRequiredRole("tutor");
+        setRoleModalOpen(true);
+        return;
       }
     }
   };
@@ -543,153 +531,12 @@ export default function Header() {
       )}
 
       {/* Already a Tutor Modal */}
-      {alreadyTutorModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all">
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-8 h-8 text-cyan-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <h2 className="text-2xl font-bold text-center mb-2 text-gray-900">
-              Become a Tutor
-            </h2>
-            <p className="text-center text-gray-500 text-sm mb-4">
-              This feature requires tutor access
-            </p>
-            <p className="text-center text-gray-600 mb-6 leading-relaxed">
-              To create courses and teach students, you need to apply as a
-              tutor.
-            </p>
-
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm">
-                What you'll be able to do:
-              </h3>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-gray-700 text-sm">
-                    Create and publish courses
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-gray-700 text-sm">
-                    Upload video lessons
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-gray-700 text-sm">
-                    Host live sessions
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-gray-700 text-sm">
-                    Earn from your courses
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-gray-700 text-sm">
-                    Build your student community
-                  </span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-amber-800">
-                <span className="font-semibold">Note:</span> Tutor applications
-                require admin approval. You'll be notified once your application
-                is reviewed.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                onClick={() => setAlreadyTutorModalOpen(false)}
-                className="w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-medium rounded-lg transition-colors"
-              >
-                Maybe Later
-              </button>
-              <button
-                onClick={() => {
-                  setAlreadyTutorModalOpen(false);
-                  router.push("/student/become-tutor");
-                }}
-                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-3 rounded-lg transition-colors"
-              >
-                Apply as Tutor
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RoleUpgradeModal
+        isOpen={roleModalOpen}
+        onClose={() => setRoleModalOpen(false)}
+        roleType={requiredRole as RoleType}
+        featureName="tutor"
+      />
     </header>
   );
 }
