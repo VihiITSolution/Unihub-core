@@ -8,7 +8,7 @@ import { authService } from "@/services/auth.service";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, token, isAuthenticated, updateUser } = useAuth();
+  const { user, token, isAuthenticated, updateUser, switchRole } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -492,6 +492,108 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          {/* Mode Switcher */}
+          {user && user.roles && user.roles.length > 1 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-6 h-6 text-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7h12M8 11h12m-12 4h12m2-8a2 2 0 11-4 0 2 2 0 014 0zM4 7a2 2 0 11-4 0 2 2 0 014 0zm0 4a2 2 0 11-4 0 2 2 0 014 0zm0 4a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    Switch Mode
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Current mode:{" "}
+                    <span className="font-medium capitalize">
+                      {user.primaryRole}
+                    </span>
+                  </p>
+                  <div className="space-y-2">
+                    {user.roles.includes("student") && (
+                      <button
+                        onClick={async () => {
+                          if (user.primaryRole !== "student") {
+                            const result = await switchRole("student");
+                            if (result.success) {
+                              router.push("/student/dashboard");
+                            }
+                          }
+                        }}
+                        className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                          user.primaryRole === "student"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        Switch to Student Mode
+                        {user.primaryRole === "student" && (
+                          <svg
+                            className="w-4 h-4 ml-auto"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    )}
+                    {user.roles.includes("tutor") && (
+                      <button
+                        onClick={async () => {
+                          if (user.primaryRole !== "tutor") {
+                            const result = await switchRole("tutor");
+                            if (result.success) {
+                              router.push("/tutor/dashboard");
+                            }
+                          }
+                        }}
+                        className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                          user.primaryRole === "tutor"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        Switch to Tutor Mode
+                        {user.primaryRole === "tutor" && (
+                          <svg
+                            className="w-4 h-4 ml-auto"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
