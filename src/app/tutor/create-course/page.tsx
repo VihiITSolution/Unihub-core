@@ -21,7 +21,7 @@ export default function CreateCoursePage() {
   const { token, isAuthenticated, hasRole } = useAuth();
   const { isChecking, roleError } = useRoleCheck({
     requiredRole: "tutor",
-    requireApproval: true,
+    requireApproval: false,
   });
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
