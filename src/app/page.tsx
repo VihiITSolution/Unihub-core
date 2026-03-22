@@ -14,7 +14,8 @@ export default function Home() {
   const { user, token, isAuthenticated } = useAuth();
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showBecomeYourTutorModal, setShowBecomeYourTutorModal] = useState(false);
+  const [showBecomeYourTutorModal, setShowBecomeYourTutorModal] =
+    useState(false);
 
   useEffect(() => {
     loadFeaturedCourses();
@@ -556,8 +557,8 @@ export default function Home() {
               Ready to Create Kuppi?
             </h2>
             <p className="text-center text-gray-600 mb-6">
-              You'll need to become a tutor to create and publish kuppi sessions.
-              Apply now to start teaching and earning!
+              You'll need to become a tutor to create and publish kuppi
+              sessions. Apply now to start teaching and earning!
             </p>
             <div className="space-y-3">
               <button
@@ -581,3 +582,4 @@ export default function Home() {
       )}
     </div>
   );
+}
