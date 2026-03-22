@@ -546,10 +546,10 @@ export default function Header() {
       {alreadyTutorModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center">
                 <svg
-                  className="w-8 h-8 text-blue-600"
+                  className="w-8 h-8 text-cyan-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -558,41 +558,133 @@ export default function Header() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                   />
                 </svg>
               </div>
             </div>
             <h2 className="text-2xl font-bold text-center mb-2 text-gray-900">
-              You're Already a Tutor!
+              Become a Tutor
             </h2>
-            <p className="text-center text-gray-600 mb-6">
-              You're registered as a tutor. Switch to{" "}
-              <span className="font-semibold">Tutor Mode</span> from your
-              profile dropdown to access your tutor dashboard and manage your
-              courses.
+            <p className="text-center text-gray-500 text-sm mb-4">
+              This feature requires tutor access
             </p>
+            <p className="text-center text-gray-600 mb-6 leading-relaxed">
+              To create courses and teach students, you need to apply as a
+              tutor.
+            </p>
+
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-gray-900 mb-3 text-sm">
+                What you'll be able to do:
+              </h3>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-gray-700 text-sm">
+                    Create and publish courses
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-gray-700 text-sm">
+                    Upload video lessons
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-gray-700 text-sm">
+                    Host live sessions
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-gray-700 text-sm">
+                    Earn from your courses
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-gray-700 text-sm">
+                    Build your student community
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-amber-800">
+                <span className="font-semibold">Note:</span> Tutor applications
+                require admin approval. You'll be notified once your application
+                is reviewed.
+              </p>
+            </div>
+
             <div className="space-y-3">
+              <button
+                onClick={() => setAlreadyTutorModalOpen(false)}
+                className="w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-medium rounded-lg transition-colors"
+              >
+                Maybe Later
+              </button>
               <button
                 onClick={() => {
                   setAlreadyTutorModalOpen(false);
-                  if (switchRole && user) {
-                    switchRole("tutor").then((result) => {
-                      if (result.success) {
-                        router.push("/tutor/dashboard");
-                      }
-                    });
-                  }
+                  router.push("/student/become-tutor");
                 }}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md"
+                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-3 rounded-lg transition-colors"
               >
-                Switch to Tutor Mode
-              </button>
-              <button
-                onClick={() => setAlreadyTutorModalOpen(false)}
-                className="w-full px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg transition-colors"
-              >
-                Close
+                Apply as Tutor
               </button>
             </div>
           </div>
