@@ -396,7 +396,7 @@ export default function LearnPage() {
                     </div>
                   </div>
                 </button>
-              )))
+              ))}
             )}
           </div>
         </div>
