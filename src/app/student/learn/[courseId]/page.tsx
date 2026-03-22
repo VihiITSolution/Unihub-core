@@ -21,7 +21,8 @@ export default function LearnPage() {
   const [completedContents, setCompletedContents] = useState<Set<number>>(
     new Set(),
   );
-  const [enrollment, setEnrollment] = useState<any>(null);  const [reviews, setReviews] = useState<any[]>([]);
+  const [enrollment, setEnrollment] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [userReview, setUserReview] = useState<any>(null);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
@@ -191,7 +192,7 @@ export default function LearnPage() {
   const loadReviews = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/reviews/course/${courseId}?limit=10`
+        `${API_BASE_URL}/reviews/course/${courseId}?limit=10`,
       );
 
       if (response.ok) {
@@ -199,9 +200,7 @@ export default function LearnPage() {
         if (data.success && Array.isArray(data.data)) {
           setReviews(data.data);
           // Find user's review
-          const myReview = data.data.find(
-            (r: any) => r.userId === user?.id
-          );
+          const myReview = data.data.find((r: any) => r.userId === user?.id);
           if (myReview) {
             setUserReview(myReview);
             setReviewRating(myReview.rating);
@@ -210,7 +209,7 @@ export default function LearnPage() {
         } else if (data.data?.reviews) {
           setReviews(data.data.reviews);
           const myReview = data.data.reviews.find(
-            (r: any) => r.userId === user?.id
+            (r: any) => r.userId === user?.id,
           );
           if (myReview) {
             setUserReview(myReview);
@@ -396,7 +395,8 @@ export default function LearnPage() {
                     </div>
                   </div>
                 </button>
-              ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -630,7 +630,7 @@ export default function LearnPage() {
                               </p>
                               <p className="text-sm text-gray-500">
                                 {new Date(
-                                  review.createdAt
+                                  review.createdAt,
                                 ).toLocaleDateString()}
                               </p>
                             </div>
