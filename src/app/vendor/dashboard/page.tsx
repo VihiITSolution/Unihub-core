@@ -98,8 +98,8 @@ export default function VendorDashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="card bg-gradient-to-br from-blue-50 to-blue-100">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 ">
+        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 p-6">
           <div className="text-sm text-blue-600 font-medium mb-1">Total Listings</div>
           <div className="text-3xl font-bold text-blue-900">{stats.totalListings}</div>
           <div className="text-sm text-blue-600 mt-1">
@@ -107,7 +107,7 @@ export default function VendorDashboardPage() {
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-green-50 to-green-100">
+        <div className="card bg-gradient-to-br from-green-50 to-green-100 p-6">
           <div className="text-sm text-green-600 font-medium mb-1">Total Sales</div>
           <div className="text-3xl font-bold text-green-900">{stats.totalSales}</div>
           <div className="text-sm text-green-600 mt-1">
@@ -115,7 +115,7 @@ export default function VendorDashboardPage() {
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-purple-50 to-purple-100">
+        <div className="card bg-gradient-to-br from-purple-50 to-purple-100 p-6">
           <div className="text-sm text-purple-600 font-medium mb-1">Total Revenue</div>
           <div className="text-3xl font-bold text-purple-900">
             ${typeof stats.totalRevenue === 'number' ? stats.totalRevenue.toFixed(2) : parseFloat(stats.totalRevenue || 0).toFixed(2)}
@@ -125,7 +125,7 @@ export default function VendorDashboardPage() {
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-orange-50 to-orange-100">
+        <div className="card bg-gradient-to-br from-orange-50 to-orange-100 p-6">
           <div className="text-sm text-orange-600 font-medium mb-1">Pending Orders</div>
           <div className="text-3xl font-bold text-orange-900">{stats.pendingOrders}</div>
           <div className="text-sm text-orange-600 mt-1">
@@ -135,7 +135,7 @@ export default function VendorDashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="card mb-8">
+      <div className="card mb-8 p-6">
         <h2 className="text-2xl font-semibold mb-6">Quick Actions</h2>
         <div className="grid md:grid-cols-3 gap-4">
           <Link
