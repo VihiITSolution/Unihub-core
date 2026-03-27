@@ -83,7 +83,7 @@ export default function StudentDashboard() {
         {loading ? (
           <div className="text-center py-12">Loading your courses...</div>
         ) : enrollments.length === 0 ? (
-          <div className="card text-center py-12">
+          <div className="card text-center py-12 p-6">
             <p className="text-gray-600 mb-4">
               You haven't enrolled in any courses yet
             </p>
@@ -98,7 +98,7 @@ export default function StudentDashboard() {
               if (!course) return null;
 
               return (
-                <div key={enrollment.id} className="card">
+                <div key={enrollment.id} className="card p-6">
                   {course.thumbnail ? (
                     <img
                       src={
