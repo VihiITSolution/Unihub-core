@@ -113,7 +113,7 @@ export default function VendorShopSettingsPage() {
         )}
 
         {/* Shop Information */}
-        <div className="mb-8">
+        <div className="mb-0 p-6">
           <h2 className="text-xl font-semibold mb-4">Shop Information</h2>
           
           <div className="mb-4">
@@ -153,7 +153,7 @@ export default function VendorShopSettingsPage() {
         </div>
 
         {/* Contact Information */}
-        <div className="mb-8">
+        <div className="mb-0 p-6">
           <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
           
           <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -182,7 +182,7 @@ export default function VendorShopSettingsPage() {
         </div>
 
         {/* Address */}
-        <div className="mb-8">
+        <div className="mb-0 p-6">
           <h2 className="text-xl font-semibold mb-4">Address</h2>
           
           <div className="mb-4">
@@ -244,7 +244,7 @@ export default function VendorShopSettingsPage() {
         </div>
 
         {/* Bank Information */}
-        <div className="mb-8">
+        <div className="mb-0 p-6">
           <h2 className="text-xl font-semibold mb-4">Bank Information</h2>
           <p className="text-sm text-gray-600 mb-4">
             For receiving payments from sales
@@ -285,7 +285,7 @@ export default function VendorShopSettingsPage() {
         </div>
 
         {/* Submit Button */}
-        <div className="flex gap-4">
+        <div className="flex gap-4 p-6">
           <button
             type="submit"
             disabled={saving}
