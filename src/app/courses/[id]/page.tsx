@@ -21,12 +21,6 @@ export default function CourseDetailsPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [activeTab, setActiveTab] = useState<"about" | "reviews">("about");
-  const [userHelpfulReviews, setUserHelpfulReviews] = useState<Set<number>>(
-    new Set(),
-  );
-  const [reviewHelpfulCounts, setReviewHelpfulCounts] = useState<{
-    [key: number]: number;
-  }>({});
 
   useEffect(() => {
     if (courseId) {
@@ -128,47 +122,6 @@ export default function CourseDetailsPage() {
       );
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleHelpful = async (reviewId: number) => {
-    // Prevent duplicate likes from same user
-    if (userHelpfulReviews.has(reviewId)) {
-      alert("You've already marked this review as helpful");
-      return;
-    }
-
-    try {
-      // Add helpful vote to backend
-      const response = await fetch(
-        `${API_BASE_URL}/reviews/${reviewId}/helpful`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            courseId: parseInt(courseId),
-          }),
-        },
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-        // Update local state
-        setUserHelpfulReviews((prev) => new Set([...prev, reviewId]));
-        setReviewHelpfulCounts((prev) => ({
-          ...prev,
-          [reviewId]: (prev[reviewId] || 0) + 1,
-        }));
-      } else {
-        console.error("Failed to add helpful vote");
-        alert("Failed to mark as helpful. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error marking review as helpful:", error);
-      alert("An error occurred. Please try again.");
     }
   };
 
@@ -548,25 +501,6 @@ export default function CourseDetailsPage() {
                               {review.comment}
                             </p>
                           )}
-
-                          <button
-                            onClick={() => handleHelpful(review.id)}
-                            disabled={userHelpfulReviews.has(review.id)}
-                            className={`flex items-center gap-2 text-sm transition ${
-                              userHelpfulReviews.has(review.id)
-                                ? "text-primary-600 cursor-not-allowed"
-                                : "text-gray-600 hover:text-primary-600"
-                            }`}
-                          >
-                            <span>👍</span>
-                            <span>
-                              Helpful (
-                              {reviewHelpfulCounts[review.id] ||
-                                review.helpful ||
-                                0}
-                              )
-                            </span>
-                          </button>
                         </div>
                       ))
                     ) : (
@@ -611,7 +545,7 @@ export default function CourseDetailsPage() {
               {isEnrolled ? (
                 <button
                   onClick={handleEnroll}
-                  className="btn-primary w-full mb-4 flex items-center justify-center gap-2 hover:shadow-lg transition-all text-lg py-3"
+                  className="btn-primary w-full mb-6 flex items-center justify-center gap-2 hover:shadow-lg transition-all text-lg py-3"
                 >
                   ▶ Continue Learning
                 </button>
@@ -619,7 +553,7 @@ export default function CourseDetailsPage() {
                 <button
                   onClick={handleEnroll}
                   disabled={isEnrolling}
-                  className="btn-primary w-full mb-4 disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-lg transition-all text-lg py-3"
+                  className="btn-primary w-full mb-6 disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-lg transition-all text-lg py-3"
                 >
                   {isEnrolling ? (
                     <>
@@ -650,41 +584,23 @@ export default function CourseDetailsPage() {
                 </button>
               )}
 
-              <button className="w-full py-3 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium mb-6 transition">
-                🛒 Add to Wishlist
-              </button>
-
-              <div className="space-y-4 border-t border-gray-200 pt-6">
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <span className="text-xl">📥</span>
-                  <div>
-                    <p className="font-semibold">Full lifetime access</p>
-                    <p className="text-xs text-gray-500">
-                      Download and access offline
-                    </p>
+              <div className="border-t border-gray-200 pt-6">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                  Instructor
+                </h4>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
+                    {course.tutor?.firstName
+                      ? course.tutor.firstName.charAt(0)
+                      : course.tutorName?.charAt(0) || "T"}
                   </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <span className="text-xl">🏆</span>
                   <div>
-                    <p className="font-semibold">Certificate included</p>
-                    <p className="text-xs text-gray-500">Show your expertise</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <span className="text-xl">💬</span>
-                  <div>
-                    <p className="font-semibold">Q&A Support</p>
-                    <p className="text-xs text-gray-500">
-                      Ask questions anytime
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <span className="text-xl">📱</span>
-                  <div>
-                    <p className="font-semibold">Mobile ready</p>
-                    <p className="text-xs text-gray-500">Learn on the go</p>
+                    <h5 className="text-sm font-semibold text-gray-900">
+                      {course.tutor
+                        ? `${course.tutor.firstName} ${course.tutor.lastName}`
+                        : course.tutorName || "Instructor"}
+                    </h5>
+                    <p className="text-xs text-gray-500">Course Instructor</p>
                   </div>
                 </div>
               </div>
