@@ -307,63 +307,65 @@ export default function CourseDetailsPage() {
             <span className="text-gray-400">/</span>
             <span className="text-gray-700 text-sm">{course.category}</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-            {course.title}
-          </h1>
-          <p className="text-lg text-gray-600 mb-4">{course.description}</p>
-
-          {/* Quick Stats */}
-          <div className="flex flex-wrap gap-6 items-center mb-6">
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <span key={star} className="text-lg text-yellow-400">
-                    ★
-                  </span>
-                ))}
-              </div>
-              <span className="font-semibold text-gray-900">
-                {averageRating}
-              </span>
-              <span className="text-gray-600">({reviews.length} reviews)</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-700">
-              <span>👥</span>
-              <span className="font-medium">
-                {course.enrolledCount || course.enrollmentCount || 0} students
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-700">
-              <span>⏱️</span>
-              <span className="font-medium">
-                {Math.floor((course.duration || 0) / 60)} hours
-              </span>
-            </div>
-          </div>
-
-          {/* Instructor */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-              {course.tutor?.firstName
-                ? course.tutor.firstName.charAt(0)
-                : course.tutorName?.charAt(0) || "T"}
-            </div>
-            <div>
-              <h5 className="text-sm font-semibold text-gray-900">
-                {course.tutor
-                  ? `${course.tutor.firstName} ${course.tutor.lastName}`
-                  : course.tutorName || "Instructor"}
-              </h5>
-              <p className="text-xs text-gray-500">Instructor</p>
-            </div>
-          </div>
         </div>
       </div>
 
-      <div className="container-custom py-0 pb-8">
+      <div className="container-custom py-8 pb-8">
         <div className="grid md:grid-cols-3 gap-4">
           {/* Main Content */}
           <div className="md:col-span-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              {course.title}
+            </h1>
+            <p className="text-lg text-gray-600 mb-4">{course.description}</p>
+
+            {/* Quick Stats */}
+            <div className="flex flex-wrap gap-6 items-center mb-6">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span key={star} className="text-lg text-yellow-400">
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <span className="font-semibold text-gray-900">
+                  {averageRating}
+                </span>
+                <span className="text-gray-600">
+                  ({reviews.length} reviews)
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-700">
+                <span>👥</span>
+                <span className="font-medium">
+                  {course.enrolledCount || course.enrollmentCount || 0} students
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-700">
+                <span>⏱️</span>
+                <span className="font-medium">
+                  {Math.floor((course.duration || 0) / 60)} hours
+                </span>
+              </div>
+            </div>
+
+            {/* Instructor */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
+                {course.tutor?.firstName
+                  ? course.tutor.firstName.charAt(0)
+                  : course.tutorName?.charAt(0) || "T"}
+              </div>
+              <div>
+                <h5 className="text-sm font-semibold text-gray-900">
+                  {course.tutor
+                    ? `${course.tutor.firstName} ${course.tutor.lastName}`
+                    : course.tutorName || "Instructor"}
+                </h5>
+                <p className="text-xs text-gray-500">Instructor</p>
+              </div>
+            </div>
             {/* Tab Navigation */}
             <div className="flex gap-8 border-b border-gray-200 mb-8">
               {["about", "reviews"].map((tab) => (
@@ -533,7 +535,7 @@ export default function CourseDetailsPage() {
 
           {/* Sidebar - Course Card */}
           <div className="md:col-span-1">
-            <div className="sticky top-2">
+            <div>
               {course.thumbnail ? (
                 <img
                   src={
