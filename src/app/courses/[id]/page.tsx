@@ -313,7 +313,7 @@ export default function CourseDetailsPage() {
           <p className="text-lg text-gray-600 mb-4">{course.description}</p>
 
           {/* Quick Stats */}
-          <div className="flex flex-wrap gap-6 items-center">
+          <div className="flex flex-wrap gap-6 items-center mb-6">
             <div className="flex items-center gap-2">
               <div className="flex gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -340,11 +340,28 @@ export default function CourseDetailsPage() {
               </span>
             </div>
           </div>
+
+          {/* Instructor */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
+              {course.tutor?.firstName
+                ? course.tutor.firstName.charAt(0)
+                : course.tutorName?.charAt(0) || "T"}
+            </div>
+            <div>
+              <h5 className="text-sm font-semibold text-gray-900">
+                {course.tutor
+                  ? `${course.tutor.firstName} ${course.tutor.lastName}`
+                  : course.tutorName || "Instructor"}
+              </h5>
+              <p className="text-xs text-gray-500">Instructor</p>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="container-custom py-8">
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid md:grid-cols-3 gap-4 mb-8">
           {/* Main Content */}
           <div className="md:col-span-2">
             {/* Tab Navigation */}
@@ -516,7 +533,7 @@ export default function CourseDetailsPage() {
 
           {/* Sidebar - Course Card */}
           <div className="md:col-span-1">
-            <div className="card sticky top-32">
+            <div className="sticky top-32">
               {course.thumbnail ? (
                 <img
                   src={
@@ -525,84 +542,65 @@ export default function CourseDetailsPage() {
                       : `${BACKEND_URL}${course.thumbnail}`
                   }
                   alt={course.title}
-                  className="w-full h-48 object-cover rounded-lg mb-6"
+                  className="w-full h-48 object-cover rounded-lg mb-4"
                 />
               ) : (
-                <div className="w-full h-48 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-lg mb-6 flex items-center justify-center text-white text-4xl font-bold">
+                <div className="w-full h-48 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-lg mb-4 flex items-center justify-center text-white text-4xl font-bold">
                   {course.title.charAt(0)}
                 </div>
               )}
 
-              <div className="mb-6">
-                <div className="text-4xl font-bold text-primary-600 mb-2">
-                  ${course.price}
-                </div>
-                <p className="text-sm text-gray-600">
-                  30-day money-back guarantee
-                </p>
-              </div>
-
-              {isEnrolled ? (
-                <button
-                  onClick={handleEnroll}
-                  className="btn-primary w-full mb-6 flex items-center justify-center gap-2 hover:shadow-lg transition-all text-lg py-3"
-                >
-                  ▶ Continue Learning
-                </button>
-              ) : (
-                <button
-                  onClick={handleEnroll}
-                  disabled={isEnrolling}
-                  className="btn-primary w-full mb-6 disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-lg transition-all text-lg py-3"
-                >
-                  {isEnrolling ? (
-                    <>
-                      <svg
-                        className="w-5 h-5 animate-spin inline mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Enrolling...
-                    </>
-                  ) : (
-                    <>Enroll Now</>
-                  )}
-                </button>
-              )}
-
-              <div className="border-t border-gray-200 pt-6">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                  Instructor
-                </h4>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-                    {course.tutor?.firstName
-                      ? course.tutor.firstName.charAt(0)
-                      : course.tutorName?.charAt(0) || "T"}
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="mb-4">
+                  <div className="text-4xl font-bold text-primary-600 mb-2">
+                    ${course.price}
                   </div>
-                  <div>
-                    <h5 className="text-sm font-semibold text-gray-900">
-                      {course.tutor
-                        ? `${course.tutor.firstName} ${course.tutor.lastName}`
-                        : course.tutorName || "Instructor"}
-                    </h5>
-                    <p className="text-xs text-gray-500">Course Instructor</p>
-                  </div>
+                  <p className="text-sm text-gray-600">
+                    30-day money-back guarantee
+                  </p>
                 </div>
+
+                {isEnrolled ? (
+                  <button
+                    onClick={handleEnroll}
+                    className="btn-primary w-full flex items-center justify-center gap-2 hover:shadow-lg transition-all text-lg py-3"
+                  >
+                    ▶ Continue Learning
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleEnroll}
+                    disabled={isEnrolling}
+                    className="btn-primary w-full disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-lg transition-all text-lg py-3"
+                  >
+                    {isEnrolling ? (
+                      <>
+                        <svg
+                          className="w-5 h-5 animate-spin inline mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Enrolling...
+                      </>
+                    ) : (
+                      <>Enroll Now</>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           </div>
