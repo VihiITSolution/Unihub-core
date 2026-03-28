@@ -496,23 +496,42 @@ export default function Header() {
               ))}
             </div>
 
+            {/* Notifications in Mobile Menu */}
+            {isAuthenticated && (
+              <div className="mt-4 pt-4 border-t">
+                <h3 className="px-4 text-sm font-semibold text-gray-600 mb-3">
+                  Notifications
+                </h3>
+                <div className="px-4">
+                  <NotificationBell />
+                </div>
+              </div>
+            )}
+
             <div className="mt-4 pt-4 border-t space-y-3">
-              <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                <Button
-                  variant="outline"
-                  className="w-full border-ocean-400 text-ocean-600 hover:bg-ocean-50"
-                >
-                  Login
-                </Button>
-              </Link>
-              <Link href="/auth/register" onClick={() => setIsMenuOpen(false)}>
-                <Button
-                  variant="primary"
-                  className="w-full bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0"
-                >
-                  Sign Up
-                </Button>
-              </Link>
+              {!isAuthenticated && (
+                <>
+                  <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                    <Button
+                      variant="outline"
+                      className="w-full border-ocean-400 text-ocean-600 hover:bg-ocean-50"
+                    >
+                      Login
+                    </Button>
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Button
+                      variant="primary"
+                      className="w-full bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 border-0"
+                    >
+                      Sign Up
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}

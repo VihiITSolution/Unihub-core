@@ -27,6 +27,7 @@ export default function LearnPage() {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/auth/login");
@@ -150,6 +151,11 @@ export default function LearnPage() {
 
     try {
       // Mark as complete via API
+      const completedArray = [
+        ...Array.from(completedContents),
+        String(currentContent.id),
+      ];
+
       const response = await fetch(
         `${API_BASE_URL}/enrollments/${enrollment.id}`,
         {
@@ -159,18 +165,21 @@ export default function LearnPage() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            progress: {
-              completedContents: [
-                ...Array.from(completedContents),
-                String(currentContent.id),
-              ],
-            },
+            completedContents: completedArray,
+            progress: Math.round(
+              (completedArray.length / contents.length) * 100,
+            ),
           }),
         },
       );
 
       if (!response.ok) {
-        console.error("Failed to mark as complete");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Failed to mark as complete:", errorData);
+        alert(
+          errorData.message ||
+            "Failed to mark content as complete. Please try again.",
+        );
         return;
       }
 
@@ -191,6 +200,7 @@ export default function LearnPage() {
       }
     } catch (error) {
       console.error("Error marking as complete:", error);
+      alert("An error occurred while marking content as complete.");
     }
   };
 
@@ -325,10 +335,35 @@ export default function LearnPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-100">
+      {/* Mobile Sidebar Toggle Button */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="md:hidden p-4 bg-white border-b border-gray-200 flex items-center justify-between"
+      >
+        <span className="font-semibold text-gray-700">Course Content</span>
+        <svg
+          className={`w-6 h-6 transform transition-transform ${sidebarOpen ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+
       {/* Sidebar - Course Content List */}
-      <div className="w-80 bg-white shadow-lg overflow-y-auto">
-        <div className="p-6 border-b">
+      <div
+        className={`${
+          sidebarOpen ? "block" : "hidden"
+        } md:block md:w-80 bg-white shadow-lg overflow-y-auto fixed md:relative left-0 top-0 w-full h-full md:h-auto md:shadow-lg z-40`}
+      >
+        <div className="p-6 border-b md:block hidden">
           <h2 className="text-xl font-bold">{course.title}</h2>
           <div className="mt-4">
             <div className="text-sm text-gray-600 mb-2">Your Progress</div>
@@ -350,8 +385,29 @@ export default function LearnPage() {
           </div>
         </div>
 
+        {/* Mobile Progress Bar */}
+        <div className="p-4 border-b md:hidden bg-white">
+          <h3 className="font-semibold mb-3 text-gray-700">{course.title}</h3>
+          <div className="text-sm text-gray-600 mb-2">Progress</div>
+          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary-600"
+              style={{
+                width: `${
+                  contents.length > 0
+                    ? (completedContents.size / contents.length) * 100
+                    : 0
+                }%`,
+              }}
+            ></div>
+          </div>
+          <div className="text-sm text-gray-600 mt-1">
+            {completedContents.size} of {contents.length} completed
+          </div>
+        </div>
+
         <div className="p-4">
-          <h3 className="font-semibold mb-4 text-gray-700">Course Content</h3>
+          <h3 className="font-semibold mb-4 text-gray-700">Course Materials</h3>
           <div className="space-y-2">
             {contents.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
@@ -364,7 +420,10 @@ export default function LearnPage() {
               contents.map((content, index) => (
                 <button
                   key={content.id}
-                  onClick={() => handleContentSelect(content)}
+                  onClick={() => {
+                    handleContentSelect(content);
+                    setSidebarOpen(false);
+                  }}
                   className={`w-full text-left p-4 rounded-lg transition-colors ${
                     currentContent?.id === content.id
                       ? "bg-primary-100 border-2 border-primary-500"
@@ -381,11 +440,11 @@ export default function LearnPage() {
                         index + 1
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-sm mb-1">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm mb-1 truncate">
                         {content.title}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <div className="flex items-center gap-2 text-xs text-gray-600 flex-wrap">
                         <span>{content.type === "video" ? "🎥" : "📄"}</span>
                         <span>{content.type.toUpperCase()}</span>
                         {content.duration && (
@@ -406,15 +465,23 @@ export default function LearnPage() {
         </div>
       </div>
 
+      {/* Overlay for mobile sidebar */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto flex flex-col w-full">
         {currentContent ? (
           <>
-            <div className="bg-white p-6 border-b">
-              <h1 className="text-2xl font-bold mb-2">
+            <div className="bg-white p-4 md:p-6 border-b sticky top-0 z-10">
+              <h1 className="text-xl md:text-2xl font-bold mb-2">
                 {currentContent.title}
               </h1>
-              <div className="flex items-center gap-4 text-sm text-gray-600">
+              <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600">
                 <span>
                   {currentContent.type === "video" ? "🎥 Video" : "📄 PDF"}
                 </span>
@@ -424,11 +491,11 @@ export default function LearnPage() {
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
               {/* Video Player */}
               {currentContent.type === "video" && currentContent.url && (
                 <div className="bg-black rounded-lg overflow-hidden mb-6">
-                  <div className="aspect-video">
+                  <div className="aspect-video w-full">
                     <iframe
                       src={getEmbedUrl(
                         currentContent.url,
@@ -448,14 +515,16 @@ export default function LearnPage() {
 
               {/* PDF Viewer */}
               {currentContent.type === "pdf" && currentContent.url && (
-                <div className="bg-white rounded-lg border-2 border-gray-200 p-8 mb-6">
+                <div className="bg-white rounded-lg border-2 border-gray-200 p-6 md:p-8 mb-6">
                   <div className="text-center">
                     <div className="text-6xl mb-4">📄</div>
-                    <h3 className="text-xl font-semibold mb-2">PDF Document</h3>
-                    <p className="text-gray-600 mb-4">
+                    <h3 className="text-lg md:text-xl font-semibold mb-2">
+                      PDF Document
+                    </h3>
+                    <p className="text-sm md:text-base text-gray-600 mb-4">
                       View or download the course material
                     </p>
-                    <div className="flex gap-4 justify-center">
+                    <div className="flex flex-col md:flex-row gap-4 justify-center">
                       <a
                         href={
                           currentContent.url.startsWith("http")
@@ -464,7 +533,7 @@ export default function LearnPage() {
                         }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-primary"
+                        className="btn-primary text-center"
                       >
                         View PDF
                       </a>
@@ -475,7 +544,7 @@ export default function LearnPage() {
                             : `${BACKEND_URL}${currentContent.url}`
                         }
                         download
-                        className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 font-semibold"
+                        className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 font-semibold text-center"
                       >
                         Download PDF
                       </a>
@@ -485,7 +554,7 @@ export default function LearnPage() {
               )}
 
               {/* Navigation Buttons */}
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-center mt-8">
                 <button
                   onClick={() => {
                     const currentIndex = contents.findIndex(
@@ -496,7 +565,7 @@ export default function LearnPage() {
                     }
                   }}
                   disabled={contents[0].id === currentContent.id}
-                  className={`px-6 py-2 rounded-lg font-semibold ${
+                  className={`w-full sm:w-auto px-6 py-2 rounded-lg font-semibold ${
                     contents[0].id === currentContent.id
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -508,7 +577,7 @@ export default function LearnPage() {
                 <button
                   onClick={handleMarkAsComplete}
                   disabled={completedContents.has(String(currentContent.id))}
-                  className={`px-6 py-2 rounded-lg font-semibold ${
+                  className={`w-full sm:w-auto px-6 py-2 rounded-lg font-semibold ${
                     completedContents.has(String(currentContent.id))
                       ? "bg-green-200 text-green-600 cursor-not-allowed"
                       : "btn-primary"
@@ -531,7 +600,7 @@ export default function LearnPage() {
                   disabled={
                     contents[contents.length - 1].id === currentContent.id
                   }
-                  className={`px-6 py-2 rounded-lg font-semibold ${
+                  className={`w-full sm:w-auto px-6 py-2 rounded-lg font-semibold ${
                     contents[contents.length - 1].id === currentContent.id
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "btn-primary"
@@ -542,11 +611,11 @@ export default function LearnPage() {
               </div>
 
               {/* Additional Content Section */}
-              <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-                <h3 className="text-lg font-semibold mb-4">
+              <div className="mt-8 p-4 md:p-6 bg-gray-50 rounded-lg">
+                <h3 className="text-base md:text-lg font-semibold mb-4">
                   About this lesson
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-sm md:text-base text-gray-600">
                   This lesson covers important concepts that will help you
                   understand the fundamentals of the topic. Take notes and
                   practice along with the video to maximize your learning.
@@ -554,13 +623,15 @@ export default function LearnPage() {
               </div>
 
               {/* Course Reviews Section */}
-              <div className="mt-8 p-6 bg-white border border-gray-200 rounded-lg">
-                <h3 className="text-lg font-semibold mb-6">Course Reviews</h3>
+              <div className="mt-8 p-4 md:p-6 bg-white border border-gray-200 rounded-lg">
+                <h3 className="text-base md:text-lg font-semibold mb-6">
+                  Course Reviews
+                </h3>
 
                 {/* User's Review Form */}
                 {isAuthenticated && (
                   <div className="mb-8 pb-8 border-b">
-                    <h4 className="font-semibold mb-4">
+                    <h4 className="font-semibold mb-4 text-sm md:text-base">
                       {userReview ? "Edit Your Review" : "Leave a Review"}
                     </h4>
                     <div className="space-y-4">
@@ -574,7 +645,7 @@ export default function LearnPage() {
                             <button
                               key={star}
                               onClick={() => setReviewRating(star)}
-                              className={`text-3xl transition ${
+                              className={`text-2xl md:text-3xl transition ${
                                 star <= reviewRating
                                   ? "text-yellow-400"
                                   : "text-gray-300"
@@ -596,14 +667,14 @@ export default function LearnPage() {
                           onChange={(e) => setReviewComment(e.target.value)}
                           placeholder="Share your thoughts about this course..."
                           rows={4}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
                         />
                       </div>
 
                       <button
                         onClick={handleSubmitReview}
                         disabled={submittingReview}
-                        className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 font-semibold"
+                        className="w-full sm:w-auto px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 font-semibold text-sm"
                       >
                         {submittingReview
                           ? "Submitting..."
@@ -617,23 +688,23 @@ export default function LearnPage() {
 
                 {/* All Reviews */}
                 <div>
-                  <h4 className="font-semibold mb-4">
+                  <h4 className="font-semibold mb-4 text-sm md:text-base">
                     Reviews ({reviews.length})
                   </h4>
                   {reviews.length === 0 ? (
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-gray-500 text-xs md:text-sm">
                       No reviews yet. Be the first to review this course!
                     </p>
                   ) : (
                     <div className="space-y-4">
                       {reviews.map((review: any, idx: number) => (
                         <div key={idx} className="p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-start justify-between mb-2">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-2">
                             <div>
-                              <p className="font-semibold">
+                              <p className="font-semibold text-sm md:text-base">
                                 {review.user?.firstName} {review.user?.lastName}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-xs md:text-sm text-gray-500">
                                 {new Date(
                                   review.createdAt,
                                 ).toLocaleDateString()}
@@ -655,7 +726,9 @@ export default function LearnPage() {
                             </div>
                           </div>
                           {review.comment && (
-                            <p className="text-gray-700">{review.comment}</p>
+                            <p className="text-gray-700 text-sm">
+                              {review.comment}
+                            </p>
                           )}
                         </div>
                       ))}
@@ -669,7 +742,7 @@ export default function LearnPage() {
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="text-center">
               <svg
-                className="w-24 h-24 mx-auto mb-4 text-gray-300"
+                className="w-16 md:w-24 h-16 md:h-24 mx-auto mb-4 text-gray-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -681,7 +754,7 @@ export default function LearnPage() {
                   d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                 />
               </svg>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              <h3 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">
                 No Content Available
               </h3>
               <p className="text-gray-500">
