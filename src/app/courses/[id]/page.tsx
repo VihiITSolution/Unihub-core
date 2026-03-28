@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
-import type { Course, CourseContent, CourseReview } from "@/types";
+import type { Course, CourseContent } from "@/types";
 
 export default function CourseDetailsPage() {
   const params = useParams();
@@ -14,15 +14,13 @@ export default function CourseDetailsPage() {
   const courseId = params?.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
-  const [reviews, setReviews] = useState<CourseReview[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
-  const [activeTab, setActiveTab] = useState<"about" | "reviews" | "content">(
-    "about",
-  );
+  const [activeTab, setActiveTab] = useState<"about" | "reviews">("about");
 
   useEffect(() => {
     if (courseId) {
@@ -68,24 +66,22 @@ export default function CourseDetailsPage() {
         }
       }
 
-      // Fetch reviews - Try to fetch from backend, fallback to demo reviews
+      // Fetch reviews from API
       try {
         const reviewsResponse = await fetch(
-          `${API_BASE_URL}/courses/${courseId}/reviews`,
+          `${API_BASE_URL}/reviews/course/${courseId}?limit=10`,
         );
 
         if (reviewsResponse.ok) {
           const reviewsData = await reviewsResponse.json();
-          if (reviewsData.success && reviewsData.data) {
-            setReviews(reviewsData.data.reviews || []);
+          if (reviewsData.success && Array.isArray(reviewsData.data)) {
+            setReviews(reviewsData.data);
+          } else if (reviewsData.data?.reviews) {
+            setReviews(reviewsData.data.reviews);
           }
-        } else {
-          // Fallback to demo reviews if endpoint doesn't exist
-          setReviews(getDemoReviews());
         }
       } catch (reviewError) {
-        console.log("Reviews endpoint not available, using demo reviews");
-        setReviews(getDemoReviews());
+        console.error("Failed to load reviews:", reviewError);
       }
 
       // Check if user is enrolled (if authenticated)
@@ -129,77 +125,8 @@ export default function CourseDetailsPage() {
     }
   };
 
-  const getDemoReviews = (): CourseReview[] => {
-    return [
-      {
-        id: "1",
-        courseId: courseId,
-        userId: "user1",
-        userName: "Sarah Johnson",
-        userImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-        rating: 5,
-        title: "Excellent course! Very comprehensive",
-        comment:
-          "This course was exactly what I needed. The instructor explains concepts clearly and the materials are well-organized. I learned so much!",
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        helpful: 24,
-      },
-      {
-        id: "2",
-        courseId: courseId,
-        userId: "user2",
-        userName: "Mike Chen",
-        userImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike",
-        rating: 5,
-        title: "Great practical examples",
-        comment:
-          "The real-world examples made it easy to understand how to apply the concepts. Highly recommended for beginners!",
-        createdAt: new Date(
-          Date.now() - 14 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        updatedAt: new Date(
-          Date.now() - 14 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        helpful: 18,
-      },
-      {
-        id: "3",
-        courseId: courseId,
-        userId: "user3",
-        userName: "Emily Rodriguez",
-        userImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emily",
-        rating: 4,
-        title: "Good content, could use more exercises",
-        comment:
-          "The content is solid and well-explained. I would appreciate more practice exercises to reinforce the learning.",
-        createdAt: new Date(
-          Date.now() - 21 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        updatedAt: new Date(
-          Date.now() - 21 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        helpful: 12,
-      },
-      {
-        id: "4",
-        courseId: courseId,
-        userId: "user4",
-        userName: "David Kim",
-        userImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
-        rating: 5,
-        title: "Best course on this topic",
-        comment:
-          "Compared to other courses, this one stands out. The instructor is passionate and knows the subject deeply.",
-        createdAt: new Date(
-          Date.now() - 28 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        updatedAt: new Date(
-          Date.now() - 28 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        helpful: 32,
-      },
-    ];
+  const getDemoReviews = (): any[] => {
+    return [];
   };
 
   const handleEnroll = async () => {
@@ -426,7 +353,7 @@ export default function CourseDetailsPage() {
           <div className="md:col-span-2">
             {/* Tab Navigation */}
             <div className="flex gap-8 border-b border-gray-200 mb-8">
-              {["about", "reviews", "content"].map((tab) => (
+              {["about", "reviews"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as typeof activeTab)}
@@ -438,7 +365,6 @@ export default function CourseDetailsPage() {
                 >
                   {tab === "about" && "About"}
                   {tab === "reviews" && "Reviews"}
-                  {tab === "content" && "Content"}
                   {activeTab === tab && (
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-600"></div>
                   )}
@@ -633,143 +559,6 @@ export default function CourseDetailsPage() {
                     )}
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* Content Tab */}
-            {activeTab === "content" && (
-              <div className="space-y-8">
-                {/* Preview Section - Visible to everyone */}
-                {previewMaterials.length > 0 && (
-                  <div>
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-8 mb-6">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                        🔓 Free Preview
-                      </h2>
-                      <p className="text-gray-700">
-                        Watch these materials for free to get a feel for the
-                        course
-                      </p>
-                    </div>
-                    <div className="space-y-4">
-                      {previewMaterials.map((content, index) => (
-                        <div
-                          key={content.id}
-                          className="card flex items-center justify-between hover:bg-gray-50 transition"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center font-semibold text-green-700">
-                              {index + 1}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-semibold text-gray-900">
-                                  {content.title}
-                                </h3>
-                                <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded">
-                                  FREE
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-3 text-sm text-gray-600">
-                                <span className="font-medium">
-                                  {content.type === "video" ? "VIDEO" : "PDF"}
-                                </span>
-                                {content.duration && (
-                                  <span className="flex items-center gap-1">
-                                    <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                    {content.duration} min
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() =>
-                              router.push(`/student/learn/${courseId}`)
-                            }
-                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition flex-shrink-0 ml-4"
-                          >
-                            Watch Free
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Enrolled Only Section */}
-                {enrolledOnlyMaterials.length > 0 && (
-                  <div>
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-8 mb-6">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                        📚 Course Materials
-                      </h2>
-                      {!isEnrolled && (
-                        <p className="text-gray-700">
-                          Enroll to access all {enrolledOnlyMaterials.length}{" "}
-                          materials
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-3">
-                      {enrolledOnlyMaterials.map((content, index) => (
-                        <div
-                          key={content.id}
-                          className={`bg-white border border-gray-200 rounded-lg p-5 flex items-center justify-between ${
-                            isEnrolled
-                              ? "hover:shadow-md transition"
-                              : "opacity-60"
-                          }`}
-                        >
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-semibold text-gray-700 flex-shrink-0">
-                              {previewMaterials.length + index + 1}
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-gray-900 mb-2">
-                                {content.title}
-                              </h3>
-                              <div className="flex items-center gap-3 text-sm text-gray-600">
-                                <span className="font-medium">
-                                  {content.type === "video" ? "VIDEO" : "PDF"}
-                                </span>
-                                {content.duration && (
-                                  <span className="flex items-center gap-1">
-                                    <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                    {content.duration} min
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          {isEnrolled ? (
-                            <button
-                              onClick={() =>
-                                router.push(`/student/learn/${courseId}`)
-                              }
-                              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition flex-shrink-0 ml-4"
-                            >
-                              Continue
-                            </button>
-                          ) : (
-                            <span className="text-gray-400 font-medium flex-shrink-0 ml-4">
-                              🔒 Locked
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* No Content Message */}
-                {contents.length === 0 && (
-                  <div className="text-center py-12">
-                    <p className="text-gray-600">
-                      No course content available yet
-                    </p>
-                  </div>
-                )}
               </div>
             )}
           </div>
