@@ -20,21 +20,32 @@ export default function StudentDashboard() {
       setLoading(true);
       const result = await enrollmentService.getMyEnrollments();
 
-      if (result.success && result.data) {
+      if (result.success && result.data?.enrollments) {
         const enrollmentData = result.data.enrollments;
         setEnrollments(enrollmentData);
 
-        // Calculate stats
-        const completed = enrollmentData.filter(
-          (e) => e.status === "completed",
+        // Calculate completed courses count
+        const completedCourses = enrollmentData.filter(
+          (e: any) => e.status === "completed",
         ).length;
-        setCompletedCount(completed);
+        setCompletedCount(completedCourses);
+        console.log(`✓ Completed Courses: ${completedCourses}`);
 
-        // Calculate total learning time (sum of course durations)
-        const totalTime = enrollmentData.reduce((acc, enrollment) => {
-          return acc + (enrollment.course?.duration || 0);
-        }, 0);
-        setTotalLearningTime(Math.floor(totalTime / 60)); // Convert to hours
+        // Calculate total learning time (sum of all course durations)
+        const totalMinutes = enrollmentData.reduce(
+          (acc: number, enrollment: any) => {
+            const courseDuration = enrollment.course?.duration || 0;
+            return acc + courseDuration;
+          },
+          0,
+        );
+
+        // Convert minutes to hours
+        const totalHours = Math.round(totalMinutes / 60);
+        setTotalLearningTime(totalHours);
+        console.log(
+          `⏱️ Total Learning Time: ${totalMinutes} minutes = ${totalHours} hours`,
+        );
       }
     } catch (error) {
       console.error("Failed to load enrollments:", error);
