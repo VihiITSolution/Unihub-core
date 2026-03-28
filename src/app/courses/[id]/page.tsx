@@ -21,6 +21,12 @@ export default function CourseDetailsPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [activeTab, setActiveTab] = useState<"about" | "reviews">("about");
+  const [userHelpfulReviews, setUserHelpfulReviews] = useState<Set<number>>(
+    new Set(),
+  );
+  const [reviewHelpfulCounts, setReviewHelpfulCounts] = useState<{
+    [key: number]: number;
+  }>({});
 
   useEffect(() => {
     if (courseId) {
@@ -125,8 +131,45 @@ export default function CourseDetailsPage() {
     }
   };
 
-  const getDemoReviews = (): any[] => {
-    return [];
+  const handleHelpful = async (reviewId: number) => {
+    // Prevent duplicate likes from same user
+    if (userHelpfulReviews.has(reviewId)) {
+      alert("You've already marked this review as helpful");
+      return;
+    }
+
+    try {
+      // Add helpful vote to backend
+      const response = await fetch(
+        `${API_BASE_URL}/reviews/${reviewId}/helpful`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            courseId: parseInt(courseId),
+          }),
+        },
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        // Update local state
+        setUserHelpfulReviews((prev) => new Set([...prev, reviewId]));
+        setReviewHelpfulCounts((prev) => ({
+          ...prev,
+          [reviewId]: (prev[reviewId] || 0) + 1,
+        }));
+      } else {
+        console.error("Failed to add helpful vote");
+        alert("Failed to mark as helpful. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error marking review as helpful:", error);
+      alert("An error occurred. Please try again.");
+    }
   };
 
   const handleEnroll = async () => {
@@ -383,56 +426,6 @@ export default function CourseDetailsPage() {
                     {course.description}
                   </p>
                 </div>
-
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    What You'll Learn
-                  </h3>
-                  <ul className="space-y-3">
-                    {[
-                      "Master the core concepts and fundamentals",
-                      "Apply practical techniques in real-world scenarios",
-                      "Build projects from scratch",
-                      "Become confident in your skills",
-                      "Get certified upon completion",
-                    ].map((item, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <span className="text-green-500 text-xl font-bold mt-0.5">
-                          ✓
-                        </span>
-                        <span className="text-gray-700">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    About the Instructor
-                  </h3>
-                  <div className="flex gap-4 p-6 bg-gray-50 rounded-lg">
-                    <div className="w-16 h-16 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                      {course.tutor?.firstName
-                        ? course.tutor.firstName.charAt(0)
-                        : course.tutorName?.charAt(0) || "T"}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-lg font-bold text-gray-900 mb-1">
-                        {course.tutor
-                          ? `${course.tutor.firstName} ${course.tutor.lastName}`
-                          : course.tutorName || "Instructor"}
-                      </h4>
-                      <p className="text-gray-600 text-sm mb-2">
-                        {course.tutor?.bio ||
-                          "Experienced instructor with a passion for teaching"}
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        Dedicated to helping students achieve their learning
-                        goals through engaging and practical education.
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -515,15 +508,21 @@ export default function CourseDetailsPage() {
                             <div className="flex items-center gap-3">
                               <img
                                 src={
+                                  review.user?.profilePhoto ||
                                   review.userImage ||
-                                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${review.userName}`
+                                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                    review.userName || "User",
+                                  )}&background=random`
                                 }
-                                alt={review.userName}
-                                className="w-10 h-10 rounded-full"
+                                alt={review.userName || "Reviewer"}
+                                className="w-10 h-10 rounded-full object-cover"
                               />
                               <div>
                                 <h4 className="font-semibold text-gray-900">
-                                  {review.userName}
+                                  {review.user?.firstName &&
+                                  review.user?.lastName
+                                    ? `${review.user.firstName} ${review.user.lastName}`
+                                    : review.userName || "Anonymous"}
                                 </h4>
                                 <p className="text-sm text-gray-500">
                                   {new Date(
@@ -539,16 +538,34 @@ export default function CourseDetailsPage() {
                             <div>{renderStars(review.rating)}</div>
                           </div>
 
-                          <h5 className="font-semibold text-gray-900 mb-2">
-                            {review.title}
-                          </h5>
-                          <p className="text-gray-700 mb-4 leading-relaxed">
-                            {review.comment}
-                          </p>
+                          {review.title && (
+                            <h5 className="font-semibold text-gray-900 mb-2">
+                              {review.title}
+                            </h5>
+                          )}
+                          {review.comment && (
+                            <p className="text-gray-700 mb-4 leading-relaxed">
+                              {review.comment}
+                            </p>
+                          )}
 
-                          <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition">
+                          <button
+                            onClick={() => handleHelpful(review.id)}
+                            disabled={userHelpfulReviews.has(review.id)}
+                            className={`flex items-center gap-2 text-sm transition ${
+                              userHelpfulReviews.has(review.id)
+                                ? "text-primary-600 cursor-not-allowed"
+                                : "text-gray-600 hover:text-primary-600"
+                            }`}
+                          >
                             <span>👍</span>
-                            <span>Helpful ({review.helpful || 0})</span>
+                            <span>
+                              Helpful (
+                              {reviewHelpfulCounts[review.id] ||
+                                review.helpful ||
+                                0}
+                              )
+                            </span>
                           </button>
                         </div>
                       ))
