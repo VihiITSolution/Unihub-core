@@ -24,12 +24,21 @@ export default function StudentDashboard() {
         const enrollmentData = result.data.enrollments;
         setEnrollments(enrollmentData);
 
-        // Calculate completed courses count
+        // Calculate completed courses count - count where status is "completed" OR progress is 100%
         const completedCourses = enrollmentData.filter(
-          (e: any) => e.status === "completed",
+          (e: any) => e.status === "completed" || e.progress === 100,
         ).length;
         setCompletedCount(completedCourses);
         console.log(`✓ Completed Courses: ${completedCourses}`);
+        console.log(
+          "Enrollment details:",
+          enrollmentData.map((e: any) => ({
+            id: e.id,
+            status: e.status,
+            progress: e.progress,
+            title: e.course?.title,
+          })),
+        );
 
         // Calculate total learning time (sum of all course durations)
         const totalMinutes = enrollmentData.reduce(
