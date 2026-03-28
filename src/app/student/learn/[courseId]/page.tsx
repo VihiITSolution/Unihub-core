@@ -154,7 +154,7 @@ export default function LearnPage() {
   const handleMarkAsComplete = async () => {
     if (!currentContent) return;
     if (completedContents.has(String(currentContent.id))) return;
-    
+
     // If enrollment is not available, cannot mark complete
     if (!enrollment) {
       console.warn("No enrollment found for this course");
@@ -390,7 +390,6 @@ export default function LearnPage() {
 
       {/* LEFT COLUMN - Sidebar with Progress (Desktop width: 320px) */}
       <div className="flex flex-col w-full md:w-80 md:flex-shrink-0 bg-white md:border-r md:border-gray-200 relative md:fixed md:left-0 md:top-0 md:h-screen">
-        
         {/* PROGRESS BAR - ALWAYS VISIBLE at top */}
         <div className="p-4 md:p-6 border-b border-gray-200 bg-white sticky top-0 z-20">
           <h3 className="text-sm md:text-base font-semibold text-gray-800 mb-3">
@@ -409,7 +408,9 @@ export default function LearnPage() {
             ></div>
           </div>
           <div className="text-sm font-semibold text-gray-700">
-            {completedContents.size} of {contents.length} completed ({Math.round((completedContents.size / contents.length) * 100) || 0}%)
+            {completedContents.size} of {contents.length} completed (
+            {Math.round((completedContents.size / contents.length) * 100) || 0}
+            %)
           </div>
         </div>
 
@@ -440,61 +441,64 @@ export default function LearnPage() {
             sidebarOpen ? "block" : "hidden"
           } md:block overflow-y-auto flex-1`}
         >
-        <div className="p-4">
-          <h3 className="font-semibold mb-4 text-gray-700">Course Materials</h3>
-          <div className="space-y-2">
-            {contents.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p>No materials available yet.</p>
-                <p className="text-sm mt-2">
-                  The instructor hasn't added any content to this course.
-                </p>
-              </div>
-            ) : (
-              contents.map((content, index) => (
-                <button
-                  key={content.id}
-                  onClick={() => {
-                    handleContentSelect(content);
-                    setSidebarOpen(false);
-                  }}
-                  className={`w-full text-left p-4 rounded-lg transition-colors ${
-                    currentContent?.id === content.id
-                      ? "bg-primary-100 border-2 border-primary-500"
-                      : "bg-gray-50 hover:bg-gray-100"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                      {completedContents.has(String(content.id)) ? (
-                        <span className="bg-green-500 text-white rounded-full w-full h-full flex items-center justify-center">
-                          ✓
-                        </span>
-                      ) : (
-                        index + 1
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm mb-1 truncate">
-                        {content.title}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-600 flex-wrap">
-                        <span>{content.type === "video" ? "🎥" : "📄"}</span>
-                        <span>{content.type.toUpperCase()}</span>
-                        {content.duration && (
-                          <span>• {content.duration} min</span>
-                        )}
-                        {completedContents.has(String(content.id)) && (
-                          <span className="text-green-600 font-semibold">
-                            • Completed
+          <div className="p-4">
+            <h3 className="font-semibold mb-4 text-gray-700">
+              Course Materials
+            </h3>
+            <div className="space-y-2">
+              {contents.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No materials available yet.</p>
+                  <p className="text-sm mt-2">
+                    The instructor hasn't added any content to this course.
+                  </p>
+                </div>
+              ) : (
+                contents.map((content, index) => (
+                  <button
+                    key={content.id}
+                    onClick={() => {
+                      handleContentSelect(content);
+                      setSidebarOpen(false);
+                    }}
+                    className={`w-full text-left p-4 rounded-lg transition-colors ${
+                      currentContent?.id === content.id
+                        ? "bg-primary-100 border-2 border-primary-500"
+                        : "bg-gray-50 hover:bg-gray-100"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                        {completedContents.has(String(content.id)) ? (
+                          <span className="bg-green-500 text-white rounded-full w-full h-full flex items-center justify-center">
+                            ✓
                           </span>
+                        ) : (
+                          index + 1
                         )}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm mb-1 truncate">
+                          {content.title}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-600 flex-wrap">
+                          <span>{content.type === "video" ? "🎥" : "📄"}</span>
+                          <span>{content.type.toUpperCase()}</span>
+                          {content.duration && (
+                            <span>• {content.duration} min</span>
+                          )}
+                          {completedContents.has(String(content.id)) && (
+                            <span className="text-green-600 font-semibold">
+                              • Completed
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))
-            )}
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
