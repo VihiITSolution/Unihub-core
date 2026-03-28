@@ -377,7 +377,7 @@ export default function LearnPage() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-100 relative">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       {/* Completion Feedback Toast */}
       {showCompletionFeedback && (
         <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-in fade-in slide-in-from-bottom-4">
@@ -392,10 +392,10 @@ export default function LearnPage() {
         </div>
       )}
 
-      {/* LEFT COLUMN - Sidebar with Progress (Desktop width: 320px) */}
-      <div className="flex flex-col w-full md:w-80 md:flex-shrink-0 bg-white md:border-r md:border-gray-200 relative md:fixed md:left-0 md:top-0 md:h-screen">
+      {/* LEFT COLUMN - Sidebar with Progress */}
+      <div className="w-full md:w-80 md:flex-shrink-0 bg-white md:border-r md:border-gray-300 flex flex-col">
         {/* PROGRESS BAR - ALWAYS VISIBLE at top */}
-        <div className="p-4 md:p-6 border-b border-gray-200 bg-white sticky top-0 z-20">
+        <div className="p-4 md:p-6 border-b border-gray-300 bg-white">
           <h3 className="text-sm md:text-base font-semibold text-gray-800 mb-3">
             {course?.title || "Course Progress"}
           </h3>
@@ -421,7 +421,7 @@ export default function LearnPage() {
         {/* Mobile Toggle Button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="md:hidden p-4 bg-white border-b border-gray-200 flex items-center justify-between"
+          className="md:hidden p-4 bg-white border-b border-gray-300 flex items-center justify-between hover:bg-gray-50"
         >
           <span className="font-semibold text-gray-700">Course Materials</span>
           <svg
@@ -441,12 +441,10 @@ export default function LearnPage() {
 
         {/* Sidebar Content - Course Materials List */}
         <div
-          className={`${
-            sidebarOpen ? "block" : "hidden"
-          } md:block overflow-y-auto flex-1`}
+          className={`${sidebarOpen ? "block" : "hidden"} md:block overflow-y-auto flex-1`}
         >
           <div className="p-4">
-            <h3 className="font-semibold mb-4 text-gray-700">
+            <h3 className="font-semibold mb-4 text-gray-700 text-sm md:text-base">
               Course Materials
             </h3>
             <div className="space-y-2">
@@ -516,7 +514,7 @@ export default function LearnPage() {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto flex flex-col w-full md:ml-80">
+      <div className="flex-1 overflow-y-auto flex flex-col w-full bg-white">
         {currentContent ? (
           <>
             <div className="bg-white p-4 md:p-6 border-b sticky top-0 z-10">
