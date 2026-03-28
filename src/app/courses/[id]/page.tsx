@@ -106,6 +106,12 @@ export default function CourseDetailsPage() {
       return;
     }
 
+    // If already enrolled, navigate to learn page
+    if (isEnrolled) {
+      router.push(`/student/learn/${courseId}`);
+      return;
+    }
+
     try {
       setIsEnrolling(true);
       // Save enrollment to backend
@@ -185,7 +191,7 @@ export default function CourseDetailsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center animate-in fade-in zoom-in duration-300">
             <div className="mb-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                 <svg
                   className="w-8 h-8 text-green-600"
                   fill="currentColor"
@@ -199,29 +205,32 @@ export default function CourseDetailsPage() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Successfully Enrolled!
+                🎉 Successfully Enrolled!
               </h2>
               <p className="text-gray-600 mb-4">
                 Welcome to{" "}
-                <span className="font-semibold">{course?.title}</span>!
+                <span className="font-semibold text-primary-600">
+                  {course?.title}
+                </span>
+                !
               </p>
               <p className="text-gray-600 text-sm mb-6">
-                You now have full access to all course materials and can start
-                learning immediately.
+                You now have full access to all course materials. Start learning
+                and unlock your potential!
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-col sm:flex-row">
               <button
                 onClick={() => setShowSuccessModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition"
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition order-2 sm:order-1"
               >
-                Continue Shopping
+                Continue Browsing
               </button>
               <Link
                 href={`/student/learn/${courseId}`}
-                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition"
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition order-1 sm:order-2"
               >
-                Start Learning
+                Start Learning Now →
               </Link>
             </div>
           </div>
@@ -298,24 +307,44 @@ export default function CourseDetailsPage() {
             ${course.price}
           </div>
           {isEnrolled ? (
-            <div className="text-center">
-              <p className="text-green-600 font-semibold mb-4">
-                ✓ You're enrolled
-              </p>
-              <Link
-                href={`/student/learn/${courseId}`}
-                className="btn-primary w-full mb-4"
-              >
-                Watch Now
-              </Link>
-            </div>
+            <button
+              onClick={handleEnroll}
+              className="btn-primary w-full mb-4 flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+            >
+              ▶ Continue Learning
+            </button>
           ) : (
             <button
               onClick={handleEnroll}
               disabled={isEnrolling}
-              className="btn-primary w-full mb-4 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="btn-primary w-full mb-4 disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-lg transition-all"
             >
-              {isEnrolling ? "Enrolling..." : "Enroll Now"}
+              {isEnrolling ? (
+                <>
+                  <svg
+                    className="w-4 h-4 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Enrolling...
+                </>
+              ) : (
+                <>Enroll Now</>
+              )}
             </button>
           )}
           <div className="space-y-2 text-sm text-gray-600">

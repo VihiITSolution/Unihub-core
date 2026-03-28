@@ -28,6 +28,10 @@ export default function LearnPage() {
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+  const [showCompletionFeedback, setShowCompletionFeedback] = useState(false);
+  const [completionMessage, setCompletionMessage] = useState("");
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/auth/login");
@@ -148,13 +152,19 @@ export default function LearnPage() {
 
   const handleMarkAsComplete = async () => {
     if (!currentContent || !enrollment) return;
+    if (completedContents.has(String(currentContent.id))) return;
 
     try {
+      setIsMarkingComplete(true);
       // Mark as complete via API
       const completedArray = [
         ...Array.from(completedContents),
         String(currentContent.id),
       ];
+
+      const progressPercentage = Math.round(
+        (completedArray.length / contents.length) * 100,
+      );
 
       const response = await fetch(
         `${API_BASE_URL}/enrollments/${enrollment.id}`,
@@ -166,9 +176,7 @@ export default function LearnPage() {
           },
           body: JSON.stringify({
             completedContents: completedArray,
-            progress: Math.round(
-              (completedArray.length / contents.length) * 100,
-            ),
+            progress: progressPercentage,
           }),
         },
       );
@@ -176,10 +184,11 @@ export default function LearnPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Failed to mark as complete:", errorData);
-        alert(
-          errorData.message ||
-            "Failed to mark content as complete. Please try again.",
+        setCompletionMessage(
+          errorData.message || "Failed to mark content as complete",
         );
+        setShowCompletionFeedback(true);
+        setIsMarkingComplete(false);
         return;
       }
 
@@ -188,19 +197,39 @@ export default function LearnPage() {
       newCompleted.add(String(currentContent.id));
       setCompletedContents(newCompleted);
 
-      // Auto-navigate to next content
+      // Auto-navigate to next content and show feedback
       const currentIndex = contents.findIndex(
         (c) => c.id === currentContent.id,
       );
+
       if (currentIndex < contents.length - 1) {
-        setCurrentContent(contents[currentIndex + 1]);
+        // Show progress feedback
+        setCompletionMessage(
+          `Great job! Progress: ${progressPercentage}% complete`,
+        );
+        setShowCompletionFeedback(true);
+        setIsMarkingComplete(false);
+
+        // Auto-advance after 2 seconds
+        setTimeout(() => {
+          setCurrentContent(contents[currentIndex + 1]);
+          setShowCompletionFeedback(false);
+        }, 2000);
       } else {
         // If last content, show completion message
-        alert("Congratulations! You've completed the course!");
+        setCompletionMessage(
+          `🎉 Congratulations! You've completed the course! Progress: ${progressPercentage}%`,
+        );
+        setShowCompletionFeedback(true);
+        setIsMarkingComplete(false);
       }
     } catch (error) {
       console.error("Error marking as complete:", error);
-      alert("An error occurred while marking content as complete.");
+      setCompletionMessage(
+        "An error occurred while marking content as complete",
+      );
+      setShowCompletionFeedback(true);
+      setIsMarkingComplete(false);
     }
   };
 
@@ -336,6 +365,20 @@ export default function LearnPage() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
+      {/* Completion Feedback Toast */}
+      {showCompletionFeedback && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-in fade-in slide-in-from-bottom-4">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span className="font-medium">{completionMessage}</span>
+        </div>
+      )}
+
       {/* Mobile Sidebar Toggle Button */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -369,7 +412,7 @@ export default function LearnPage() {
             <div className="text-sm text-gray-600 mb-2">Your Progress</div>
             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-primary-600"
+                className="h-full bg-primary-600 transition-all duration-300"
                 style={{
                   width: `${
                     contents.length > 0
@@ -380,7 +423,10 @@ export default function LearnPage() {
               ></div>
             </div>
             <div className="text-sm text-gray-600 mt-1">
-              {completedContents.size} of {contents.length} completed
+              {completedContents.size} of {contents.length} completed (
+              {Math.round((completedContents.size / contents.length) * 100) ||
+                0}
+              %)
             </div>
           </div>
         </div>
@@ -576,16 +622,23 @@ export default function LearnPage() {
 
                 <button
                   onClick={handleMarkAsComplete}
-                  disabled={completedContents.has(String(currentContent.id))}
-                  className={`w-full sm:w-auto px-6 py-2 rounded-lg font-semibold ${
+                  disabled={
+                    completedContents.has(String(currentContent.id)) ||
+                    isMarkingComplete
+                  }
+                  className={`w-full sm:w-auto px-6 py-2 rounded-lg font-semibold transition-all ${
                     completedContents.has(String(currentContent.id))
-                      ? "bg-green-200 text-green-600 cursor-not-allowed"
-                      : "btn-primary"
+                      ? "bg-green-500 text-white cursor-not-allowed"
+                      : isMarkingComplete
+                        ? "btn-primary opacity-70 cursor-wait"
+                        : "btn-primary hover:shadow-lg"
                   }`}
                 >
                   {completedContents.has(String(currentContent.id))
                     ? "✓ Completed"
-                    : "Mark as Complete"}
+                    : isMarkingComplete
+                      ? "Saving..."
+                      : "Mark as Complete"}
                 </button>
 
                 <button
