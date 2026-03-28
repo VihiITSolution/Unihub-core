@@ -557,9 +557,6 @@ export default function CourseDetailsPage() {
                   <div className="text-4xl font-bold text-primary-600 mb-2">
                     ${course.price}
                   </div>
-                  <p className="text-sm text-gray-600">
-                    30-day money-back guarantee
-                  </p>
                 </div>
 
                 {isEnrolled ? (
