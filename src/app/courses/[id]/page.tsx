@@ -17,6 +17,8 @@ export default function CourseDetailsPage() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
 
   useEffect(() => {
     if (courseId) {
@@ -105,6 +107,7 @@ export default function CourseDetailsPage() {
     }
 
     try {
+      setIsEnrolling(true);
       // Save enrollment to backend
       const enrollResponse = await fetch(`${API_BASE_URL}/enrollments`, {
         method: "POST",
@@ -120,15 +123,18 @@ export default function CourseDetailsPage() {
       if (!enrollResponse.ok) {
         const errorData = await enrollResponse.json();
         alert(errorData.message || "Failed to enroll in course");
+        setIsEnrolling(false);
         return;
       }
 
-      // Update state and navigate
+      // Update state and show success modal
       setIsEnrolled(true);
-      router.push(`/student/learn/${courseId}`);
+      setShowSuccessModal(true);
+      setIsEnrolling(false);
     } catch (error) {
       console.error("Enrollment error:", error);
       alert("An error occurred during enrollment");
+      setIsEnrolling(false);
     }
   };
 
@@ -174,6 +180,54 @@ export default function CourseDetailsPage() {
 
   return (
     <div className="container-custom py-8">
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center animate-in fade-in zoom-in duration-300">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-8 h-8 text-green-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Successfully Enrolled!
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Welcome to{" "}
+                <span className="font-semibold">{course?.title}</span>!
+              </p>
+              <p className="text-gray-600 text-sm mb-6">
+                You now have full access to all course materials and can start
+                learning immediately.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition"
+              >
+                Continue Shopping
+              </button>
+              <Link
+                href={`/student/learn/${courseId}`}
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition"
+              >
+                Start Learning
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Course Header */}
       <div className="grid md:grid-cols-3 gap-8 mb-12">
         <div className="md:col-span-2">
@@ -252,12 +306,16 @@ export default function CourseDetailsPage() {
                 href={`/student/learn/${courseId}`}
                 className="btn-primary w-full mb-4"
               >
-                Continue Learning
+                Watch Now
               </Link>
             </div>
           ) : (
-            <button onClick={handleEnroll} className="btn-primary w-full mb-4">
-              Enroll Now
+            <button
+              onClick={handleEnroll}
+              disabled={isEnrolling}
+              className="btn-primary w-full mb-4 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isEnrolling ? "Enrolling..." : "Enroll Now"}
             </button>
           )}
           <div className="space-y-2 text-sm text-gray-600">
