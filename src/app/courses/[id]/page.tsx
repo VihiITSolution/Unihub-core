@@ -78,9 +78,13 @@ export default function CourseDetailsPage() {
 
           if (enrollmentResponse.ok) {
             const enrollmentData = await enrollmentResponse.json();
-            if (enrollmentData.success && Array.isArray(enrollmentData.data)) {
+            if (
+              enrollmentData.success &&
+              enrollmentData.data &&
+              Array.isArray(enrollmentData.data.enrollments)
+            ) {
               const courseIdNum = parseInt(courseId, 10);
-              const enrolled = enrollmentData.data.some(
+              const enrolled = enrollmentData.data.enrollments.some(
                 (enrollment: any) =>
                   parseInt(String(enrollment.courseId), 10) === courseIdNum,
               );

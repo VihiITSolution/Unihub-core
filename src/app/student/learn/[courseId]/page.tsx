@@ -118,9 +118,13 @@ export default function LearnPage() {
 
           if (enrollmentResponse.ok) {
             const enrollmentData = await enrollmentResponse.json();
-            if (enrollmentData.success && Array.isArray(enrollmentData.data)) {
+            if (
+              enrollmentData.success &&
+              enrollmentData.data &&
+              Array.isArray(enrollmentData.data.enrollments)
+            ) {
               const courseIdNum = parseInt(courseId, 10);
-              const userEnrollment = enrollmentData.data.find(
+              const userEnrollment = enrollmentData.data.enrollments.find(
                 (e: any) => parseInt(String(e.courseId), 10) === courseIdNum,
               );
               if (userEnrollment) {
