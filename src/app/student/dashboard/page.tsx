@@ -40,21 +40,19 @@ export default function StudentDashboard() {
           })),
         );
 
-        // Calculate total learning time (sum of all course durations)
-        const totalMinutes = enrollmentData.reduce(
-          (acc: number, enrollment: any) => {
-            const courseDuration = enrollment.course?.duration || 0;
-            return acc + courseDuration;
-          },
-          0,
-        );
+        // Calculate total learning time (sum of all course durations in hours)
+        let totalHours = 0;
+        enrollmentData.forEach((enrollment: any, index: number) => {
+          const courseHours = enrollment.course?.duration || 0;
+          console.log(
+            `Course ${index + 1}: ${enrollment.course?.title || "Unknown"} - Duration: ${courseHours}h`,
+          );
+          totalHours += courseHours;
+        });
 
-        // Convert minutes to hours
-        const totalHours = Math.round(totalMinutes / 60);
         setTotalLearningTime(totalHours);
-        console.log(
-          `⏱️ Total Learning Time: ${totalMinutes} minutes = ${totalHours} hours`,
-        );
+        console.log(`⏱️ Total Learning Time: ${totalHours} hours`);
+        console.log("Raw enrollment data:", enrollmentData);
       }
     } catch (error) {
       console.error("Failed to load enrollments:", error);
