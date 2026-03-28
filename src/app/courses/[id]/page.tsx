@@ -533,7 +533,7 @@ export default function CourseDetailsPage() {
 
           {/* Sidebar - Course Card */}
           <div className="md:col-span-1">
-            <div className="sticky top-32">
+            <div className="sticky top-2">
               {course.thumbnail ? (
                 <img
                   src={
