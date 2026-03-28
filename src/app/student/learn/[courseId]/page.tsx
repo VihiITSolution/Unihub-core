@@ -404,13 +404,14 @@ export default function LearnPage() {
       <div
         className={`${
           sidebarOpen ? "block" : "hidden"
-        } md:block md:w-80 bg-white shadow-lg overflow-y-auto fixed md:relative left-0 top-0 w-full h-full md:h-auto md:shadow-lg z-40`}
+        } md:block md:w-80 bg-white shadow-lg overflow-y-auto fixed md:relative left-0 top-0 w-full h-full md:h-auto z-40`}
       >
-        <div className="p-6 border-b md:block hidden">
-          <h2 className="text-xl font-bold">{course.title}</h2>
-          <div className="mt-4">
+        {/* Progress Bar - Always shown at top */}
+        <div className="p-6 border-b bg-white">
+          <h2 className="text-xl font-bold mb-4">{course?.title}</h2>
+          <div>
             <div className="text-sm text-gray-600 mb-2">Your Progress</div>
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
               <div
                 className="h-full bg-primary-600 transition-all duration-300"
                 style={{
@@ -422,33 +423,12 @@ export default function LearnPage() {
                 }}
               ></div>
             </div>
-            <div className="text-sm text-gray-600 mt-1">
+            <div className="text-sm font-semibold text-gray-800">
               {completedContents.size} of {contents.length} completed (
               {Math.round((completedContents.size / contents.length) * 100) ||
                 0}
               %)
             </div>
-          </div>
-        </div>
-
-        {/* Mobile Progress Bar */}
-        <div className="p-4 border-b md:hidden bg-white">
-          <h3 className="font-semibold mb-3 text-gray-700">{course.title}</h3>
-          <div className="text-sm text-gray-600 mb-2">Progress</div>
-          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary-600"
-              style={{
-                width: `${
-                  contents.length > 0
-                    ? (completedContents.size / contents.length) * 100
-                    : 0
-                }%`,
-              }}
-            ></div>
-          </div>
-          <div className="text-sm text-gray-600 mt-1">
-            {completedContents.size} of {contents.length} completed
           </div>
         </div>
 
