@@ -119,8 +119,9 @@ export default function LearnPage() {
           if (enrollmentResponse.ok) {
             const enrollmentData = await enrollmentResponse.json();
             if (enrollmentData.success && Array.isArray(enrollmentData.data)) {
+              const courseIdNum = parseInt(courseId, 10);
               const userEnrollment = enrollmentData.data.find(
-                (e: any) => e.courseId === parseInt(courseId),
+                (e: any) => parseInt(String(e.courseId), 10) === courseIdNum,
               );
               if (userEnrollment) {
                 setEnrollment(userEnrollment);
@@ -151,8 +152,16 @@ export default function LearnPage() {
   };
 
   const handleMarkAsComplete = async () => {
-    if (!currentContent || !enrollment) return;
+    if (!currentContent) return;
     if (completedContents.has(String(currentContent.id))) return;
+    
+    // If enrollment is not available, cannot mark complete
+    if (!enrollment) {
+      console.warn("No enrollment found for this course");
+      setCompletionMessage("Please ensure you are enrolled in this course");
+      setShowCompletionFeedback(true);
+      return;
+    }
 
     try {
       setIsMarkingComplete(true);
@@ -364,7 +373,7 @@ export default function LearnPage() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-100">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-100 relative">
       {/* Completion Feedback Toast */}
       {showCompletionFeedback && (
         <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-in fade-in slide-in-from-bottom-4">
@@ -379,59 +388,58 @@ export default function LearnPage() {
         </div>
       )}
 
-      {/* Mobile Sidebar Toggle Button */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden p-4 bg-white border-b border-gray-200 flex items-center justify-between"
-      >
-        <span className="font-semibold text-gray-700">Course Content</span>
-        <svg
-          className={`w-6 h-6 transform transition-transform ${sidebarOpen ? "rotate-180" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
-
-      {/* Sidebar - Course Content List */}
-      <div
-        className={`${
-          sidebarOpen ? "block" : "hidden"
-        } md:block md:w-80 bg-white shadow-lg overflow-y-auto fixed md:relative left-0 top-0 w-full h-full md:h-auto z-40`}
-      >
-        {/* Progress Bar - Always shown at top */}
-        <div className="p-6 border-b bg-white">
-          <h2 className="text-xl font-bold mb-4">{course?.title}</h2>
-          <div>
-            <div className="text-sm text-gray-600 mb-2">Your Progress</div>
-            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
-              <div
-                className="h-full bg-primary-600 transition-all duration-300"
-                style={{
-                  width: `${
-                    contents.length > 0
-                      ? (completedContents.size / contents.length) * 100
-                      : 0
-                  }%`,
-                }}
-              ></div>
-            </div>
-            <div className="text-sm font-semibold text-gray-800">
-              {completedContents.size} of {contents.length} completed (
-              {Math.round((completedContents.size / contents.length) * 100) ||
-                0}
-              %)
-            </div>
+      {/* LEFT COLUMN - Sidebar with Progress (Desktop width: 320px) */}
+      <div className="flex flex-col w-full md:w-80 md:flex-shrink-0 bg-white md:border-r md:border-gray-200 relative md:fixed md:left-0 md:top-0 md:h-screen">
+        
+        {/* PROGRESS BAR - ALWAYS VISIBLE at top */}
+        <div className="p-4 md:p-6 border-b border-gray-200 bg-white sticky top-0 z-20">
+          <h3 className="text-sm md:text-base font-semibold text-gray-800 mb-3">
+            {course?.title || "Course Progress"}
+          </h3>
+          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
+            <div
+              className="h-full bg-primary-600 transition-all duration-300"
+              style={{
+                width: `${
+                  contents.length > 0
+                    ? (completedContents.size / contents.length) * 100
+                    : 0
+                }%`,
+              }}
+            ></div>
+          </div>
+          <div className="text-sm font-semibold text-gray-700">
+            {completedContents.size} of {contents.length} completed ({Math.round((completedContents.size / contents.length) * 100) || 0}%)
           </div>
         </div>
 
+        {/* Mobile Toggle Button */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="md:hidden p-4 bg-white border-b border-gray-200 flex items-center justify-between"
+        >
+          <span className="font-semibold text-gray-700">Course Materials</span>
+          <svg
+            className={`w-6 h-6 transform transition-transform ${sidebarOpen ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+
+        {/* Sidebar Content - Course Materials List */}
+        <div
+          className={`${
+            sidebarOpen ? "block" : "hidden"
+          } md:block overflow-y-auto flex-1`}
+        >
         <div className="p-4">
           <h3 className="font-semibold mb-4 text-gray-700">Course Materials</h3>
           <div className="space-y-2">
@@ -500,7 +508,7 @@ export default function LearnPage() {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto flex flex-col w-full">
+      <div className="flex-1 overflow-y-auto flex flex-col w-full md:ml-80">
         {currentContent ? (
           <>
             <div className="bg-white p-4 md:p-6 border-b sticky top-0 z-10">
