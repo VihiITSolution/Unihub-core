@@ -130,6 +130,20 @@ export interface Course {
   updatedAt: string;
 }
 
+export interface CourseReview {
+  id: string;
+  courseId: string;
+  userId: string;
+  userName: string;
+  userImage?: string;
+  rating: number;
+  title: string;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+  helpful?: number;
+}
+
 export interface CourseContent {
   id: string;
   courseId: string;
