@@ -185,7 +185,7 @@ export default function TutorDashboard() {
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">
-            $
+            Rs.
             {courses
               .reduce((acc, c) => acc + (c.enrolledCount || 0) * c.price, 0)
               .toFixed(2)}
@@ -419,7 +419,7 @@ export default function TutorDashboard() {
               <div className="flex-1">
                 <p className="font-semibold">Payment received</p>
                 <p className="text-sm text-gray-600">
-                  Earned $99.99 from course enrollment
+                  Earned Rs. 99.99 from course enrollment
                 </p>
               </div>
               <span className="text-sm text-gray-500">1 day ago</span>
