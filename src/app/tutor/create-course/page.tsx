@@ -438,11 +438,11 @@ export default function CreateCoursePage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Price (USD) <span className="text-red-500">*</span>
+                      Price (LKR) <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-3.5 text-gray-500">
-                        $
+                        ₨
                       </span>
                       <input
                         type="number"
