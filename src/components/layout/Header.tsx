@@ -11,7 +11,6 @@ import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [requiredRole, setRequiredRole] = useState<RoleType | null>(null);
