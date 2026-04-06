@@ -12,7 +12,9 @@ export default function VendorListingsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [listings, setListings] = useState<MarketplaceItem[]>([]);
-  const [filter, setFilter] = useState<"all" | "active" | "inactive" | "pending">("all");
+  const [filter, setFilter] = useState<
+    "all" | "active" | "inactive" | "pending"
+  >("all");
 
   useEffect(() => {
     if (!user?.isVendorProfileComplete) {
@@ -39,7 +41,8 @@ export default function VendorListingsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!token || !confirm("Are you sure you want to delete this listing?")) return;
+    if (!token || !confirm("Are you sure you want to delete this listing?"))
+      return;
 
     try {
       await marketplaceService.deleteListing(id, token);
@@ -63,7 +66,7 @@ export default function VendorListingsPage() {
       );
     }
 
-    if (item.approvalStatus === 'pending') {
+    if (item.approvalStatus === "pending") {
       return (
         <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
           Pending Approval
@@ -71,7 +74,7 @@ export default function VendorListingsPage() {
       );
     }
 
-    if (item.approvalStatus === 'rejected') {
+    if (item.approvalStatus === "rejected") {
       return (
         <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
           Rejected
@@ -79,7 +82,7 @@ export default function VendorListingsPage() {
       );
     }
 
-    if (item.approvalStatus === 'approved') {
+    if (item.approvalStatus === "approved") {
       return (
         <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
           Approved
@@ -92,25 +95,35 @@ export default function VendorListingsPage() {
 
   const getRemainingDays = (expiresAt?: string) => {
     if (!expiresAt) return null;
-    
+
     const now = new Date();
     const expiry = new Date(expiresAt);
     const diffTime = expiry.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return <span className="text-red-600">Expired</span>;
-    if (diffDays <= 7) return <span className="text-orange-600">{diffDays} days left</span>;
+    if (diffDays <= 7)
+      return <span className="text-orange-600">{diffDays} days left</span>;
     return <span className="text-gray-600">{diffDays} days left</span>;
   };
 
-  const filteredListings = listings.filter(item => {
-    if (filter === "active") return item.isAvailable && item.isPaid && item.approvalStatus === 'approved';
+  const filteredListings = listings.filter((item) => {
+    if (filter === "active")
+      return (
+        item.isAvailable && item.isPaid && item.approvalStatus === "approved"
+      );
     if (filter === "inactive") return !item.isAvailable;
-    if (filter === "pending") return item.requiresPayment && (!item.isPaid || item.approvalStatus === 'pending');
+    if (filter === "pending")
+      return (
+        item.requiresPayment &&
+        (!item.isPaid || item.approvalStatus === "pending")
+      );
     return true;
   });
 
-  const pendingCount = listings.filter(l => l.requiresPayment && (!l.isPaid || l.approvalStatus === 'pending')).length;
+  const pendingCount = listings.filter(
+    (l) => l.requiresPayment && (!l.isPaid || l.approvalStatus === "pending"),
+  ).length;
 
   if (loading) {
     return (
@@ -152,7 +165,14 @@ export default function VendorListingsPage() {
               : "border-transparent text-gray-600 hover:text-gray-900"
           }`}
         >
-          Active ({listings.filter(l => l.isAvailable && l.isPaid && l.approvalStatus === 'approved').length})
+          Active (
+          {
+            listings.filter(
+              (l) =>
+                l.isAvailable && l.isPaid && l.approvalStatus === "approved",
+            ).length
+          }
+          )
         </button>
         <button
           onClick={() => setFilter("pending")}
@@ -172,7 +192,7 @@ export default function VendorListingsPage() {
               : "border-transparent text-gray-600 hover:text-gray-900"
           }`}
         >
-          Inactive ({listings.filter(l => !l.isAvailable).length})
+          Inactive ({listings.filter((l) => !l.isAvailable).length})
         </button>
       </div>
 
@@ -193,14 +213,30 @@ export default function VendorListingsPage() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Product</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Category</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Price</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Stock</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Sold</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Expires</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Product
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Category
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Price
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Stock
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Sold
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Expires
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -214,13 +250,23 @@ export default function VendorListingsPage() {
                   </td>
                   <td className="px-4 py-3 text-sm">{item.category}</td>
                   <td className="px-4 py-3">
-                    <div className="font-semibold">${item.price}</div>
+                    <div className="font-semibold">Rs. {item.price}</div>
                     {item.requiresPayment && item.adFee && (
-                      <div className="text-xs text-gray-500">Fee: ${item.adFee}</div>
+                      <div className="text-xs text-gray-500">
+                        Fee: Rs. {item.adFee}
+                      </div>
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={item.stock > 10 ? "text-green-600" : item.stock > 0 ? "text-orange-600" : "text-red-600"}>
+                    <span
+                      className={
+                        item.stock > 10
+                          ? "text-green-600"
+                          : item.stock > 0
+                            ? "text-orange-600"
+                            : "text-red-600"
+                      }
+                    >
                       {item.stock}
                     </span>
                   </td>
@@ -237,11 +283,15 @@ export default function VendorListingsPage() {
                         {item.isAvailable ? "Active" : "Inactive"}
                       </span>
                       {getPaymentStatusBadge(item)}
-                      {item.approvalStatus === 'rejected' && item.rejectionReason && (
-                        <div className="text-xs text-red-600 mt-1" title={item.rejectionReason}>
-                          See reason
-                        </div>
-                      )}
+                      {item.approvalStatus === "rejected" &&
+                        item.rejectionReason && (
+                          <div
+                            className="text-xs text-red-600 mt-1"
+                            title={item.rejectionReason}
+                          >
+                            See reason
+                          </div>
+                        )}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm">

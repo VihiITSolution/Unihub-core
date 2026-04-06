@@ -12,7 +12,9 @@ export default function TutorLiveSessionsPage() {
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "upcoming" | "live" | "ended">("all");
+  const [filter, setFilter] = useState<"all" | "upcoming" | "live" | "ended">(
+    "all",
+  );
 
   useEffect(() => {
     loadSessions();
@@ -34,7 +36,9 @@ export default function TutorLiveSessionsPage() {
       }
 
       const response = await liveSessionService.getSessions(filters, token);
-      const sessionsData = Array.isArray(response.data) ? response.data : (response.data as any)?.sessions || [];
+      const sessionsData = Array.isArray(response.data)
+        ? response.data
+        : (response.data as any)?.sessions || [];
       setSessions(sessionsData);
     } catch (err: any) {
       setError(err.message || "Failed to load sessions");
@@ -93,7 +97,9 @@ export default function TutorLiveSessionsPage() {
     };
 
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status]}`}>
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status]}`}
+      >
         {status.toUpperCase()}
       </span>
     );
@@ -180,15 +186,13 @@ export default function TutorLiveSessionsPage() {
                   <div className="flex gap-4 text-sm text-gray-500">
                     <span>📅 {formatDate(session.scheduledStartTime)}</span>
                     <span>
-                      {session.isFree ? (
-                        "🆓 Free"
-                      ) : (
-                        `💰 $${session.price}`
-                      )}
+                      {session.isFree ? "🆓 Free" : `💰 Rs. ${session.price}`}
                     </span>
                     <span>👥 {session.totalAttendees} attendees</span>
                     {!session.isFree && (
-                      <span>💵 Revenue: ${session.totalRevenue.toFixed(2)}</span>
+                      <span>
+                        💵 Revenue: Rs. {session.totalRevenue.toFixed(2)}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -204,7 +208,9 @@ export default function TutorLiveSessionsPage() {
                         Start Session
                       </button>
                       <button
-                        onClick={() => router.push(`/tutor/live-sessions/${session.id}/edit`)}
+                        onClick={() =>
+                          router.push(`/tutor/live-sessions/${session.id}/edit`)
+                        }
                         className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
                       >
                         Edit
@@ -237,16 +243,18 @@ export default function TutorLiveSessionsPage() {
                     </>
                   )}
 
-                  {(session.status === "ended" || session.status === "recorded") && session.recordingUrl && (
-                    <a
-                      href={session.recordingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-                    >
-                      View Recording
-                    </a>
-                  )}
+                  {(session.status === "ended" ||
+                    session.status === "recorded") &&
+                    session.recordingUrl && (
+                      <a
+                        href={session.recordingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                      >
+                        View Recording
+                      </a>
+                    )}
 
                   <Link
                     href={`/tutor/live-sessions/${session.id}/enrollments`}
@@ -260,7 +268,8 @@ export default function TutorLiveSessionsPage() {
               {/* Session Details */}
               {session.youtubeVideoId && (
                 <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-                  <span className="font-medium">YouTube Video ID:</span> {session.youtubeVideoId}
+                  <span className="font-medium">YouTube Video ID:</span>{" "}
+                  {session.youtubeVideoId}
                 </div>
               )}
             </div>

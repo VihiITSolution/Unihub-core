@@ -12,7 +12,9 @@ export default function StudentLiveSessionsPage() {
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "free" | "paid" | "upcoming">("all");
+  const [filter, setFilter] = useState<"all" | "free" | "paid" | "upcoming">(
+    "all",
+  );
 
   useEffect(() => {
     loadSessions();
@@ -21,7 +23,7 @@ export default function StudentLiveSessionsPage() {
   const loadSessions = async () => {
     try {
       const token = localStorage.getItem(TOKEN_KEY);
-      
+
       const filters: any = {};
       if (filter === "upcoming") {
         filters.upcoming = true;
@@ -31,8 +33,13 @@ export default function StudentLiveSessionsPage() {
         filters.isFree = false;
       }
 
-      const response = await liveSessionService.getSessions(filters, token || undefined);
-      const sessionsData = Array.isArray(response.data) ? response.data : (response.data as any)?.sessions || [];
+      const response = await liveSessionService.getSessions(
+        filters,
+        token || undefined,
+      );
+      const sessionsData = Array.isArray(response.data)
+        ? response.data
+        : (response.data as any)?.sessions || [];
       setSessions(sessionsData);
     } catch (err: any) {
       setError(err.message || "Failed to load sessions");
@@ -51,7 +58,9 @@ export default function StudentLiveSessionsPage() {
 
       if (!isFree) {
         // TODO: Implement payment flow
-        alert("Payment integration coming soon! For now, this will enroll you for free.");
+        alert(
+          "Payment integration coming soon! For now, this will enroll you for free.",
+        );
       }
 
       await liveSessionService.enrollInSession(sessionId, {}, token);
@@ -82,7 +91,9 @@ export default function StudentLiveSessionsPage() {
     };
 
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status]}`}>
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status]}`}
+      >
         {status.toUpperCase()}
       </span>
     );
@@ -145,7 +156,9 @@ export default function StudentLiveSessionsPage() {
             >
               <div className="p-6">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-semibold flex-1">{session.title}</h3>
+                  <h3 className="text-lg font-semibold flex-1">
+                    {session.title}
+                  </h3>
                   {getStatusBadge(session.status)}
                 </div>
 
@@ -168,13 +181,14 @@ export default function StudentLiveSessionsPage() {
                     <span>👥</span>
                     <span>
                       {session.totalAttendees}{" "}
-                      {session.maxAttendees ? `/ ${session.maxAttendees}` : ""} attendees
+                      {session.maxAttendees ? `/ ${session.maxAttendees}` : ""}{" "}
+                      attendees
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span>💰</span>
                     <span className="font-semibold">
-                      {session.isFree ? "Free" : `$${session.price}`}
+                      {session.isFree ? "Free" : `Rs. ${session.price}`}
                     </span>
                   </div>
                 </div>
@@ -185,7 +199,9 @@ export default function StudentLiveSessionsPage() {
                     onClick={() => handleEnroll(session.id, session.isFree)}
                     className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium"
                   >
-                    {session.isFree ? "Enroll Free" : `Enroll for $${session.price}`}
+                    {session.isFree
+                      ? "Enroll Free"
+                      : `Enroll for Rs. ${session.price}`}
                   </button>
                 )}
 
@@ -198,7 +214,8 @@ export default function StudentLiveSessionsPage() {
                   </Link>
                 )}
 
-                {(session.status === "ended" || session.status === "recorded") &&
+                {(session.status === "ended" ||
+                  session.status === "recorded") &&
                   session.recordingUrl && (
                     <a
                       href={session.recordingUrl}
