@@ -44,7 +44,7 @@ export default function CreateCoursePage() {
     description: "",
     aboutCourse: "",
     price: "",
-    categoryId: "",
+    category: "",
     level: "beginner" as "beginner" | "intermediate" | "advanced",
     duration: "",
   });
@@ -117,7 +117,7 @@ export default function CreateCoursePage() {
         setCategories([...categories, data.data]);
         setFormData((prev) => ({
           ...prev,
-          categoryId: data.data.id.toString(),
+          category: data.data.id.toString(),
         }));
         setShowAddCategory(false);
         setNewCategoryName("");
@@ -235,7 +235,7 @@ export default function CreateCoursePage() {
       return;
     }
 
-    if (!formData.categoryId) {
+    if (!formData.category) {
       setError("Please select or create a category");
       return;
     }
@@ -251,7 +251,7 @@ export default function CreateCoursePage() {
       formDataToSend.append("shortDescription", formData.shortDescription);
       formDataToSend.append("aboutCourse", formData.aboutCourse || "");
       formDataToSend.append("price", formData.price);
-      formDataToSend.append("categoryId", formData.categoryId);
+      formDataToSend.append("category", formData.category);
       formDataToSend.append("level", formData.level);
       formDataToSend.append("duration", formData.duration);
       formDataToSend.append("thumbnail", thumbnailFile);
@@ -485,9 +485,9 @@ export default function CreateCoursePage() {
                     </label>
                     <div className="flex gap-2">
                       <select
-                        name="categoryId"
+                        name="category"
                         required
-                        value={formData.categoryId}
+                        value={formData.category}
                         onChange={handleChange}
                         className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
