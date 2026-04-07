@@ -9,45 +9,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/types";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 import { API_BASE_URL } from "@/lib/constants";
+import FeaturedCoursesCarousel from "@/components/FeaturedCoursesCarousel";
 
 export default function Home() {
   const router = useRouter();
   const { user, token, isAuthenticated } = useAuth();
-  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
-
-  useEffect(() => {
-    loadFeaturedCourses();
-  }, [isAuthenticated, token]);
-
-  const loadFeaturedCourses = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch with authentication header if user is logged in
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/courses?limit=3&page=1`, {
-        headers,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          const coursesData = (result.data as any).courses || result.data;
-          setFeaturedCourses(coursesData.slice(0, 3));
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load featured courses:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Handler for Create Kuppi button
   const handleCreateKuppi = (e: React.MouseEvent) => {
@@ -256,146 +223,8 @@ export default function Home() {
         </div>
       </section> */}
 
-      {/* Featured Courses */}
-      <section className="section">
-        <div className="container-custom">
-          <div className="flex justify-between items-center mb-12">
-            <div>
-              <h2 className="heading-2 text-gray-900 mb-2">
-                Featured Kuppi Sessions
-              </h2>
-              <p className="text-gray-600">
-                Popular sessions by fellow students
-              </p>
-            </div>
-            <Link href="/courses">
-              <Button variant="outline">View All Sessions</Button>
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-            </div>
-          ) : featuredCourses.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No courses available yet</p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredCourses.map((course) => (
-                <Link key={course.id} href={`/courses/${course.id}`}>
-                  <Card hover padding="sm" className="group">
-                    <div className="relative overflow-hidden rounded-lg mb-4">
-                      <img
-                        src={
-                          course.thumbnail ||
-                          "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop&q=80"
-                        }
-                        alt={course.title}
-                        className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src =
-                            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop&q=80";
-                        }}
-                      />
-                      {course.rating && course.rating > 0 && (
-                        <Badge
-                          variant="warning"
-                          className="absolute top-3 left-3"
-                        >
-                          ⭐ {Number(course.rating).toFixed(1)}
-                        </Badge>
-                      )}
-                      {course.year ? (
-                        <Badge
-                          variant="gray"
-                          className="absolute top-3 right-3 bg-purple-100 text-purple-700 font-medium"
-                        >
-                          Year {course.year}
-                        </Badge>
-                      ) : (
-                        course.level && (
-                          <Badge
-                            variant="gray"
-                            className="absolute top-3 right-3 bg-white capitalize"
-                          >
-                            {course.level}
-                          </Badge>
-                        )
-                      )}
-                    </div>
-
-                    <div className="p-4">
-                      {course.faculty ? (
-                        <Badge variant="primary" size="sm" className="mb-2">
-                          {course.faculty.name}
-                        </Badge>
-                      ) : (
-                        course.category && (
-                          <Badge variant="primary" size="sm" className="mb-2">
-                            {course.category}
-                          </Badge>
-                        )
-                      )}
-                      <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
-                        {course.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-3">
-                        {course.tutor
-                          ? `${course.tutor.firstName} ${course.tutor.lastName}`
-                          : "Unknown Instructor"}
-                      </p>
-
-                      <div className="flex items-center gap-2 mb-3">
-                        {course.rating && course.rating > 0 && (
-                          <>
-                            <span className="font-bold text-yellow-500">
-                              {Number(course.rating).toFixed(1)}
-                            </span>
-                            <div className="flex text-yellow-500 text-sm">
-                              {"★".repeat(Math.floor(Number(course.rating)))}
-                            </div>
-                          </>
-                        )}
-                        <span className="text-sm text-gray-600">
-                          ({(course.enrollmentCount || 0).toLocaleString()})
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-2xl font-bold text-gray-900">
-                            Rs. {course.price}
-                          </span>
-                        </div>
-                        {user && course.tutorId === user.id ? (
-                          <Link href={`/tutor/edit-course/${course.id}`}>
-                            <Button variant="secondary" size="sm">
-                              Manage
-                            </Button>
-                          </Link>
-                        ) : course.isEnrolled ? (
-                          <Link href={`/student/learn/${course.id}`}>
-                            <Button variant="success" size="sm">
-                              {course.price === 0 ? "View Course" : "Watch Now"}
-                            </Button>
-                          </Link>
-                        ) : (
-                          <Button variant="primary" size="sm">
-                            Enroll Now
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Featured Courses Carousel */}
+      <FeaturedCoursesCarousel />
 
       {/* Features Section */}
       <section className="section bg-gray-50">
