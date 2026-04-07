@@ -10,7 +10,6 @@ import { API_BASE_URL } from "@/lib/constants";
 interface CategoryTab {
   id: string;
   name: string;
-  icon: string;
 }
 
 interface CoursesGrouped {
@@ -87,26 +86,12 @@ export default function FeaturedCoursesCarousel() {
 
           setGroupedCourses(grouped);
 
-          // Create category tabs with icons
-          const facultyIcons: { [key: string]: string } = {
-            "IT & Computing": "💻",
-            Engineering: "⚙️",
-            Medicine: "🩺",
-            "Business & Management": "💼",
-            Science: "🔬",
-            "Arts & Humanities": "📚",
-            Law: "⚖️",
-            Architecture: "🏛️",
-            Agriculture: "🌾",
-            Other: "📖",
-          };
-
+          // Create category tabs
           const tabs: CategoryTab[] = [
-            { id: "all", name: "All Categories", icon: "✨" },
+            { id: "all", name: "All Categories" },
             ...Array.from(categorySet).map((cat) => ({
               id: cat.toLowerCase().replace(/\s+/g, "-"),
               name: cat,
-              icon: facultyIcons[cat] || "📚",
             })),
           ];
 
@@ -164,36 +149,40 @@ export default function FeaturedCoursesCarousel() {
         {/* Header */}
         <div className="mb-12">
           <h2 className="heading-2 text-gray-900 mb-2">
-            Skills to transform your future
+            Master Your Modules & Ace Your Exams
           </h2>
           <p className="text-lg text-gray-600">
-            Learn from world-class instructors. Get insights and knowledge from
-            experts in their fields.
+            Join university students covering hard lessons and difficult
+            modules. Get peer-to-peer kuppi sessions to prepare for exams.
           </p>
         </div>
 
-        {/* Category Tabs */}
+        {/* Category Tabs and Explore Button */}
         {categories.length > 0 && (
-          <div className="mb-8 overflow-x-auto scrollbar-hide">
-            <div className="flex gap-3 pb-2">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => {
-                    setActiveCategory(category.id);
-                    setTimeout(checkScroll, 100);
-                  }}
-                  className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
-                    activeCategory === category.id
-                      ? "bg-primary-600 text-white shadow-lg"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  <span className="text-lg">{category.icon}</span>
-                  <span>{category.name}</span>
-                </button>
-              ))}
+          <div className="mb-8 flex items-center justify-between gap-4">
+            <div className="flex-1 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-3 pb-2">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => {
+                      setActiveCategory(category.id);
+                      setTimeout(checkScroll, 100);
+                    }}
+                    className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all duration-300 ${
+                      activeCategory === category.id
+                        ? "bg-primary-600 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
             </div>
+            <Link href="/courses" className="flex-shrink-0">
+              <Button variant="outline">Explore All</Button>
+            </Link>
           </div>
         )}
 
@@ -401,32 +390,6 @@ export default function FeaturedCoursesCarousel() {
             )}
           </div>
         )}
-
-        {/* Keyboard Hint */}
-        {coursesToDisplay.length > 4 && (
-          <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500">
-              💡 Use{" "}
-              <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-700">
-                ←
-              </kbd>{" "}
-              and{" "}
-              <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-700">
-                →
-              </kbd>{" "}
-              arrow keys to navigate
-            </p>
-          </div>
-        )}
-
-        {/* View All Button */}
-        <div className="text-center mt-12">
-          <Link href="/courses">
-            <Button variant="outline" size="lg">
-              Explore All Sessions
-            </Button>
-          </Link>
-        </div>
       </div>
     </section>
   );

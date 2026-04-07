@@ -10,31 +10,12 @@ import type { Course } from "@/types";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 import { API_BASE_URL } from "@/lib/constants";
 import FeaturedCoursesCarousel from "@/components/FeaturedCoursesCarousel";
+import HeroSection from "@/components/HeroSection";
 
 export default function Home() {
   const router = useRouter();
   const { user, token, isAuthenticated } = useAuth();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
-
-  // Handler for Create Kuppi button
-  const handleCreateKuppi = (e: React.MouseEvent) => {
-    e.preventDefault();
-
-    if (!isAuthenticated) {
-      // Not logged in - go to registration
-      router.push("/auth/register");
-      return;
-    }
-
-    // Check if user is a tutor
-    if (user?.roles?.includes("tutor")) {
-      // User is a tutor - go to create course
-      router.push("/tutor/create-course");
-    } else {
-      // User is not a tutor - show modal
-      setRoleModalOpen(true);
-    }
-  };
 
   const categories = [
     {
@@ -86,89 +67,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="gradient-hero py-20 lg:py-28">
-        <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="animate-fade-in">
-              <Badge variant="primary" className="mb-6">
-                Sri Lanka's #1 University Student Platform
-              </Badge>
-              <h1 className="heading-1 text-gray-900 mb-6">
-                Kuppi Sessions & Academic Marketplace for University Students
-              </h1>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Join thousands of Sri Lankan university students. Access
-                peer-led kuppi sessions, master complex modules, and buy/sell
-                academic supplies - all in one platform.
-              </p>
-              <div className="mb-8 rounded-xl border border-primary-100 bg-white/80 p-4">
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  UniHub is a web platform for Sri Lankan university students to
-                  learn through peer-led kuppi sessions, teach and earn as
-                  tutors, and buy or sell academic essentials in one place.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-4 text-sm">
-                  <Link
-                    href="/privacy"
-                    className="text-primary-700 hover:text-primary-800 underline"
-                  >
-                    Privacy Policy
-                  </Link>
-                  <Link
-                    href="/terms"
-                    className="text-primary-700 hover:text-primary-800 underline"
-                  >
-                    Terms of Service
-                  </Link>
-                </div>
-              </div>
-              <div className="flex gap-4 flex-wrap">
-                <Link href="/courses">
-                  <Button variant="primary" size="lg">
-                    Browse Kuppi Sessions
-                  </Button>
-                </Link>
-                <button
-                  onClick={handleCreateKuppi}
-                  className="inline-flex items-center justify-center px-8 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Create Kuppi
-                </button>
-              </div>
-
-              {/* Trust Indicators */}
-              {/* <div className="mt-12 flex items-center gap-8 flex-wrap">
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 border-2 border-white"
-                    />
-                  ))}
-                </div>
-                <div>
-                  <div className="flex items-center gap-1 text-yellow-500 text-lg mb-1">
-                    {"★".repeat(5)}
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Trusted by 5,000+ university students
-                  </p>
-                </div>
-              </div> */}
-            </div>
-
-            <div className="relative animate-slide-up hidden lg:block">
-              <div className="relative z-10">
-                <img
-                  src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&h=500&fit=crop&q=80"
-                  alt="Sri Lankan University Students Learning"
-                  className="rounded-2xl shadow-2xl"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Stats Section */}
       <section className="py-12 bg-white border-y">
