@@ -242,7 +242,6 @@ export default function FeaturedCoursesCarousel() {
                       {/* Category Name Badge */}
                       {course.categoryObj?.name && (
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-lg">📚</span>
                           <Badge variant="primary" size="sm">
                             {course.categoryObj.name}
                           </Badge>
@@ -251,16 +250,6 @@ export default function FeaturedCoursesCarousel() {
                       {/* Fallback to faculty name if no categoryObj */}
                       {!course.categoryObj?.name && course.faculty?.name && (
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-lg">
-                            {{
-                              "IT & Computing": "💻",
-                              Engineering: "⚙️",
-                              Medicine: "🩺",
-                              "Business & Management": "💼",
-                              Science: "🔬",
-                              "Arts & Humanities": "📚",
-                            }[course.faculty.name] || "📚"}
-                          </span>
                           <Badge variant="primary" size="sm">
                             {course.faculty.name}
                           </Badge>

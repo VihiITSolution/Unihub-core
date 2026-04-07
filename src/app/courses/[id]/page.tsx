@@ -305,7 +305,9 @@ export default function CourseDetailsPage() {
               Courses
             </Link>
             <span className="text-gray-400">/</span>
-            <span className="text-gray-700 text-sm">{course.category}</span>
+            <span className="text-gray-700 text-sm">
+              {course.categoryObj?.name || course.category}
+            </span>
           </div>
         </div>
       </div>
