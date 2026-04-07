@@ -266,6 +266,12 @@ export default function FeaturedCoursesCarousel() {
                           : course.tutorName || "Unknown Instructor"}
                       </p>
 
+                      {/* Short Description */}
+                      {course.shortDescription && (
+                        <p className="text-gray-700 text-sm mb-3 line-clamp-3">
+                          {course.shortDescription}
+                        </p>
+                      )}
                       {/* Year/Level and Rating Tags */}
                       <div className="flex items-center gap-2 flex-wrap mb-3">
                         {course.year ? (

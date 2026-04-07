@@ -317,7 +317,14 @@ export default function CourseDetailsPage() {
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
               {course.title}
             </h1>
-            <p className="text-lg text-gray-600 mb-4">{course.description}</p>
+            {course.shortDescription && (
+              <p className="text-base text-gray-700 mb-2 italic">
+                {course.shortDescription}
+              </p>
+            )}
+            {course.description && (
+              <p className="text-lg text-gray-600 mb-4">{course.description}</p>
+            )}
 
             {/* About Course Section */}
             {course.aboutCourse && (
