@@ -74,14 +74,18 @@ export default function FeaturedCoursesCarousel() {
           const grouped: CoursesGrouped = {};
           const categorySet = new Set<string>();
 
-          coursesData.forEach((course: Course) => {
-            const categoryKey =
-              course.faculty?.name || course.category || "Other";
-            if (!grouped[categoryKey]) {
-              grouped[categoryKey] = [];
+          coursesData.forEach((course: any) => {
+            // Prefer category name from categoryObj if present
+            const categoryName =
+              course.categoryObj?.name ||
+              course.faculty?.name ||
+              course.category ||
+              "Other";
+            if (!grouped[categoryName]) {
+              grouped[categoryName] = [];
             }
-            grouped[categoryKey].push(course);
-            categorySet.add(categoryKey);
+            grouped[categoryName].push(course);
+            categorySet.add(categoryName);
           });
 
           setGroupedCourses(grouped);
@@ -235,7 +239,17 @@ export default function FeaturedCoursesCarousel() {
                     {/* Content */}
                     <div className="p-4 flex-1 flex flex-col">
                       {/* Faculty/Category */}
-                      {course.faculty ? (
+                      {/* Category Name Badge */}
+                      {course.categoryObj?.name && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg">📚</span>
+                          <Badge variant="primary" size="sm">
+                            {course.categoryObj.name}
+                          </Badge>
+                        </div>
+                      )}
+                      {/* Fallback to faculty name if no categoryObj */}
+                      {!course.categoryObj?.name && course.faculty?.name && (
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-lg">
                             {{
@@ -251,7 +265,7 @@ export default function FeaturedCoursesCarousel() {
                             {course.faculty.name}
                           </Badge>
                         </div>
-                      ) : null}
+                      )}
 
                       {/* Title */}
                       <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-sm group-hover/card:text-primary-600 transition-colors">
