@@ -69,12 +69,12 @@ export default function HeroSection() {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
             <div className="animate-fade-in">
-              <Badge
+              {/* <Badge
                 variant="primary"
                 className="mb-6 bg-white/10 text-white border border-white/20"
               >
                 🎓 Sri Lanka's Peer-Learning Platform
-              </Badge>
+              </Badge> */}
 
               <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
                 Master Your{" "}

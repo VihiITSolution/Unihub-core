@@ -86,14 +86,17 @@ export default function FeaturedCoursesCarousel() {
 
           setGroupedCourses(grouped);
 
-          // Create category tabs
-          const tabs: CategoryTab[] = [
+          // Create category tabs (limit to 5 total)
+          const allTabs: CategoryTab[] = [
             { id: "all", name: "All Categories" },
             ...Array.from(categorySet).map((cat) => ({
               id: cat.toLowerCase().replace(/\s+/g, "-"),
               name: cat,
             })),
           ];
+
+          // Limit to 5 categories
+          const tabs = allTabs.slice(0, 5);
 
           setCategories(tabs);
         }
@@ -169,10 +172,10 @@ export default function FeaturedCoursesCarousel() {
                       setActiveCategory(category.id);
                       setTimeout(checkScroll, 100);
                     }}
-                    className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all duration-300 ${
+                    className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all duration-300 bg-gray-100 text-gray-700 hover:bg-gray-200 ${
                       activeCategory === category.id
-                        ? "bg-primary-600 text-white shadow-lg"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "border-2 border-primary-600"
+                        : "border-2 border-transparent"
                     }`}
                   >
                     {category.name}
@@ -228,32 +231,6 @@ export default function FeaturedCoursesCarousel() {
                         }}
                       />
 
-                      {/* Rating Badge */}
-                      {course.rating && course.rating > 0 && (
-                        <div className="absolute top-3 left-3 bg-white rounded-lg px-3 py-1 shadow-md">
-                          <div className="flex items-center gap-1">
-                            <span className="font-bold text-gray-900">
-                              {Number(course.rating).toFixed(1)}
-                            </span>
-                            <span className="text-yellow-400">★</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Year/Level Badge */}
-                      {course.year ? (
-                        <Badge className="absolute top-3 right-3 bg-purple-600 text-white">
-                          Year {course.year}
-                        </Badge>
-                      ) : (
-                        course.level && (
-                          <Badge className="absolute top-3 right-3 bg-gray-900 text-white capitalize">
-                            {course.level}
-                          </Badge>
-                        )
-                      )}
-                    </div>
-
                     {/* Content */}
                     <div className="p-4 flex-1 flex flex-col">
                       {/* Faculty/Category */}
@@ -287,6 +264,26 @@ export default function FeaturedCoursesCarousel() {
                           ? `${course.tutor.firstName} ${course.tutor.lastName}`
                           : course.tutorName || "Unknown Instructor"}
                       </p>
+
+                      {/* Year/Level and Rating Tags */}
+                      <div className="flex items-center gap-2 flex-wrap mb-3">
+                        {course.year ? (
+                          <Badge className="bg-purple-100 text-purple-700 text-xs font-semibold">
+                            Year {course.year}
+                          </Badge>
+                        ) : (
+                          course.level && (
+                            <Badge className="bg-gray-200 text-gray-800 text-xs font-semibold capitalize">
+                              {course.level}
+                            </Badge>
+                          )
+                        )}
+                        {course.rating && course.rating > 0 && (
+                          <Badge className="bg-yellow-100 text-yellow-800 text-xs font-semibold">
+                            ⭐ {Number(course.rating).toFixed(1)}
+                          </Badge>
+                        )}
+                      </div>
 
                       {/* Rating and Reviews */}
                       <div className="flex items-center gap-2 mb-4 text-xs">
