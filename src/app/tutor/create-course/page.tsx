@@ -81,11 +81,16 @@ export default function CreateCoursePage() {
     try {
       const response = await fetch(`${API_BASE_URL}/categories`);
       const data = await response.json();
-      if (data.success) {
+      console.log("Fetched categories response:", data); // DEBUG
+      if (data.success && Array.isArray(data.data)) {
         setCategories(data.data);
+      } else {
+        setCategories([]);
+        console.error("Categories fetch failed or returned wrong format", data);
       }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
+      setCategories([]);
     }
   };
 
