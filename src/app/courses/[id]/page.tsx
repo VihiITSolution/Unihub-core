@@ -317,32 +317,11 @@ export default function CourseDetailsPage() {
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
               {course.title}
             </h1>
+
             {course.shortDescription && (
-              <p className="text-base text-gray-700 mb-2 italic">
+              <p className="text-base text-gray-700 mb-4 italic">
                 {course.shortDescription}
               </p>
-            )}
-            {course.description && (
-              <p className="text-lg text-gray-600 mb-4">{course.description}</p>
-            )}
-
-            {/* About Course Section */}
-            {course.aboutCourse && (
-              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  📚 About This Course
-                </h3>
-                <div className="prose prose-sm max-w-none text-gray-700 space-y-3">
-                  {course.aboutCourse.split("\n").map(
-                    (paragraph, idx) =>
-                      paragraph.trim() && (
-                        <p key={idx} className="text-gray-700 leading-relaxed">
-                          {paragraph}
-                        </p>
-                      ),
-                  )}
-                </div>
-              </div>
             )}
 
             {/* Quick Stats */}
@@ -414,15 +393,15 @@ export default function CourseDetailsPage() {
             </div>
 
             {/* About Tab */}
-            {activeTab === "about" && (
+            {activeTab === "about" && course.aboutCourse && (
               <div className="space-y-8">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">
                     About This Course
                   </h2>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {course.description}
-                  </p>
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {course.aboutCourse}
+                  </div>
                 </div>
               </div>
             )}
