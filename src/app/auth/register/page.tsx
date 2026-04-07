@@ -187,8 +187,6 @@ export default function RegisterPage() {
                 studyingArea: formData.studyingArea || undefined,
                 currentYear: formData.currentYear,
                 currentSemester: formData.currentSemester,
-                studentIdNumber: formData.studentIdNumber || undefined,
-                currentAddress: formData.currentAddress || undefined,
                 phoneNumber: formData.phoneNumber || undefined,
               }
             : undefined,
