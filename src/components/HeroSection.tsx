@@ -4,10 +4,39 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button, Badge } from "@/components/ui";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 export default function HeroSection() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const heroImages = [
+    {
+      url: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&h=600&fit=crop&q=80",
+      alt: "University students learning together",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1522202176988-696231b784d3?w=600&h=600&fit=crop&q=80",
+      alt: "Students studying with books",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1516321318463-e06db6dc985c?w=600&h=600&fit=crop&q=80",
+      alt: "Students working on assignments",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&h=600&fit=crop&q=80",
+      alt: "University students in classroom",
+    },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 4000); // Change image every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
 
   const handleCreateKuppi = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -36,8 +65,8 @@ export default function HeroSection() {
       </div>
 
       <div className="relative z-10">
-        <div className="container-custom py-16 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="container-custom py-8 lg:py-20">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
             <div className="animate-fade-in">
               <Badge
@@ -195,57 +224,72 @@ export default function HeroSection() {
               </div>
             </div>
 
-            {/* Right Visual Section */}
-            <div className="relative hidden lg:block">
-              <div className="relative">
-                {/* Main image card */}
-                <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-2xl p-8 backdrop-blur-md border border-white/20 shadow-2xl">
-                  <div className="aspect-square bg-gradient-to-br from-primary-400 to-blue-600 rounded-xl overflow-hidden">
-                    <img
-                      src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&h=600&fit=crop&q=80"
-                      alt="Students learning in Kuppi session"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src =
-                          "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=600&fit=crop&q=80";
-                      }}
+            {/* Right Visual Section - Dynamic Image Carousel */}
+            <div className="relative hidden lg:block h-96 lg:h-[500px]">
+              {/* Images Container */}
+              <div className="relative w-full h-full overflow-hidden rounded-2xl">
+                {heroImages.map((image, index) => (
+                  <img
+                    key={index}
+                    src={image.url}
+                    alt={image.alt}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                      index === currentImageIndex ? "opacity-100" : "opacity-0"
+                    }`}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src =
+                        "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=600&fit=crop&q=80";
+                    }}
+                  />
+                ))}
+
+                {/* Image indicators - dots at bottom */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+                  {heroImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                        index === currentImageIndex
+                          ? "bg-white w-8"
+                          : "bg-white/50 hover:bg-white/75"
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
                     />
-                  </div>
+                  ))}
+                </div>
+              </div>
 
-                  {/* Floating stats cards */}
-                  <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-2xl p-6 max-w-xs">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl">
-                        👥
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">5K+</p>
-                        <p className="text-sm text-gray-600">Active Students</p>
-                      </div>
-                    </div>
+              {/* Floating stats cards */}
+              <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-2xl p-6 max-w-xs">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl">
+                    👥
                   </div>
-
-                  <div className="absolute -top-6 -right-6 bg-white rounded-2xl shadow-2xl p-6 max-w-xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center text-2xl">
-                        ⭐
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">
-                          4.8/5
-                        </p>
-                        <p className="text-sm text-gray-600">Avg. Rating</p>
-                      </div>
-                    </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">5K+</p>
+                    <p className="text-sm text-gray-600">Active Students</p>
                   </div>
                 </div>
+              </div>
 
-                {/* Decorative circles */}
-                <div className="absolute -z-10 inset-0">
-                  <div className="absolute top-1/2 right-1/2 w-64 h-64 bg-primary-400 opacity-20 rounded-full blur-3xl"></div>
-                  <div className="absolute bottom-0 -right-20 w-48 h-48 bg-blue-400 opacity-20 rounded-full blur-3xl"></div>
+              <div className="absolute -top-6 -right-6 bg-white rounded-2xl shadow-2xl p-6 max-w-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center text-2xl">
+                    ⭐
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">4.8/5</p>
+                    <p className="text-sm text-gray-600">Avg. Rating</p>
+                  </div>
                 </div>
+              </div>
+
+              {/* Decorative circles */}
+              <div className="absolute -z-10 inset-0">
+                <div className="absolute top-1/2 right-1/2 w-64 h-64 bg-primary-400 opacity-20 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 -right-20 w-48 h-48 bg-blue-400 opacity-20 rounded-full blur-3xl"></div>
               </div>
             </div>
           </div>
