@@ -65,7 +65,7 @@ export default function HeroSection() {
       </div>
 
       <div className="relative z-10">
-        <div className="container-custom py-8 lg:py-20">
+        <div className="container-custom pt-0 pb-8 lg:pb-20">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
             <div className="animate-fade-in">
@@ -185,13 +185,9 @@ export default function HeroSection() {
               {/* CTA Buttons */}
               <div className="flex gap-4 flex-wrap">
                 <Link href="/courses">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="bg-white text-primary-600 hover:bg-gray-100 shadow-lg"
-                  >
+                  <button className="inline-flex items-center justify-center px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition-colors border border-white/20 backdrop-blur-sm">
                     Browse Kuppi Sessions
-                  </Button>
+                  </button>
                 </Link>
                 <button
                   onClick={handleCreateKuppi}
