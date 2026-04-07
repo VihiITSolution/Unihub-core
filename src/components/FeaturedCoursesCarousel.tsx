@@ -230,6 +230,7 @@ export default function FeaturedCoursesCarousel() {
                             "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&h=280&fit=crop&q=80";
                         }}
                       />
+                    </div>
 
                     {/* Content */}
                     <div className="p-4 flex-1 flex flex-col">
