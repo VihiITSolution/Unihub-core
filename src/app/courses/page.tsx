@@ -403,6 +403,10 @@ export default function CoursesPage() {
                           <Badge variant="primary" size="sm" className="mb-2">
                             {course.faculty.name}
                           </Badge>
+                        ) : course.categoryObj?.name ? (
+                          <Badge variant="primary" size="sm" className="mb-2">
+                            {course.categoryObj.name}
+                          </Badge>
                         ) : (
                           course.category && (
                             <Badge variant="primary" size="sm" className="mb-2">
