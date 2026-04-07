@@ -41,7 +41,7 @@ export default function HeroSection() {
             {/* Left Content */}
             <div className="animate-fade-in">
               <Badge
-                variant="secondary"
+                variant="primary"
                 className="mb-6 bg-white/10 text-white border border-white/20"
               >
                 🎓 Sri Lanka's Peer-Learning Platform
