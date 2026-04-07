@@ -49,8 +49,6 @@ interface FormData {
   studyingArea: string;
   currentYear: number;
   currentSemester: number;
-  studentIdNumber: string;
-  currentAddress: string;
 }
 
 const initialFormData: FormData = {
@@ -67,8 +65,6 @@ const initialFormData: FormData = {
   studyingArea: "",
   currentYear: 1,
   currentSemester: 1,
-  studentIdNumber: "",
-  currentAddress: "",
 };
 
 export default function RegisterPage() {
@@ -580,61 +576,7 @@ export default function RegisterPage() {
                       </div>
                     </div>
 
-                    <div>
-                      <label htmlFor="studentIdNumber" className="block text-sm font-medium text-gray-300 mb-1">
-                        Student ID <span className="text-gray-500">(optional)</span>
-                      </label>
-                      <input
-                        id="studentIdNumber"
-                        name="studentIdNumber"
-                        type="text"
-                        value={formData.studentIdNumber}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 bg-navy-800 border border-navy-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
-                        placeholder="e.g., 2021CS001"
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="currentAddress" className="block text-sm font-medium text-gray-300 mb-1">
-                        Current Address <span className="text-gray-500">(optional)</span>
-                      </label>
-                      <textarea
-                        id="currentAddress"
-                        name="currentAddress"
-                        rows={2}
-                        value={formData.currentAddress}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 bg-navy-800 border border-navy-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all resize-none"
-                        placeholder="Your current address"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Vendor Account - Simple message */}
-                    <div className="text-center py-8 px-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                      <div className="text-5xl mb-4">🏪</div>
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        Vendor Account Setup
-                      </h3>
-                      <p className="text-gray-400 mb-4">
-                        After creating your account, you'll be redirected to complete your vendor shop profile with business details, contact information, and payment settings.
-                      </p>
-                      <div className="text-left max-w-sm mx-auto bg-navy-800/50 p-4 rounded-lg">
-                        <p className="text-sm font-medium text-gray-300 mb-2">You'll need to provide:</p>
-                        <ul className="text-sm text-gray-400 space-y-1">
-                          <li>• Shop name and description</li>
-                          <li>• Business contact details</li>
-                          <li>• Address information</li>
-                          <li>• Bank account for payments</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Terms and Conditions */}
+                    {/* Terms and Conditions */}
                 <div className="flex items-start mt-6">
                   <input
                     id="terms"
