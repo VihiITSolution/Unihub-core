@@ -26,7 +26,7 @@ export default function EditCoursePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"details" | "materials">(
-    "details"
+    "details",
   );
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -34,7 +34,9 @@ export default function EditCoursePage() {
 
   const [formData, setFormData] = useState({
     title: "",
+    shortDescription: "",
     description: "",
+    aboutCourse: "",
     price: "",
     category: "",
     level: "beginner",
@@ -96,7 +98,9 @@ export default function EditCoursePage() {
 
         setFormData({
           title: course.title || "",
+          shortDescription: course.shortDescription || "",
           description: course.description || "",
+          aboutCourse: course.aboutCourse || "",
           price: course.price != null ? course.price.toString() : "",
           category: course.category || "",
           level: course.level || "beginner",
@@ -120,7 +124,7 @@ export default function EditCoursePage() {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -163,7 +167,7 @@ export default function EditCoursePage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -177,7 +181,7 @@ export default function EditCoursePage() {
               url: content.url,
               duration: content.duration,
               order: content.order,
-            }))
+            })),
           );
         }
       }
@@ -268,7 +272,7 @@ export default function EditCoursePage() {
         materialFormData.append("type", material.type);
         materialFormData.append(
           "order",
-          materials.indexOf(material).toString()
+          materials.indexOf(material).toString(),
         );
 
         if (material.duration) {
@@ -319,7 +323,7 @@ export default function EditCoursePage() {
   };
 
   const hasUnsavedMaterials = materials.some(
-    (material) => Boolean(material.file) && !material.url
+    (material) => Boolean(material.file) && !material.url,
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -333,7 +337,9 @@ export default function EditCoursePage() {
       // Create FormData for file upload
       const formDataToSend = new FormData();
       formDataToSend.append("title", formData.title);
+      formDataToSend.append("shortDescription", formData.shortDescription);
       formDataToSend.append("description", formData.description);
+      formDataToSend.append("aboutCourse", formData.aboutCourse);
       formDataToSend.append("price", formData.price);
       formDataToSend.append("category", formData.category);
       formDataToSend.append("level", formData.level);
@@ -345,16 +351,13 @@ export default function EditCoursePage() {
       }
 
       // Use fetch directly for multipart/form-data
-      const response = await fetch(
-        `${API_BASE_URL}/courses/${courseId}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formDataToSend,
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/courses/${courseId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formDataToSend,
+      });
 
       const result = await response.json();
 
@@ -466,6 +469,24 @@ export default function EditCoursePage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Short Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="shortDescription"
+                    required
+                    maxLength={500}
+                    value={formData.shortDescription}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="A brief summary for the course card (max 500 characters)"
+                  />
+                  <div className="text-xs text-gray-500 text-right">
+                    {formData.shortDescription.length}/500
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
@@ -476,6 +497,19 @@ export default function EditCoursePage() {
                     rows={5}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Describe what students will learn in this course..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    About Course
+                  </label>
+                  <textarea
+                    name="aboutCourse"
+                    value={formData.aboutCourse}
+                    onChange={handleChange}
+                    rows={5}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Detailed information, syllabus, learning points, etc."
                   />
                 </div>
 
@@ -785,7 +819,7 @@ export default function EditCoursePage() {
                     onChange={(e) =>
                       handleMaterialChange(
                         "type",
-                        e.target.value as "video" | "pdf"
+                        e.target.value as "video" | "pdf",
                       )
                     }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
