@@ -319,6 +319,25 @@ export default function CourseDetailsPage() {
             </h1>
             <p className="text-lg text-gray-600 mb-4">{course.description}</p>
 
+            {/* About Course Section */}
+            {course.aboutCourse && (
+              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  📚 About This Course
+                </h3>
+                <div className="prose prose-sm max-w-none text-gray-700 space-y-3">
+                  {course.aboutCourse.split("\n").map(
+                    (paragraph, idx) =>
+                      paragraph.trim() && (
+                        <p key={idx} className="text-gray-700 leading-relaxed">
+                          {paragraph}
+                        </p>
+                      ),
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Quick Stats */}
             <div className="flex flex-wrap gap-6 items-center mb-6">
               <div className="flex items-center gap-2">

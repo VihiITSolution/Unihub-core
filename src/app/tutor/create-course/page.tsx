@@ -7,6 +7,7 @@ import { courseService } from "@/services/course.service";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { useRoleCheck } from "@/hooks/useRoleCheck";
 import { Loading } from "@/components/ui";
+import type { Category } from "@/types";
 
 interface CourseMaterial {
   id: string;
@@ -31,11 +32,19 @@ export default function CreateCoursePage() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
+  // Categories management
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [categoryLoading, setCategoryLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     title: "",
+    shortDescription: "",
     description: "",
+    aboutCourse: "",
     price: "",
-    category: "",
+    categoryId: "",
     level: "beginner" as "beginner" | "intermediate" | "advanced",
     duration: "",
   });
@@ -53,18 +62,7 @@ export default function CreateCoursePage() {
     process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 5000,
   );
 
-  const categories = [
-    "Programming",
-    "Web Development",
-    "Data Science",
-    "Mobile Development",
-    "Design",
-    "Business",
-    "Marketing",
-    "Mathematics",
-    "Personal Development",
-  ];
-
+  // Fetch categories on mount
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/auth/login");
@@ -75,7 +73,60 @@ export default function CreateCoursePage() {
       router.push("/");
       return;
     }
+
+    fetchCategories();
   }, [isAuthenticated, hasRole, router]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/categories`);
+      const data = await response.json();
+      if (data.success) {
+        setCategories(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) {
+      alert("Please enter a category name");
+      return;
+    }
+
+    setCategoryLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/categories`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: newCategoryName }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setCategories([...categories, data.data]);
+        setFormData((prev) => ({
+          ...prev,
+          categoryId: data.data.id.toString(),
+        }));
+        setShowAddCategory(false);
+        setNewCategoryName("");
+        alert("Category created successfully!");
+      } else {
+        alert(data.message || "Failed to create category");
+      }
+    } catch (error) {
+      console.error("Failed to create category:", error);
+      alert("Failed to create category");
+    } finally {
+      setCategoryLoading(false);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -179,6 +230,11 @@ export default function CreateCoursePage() {
       return;
     }
 
+    if (!formData.categoryId) {
+      setError("Please select or create a category");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -186,9 +242,11 @@ export default function CreateCoursePage() {
       // Create FormData for multipart/form-data
       const formDataToSend = new FormData();
       formDataToSend.append("title", formData.title);
-      formDataToSend.append("description", formData.description);
+      formDataToSend.append("description", formData.shortDescription);
+      formDataToSend.append("shortDescription", formData.shortDescription);
+      formDataToSend.append("aboutCourse", formData.aboutCourse || "");
       formDataToSend.append("price", formData.price);
-      formDataToSend.append("category", formData.category);
+      formDataToSend.append("categoryId", formData.categoryId);
       formDataToSend.append("level", formData.level);
       formDataToSend.append("duration", formData.duration);
       formDataToSend.append("thumbnail", thumbnailFile);
@@ -383,16 +441,35 @@ export default function CreateCoursePage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Description <span className="text-red-500">*</span>
+                    Short Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    name="description"
+                    name="shortDescription"
                     required
-                    value={formData.description}
+                    value={formData.shortDescription}
                     onChange={handleChange}
-                    rows={5}
+                    rows={3}
+                    maxLength={500}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Describe what students will learn in this course..."
+                    placeholder="Brief description (shown on course listings)..."
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    {formData.shortDescription.length}/500 characters
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    About Course{" "}
+                    <span className="text-gray-500">(optional)</span>
+                  </label>
+                  <textarea
+                    name="aboutCourse"
+                    value={formData.aboutCourse}
+                    onChange={handleChange}
+                    rows={6}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Detailed course information including lessons breakdown, learning points, difficulty level, requirements, etc..."
                   />
                 </div>
 
@@ -401,20 +478,65 @@ export default function CreateCoursePage() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Category <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      name="category"
-                      required
-                      value={formData.category}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">Select a category</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex gap-2">
+                      <select
+                        name="categoryId"
+                        required
+                        value={formData.categoryId}
+                        onChange={handleChange}
+                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Select a category</option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddCategory(!showAddCategory)}
+                        className="px-4 py-3 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 font-medium"
+                      >
+                        + Add New
+                      </button>
+                    </div>
+                    {showAddCategory && (
+                      <div className="mt-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <input
+                          type="text"
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          placeholder="Enter category name..."
+                          className="w-full px-3 py-2 border border-blue-300 rounded mb-3"
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter") {
+                              handleAddCategory();
+                            }
+                          }}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleAddCategory}
+                            disabled={categoryLoading}
+                            className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {categoryLoading ? "Creating..." : "Create"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddCategory(false);
+                              setNewCategoryName("");
+                            }}
+                            className="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>

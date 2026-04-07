@@ -92,11 +92,27 @@ export interface AuthState {
   isLoading: boolean;
 }
 
+// Category types
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  isActive: boolean;
+  createdByTutorId?: number;
+  creator?: User;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Course types
 export interface Course {
   id: string;
   title: string;
   description: string;
+  shortDescription?: string;
+  aboutCourse?: string;
   thumbnail: string;
   price: number;
   tutorId: string;
@@ -110,7 +126,9 @@ export interface Course {
     profileImage?: string;
     bio?: string;
   };
+  categoryId?: number;
   category: string;
+  categoryObj?: Category;
   level: "beginner" | "intermediate" | "advanced";
   duration: number; // in minutes
   year?: number;
