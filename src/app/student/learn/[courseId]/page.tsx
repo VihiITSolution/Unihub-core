@@ -536,19 +536,13 @@ export default function LearnPage() {
               {currentContent.type === "video" && currentContent.url && (
                 <div className="bg-black rounded-lg overflow-hidden mb-6">
                   <div className="aspect-video w-full">
-                    <iframe
-                      src={getEmbedUrl(
+                    <YouTubePlayer
+                      embedUrl={getEmbedUrl(
                         currentContent.url,
                         currentContent.youtubeVideoId,
                       )}
-                      className="w-full h-full"
-                      allowFullScreen
                       title={currentContent.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      frameBorder="0"
-                      referrerPolicy="strict-origin-when-cross-origin"
-                      loading="lazy"
-                    ></iframe>
+                    />
                   </div>
                 </div>
               )}
