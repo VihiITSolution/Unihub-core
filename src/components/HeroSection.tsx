@@ -205,7 +205,7 @@ export default function HeroSection() {
                   {[
                     "University of Colombo",
                     "University of Moratuwa",
-                    "Colombo Medical College",
+                    "SLIIT",
                   ].map((uni, i) => (
                     <div
                       key={i}
