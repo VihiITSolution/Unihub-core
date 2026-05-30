@@ -14,13 +14,11 @@ export default function CourseDetailsPage() {
   const courseId = params?.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
-  const [activeTab, setActiveTab] = useState<"about" | "reviews">("about");
 
   useEffect(() => {
     if (courseId) {
@@ -64,24 +62,6 @@ export default function CourseDetailsPage() {
         if (contentData.success && contentData.data) {
           setContents(contentData.data.contents || []);
         }
-      }
-
-      // Fetch reviews from API
-      try {
-        const reviewsResponse = await fetch(
-          `${API_BASE_URL}/reviews/course/${courseId}?limit=10`,
-        );
-
-        if (reviewsResponse.ok) {
-          const reviewsData = await reviewsResponse.json();
-          if (reviewsData.success && Array.isArray(reviewsData.data)) {
-            setReviews(reviewsData.data);
-          } else if (reviewsData.data?.reviews) {
-            setReviews(reviewsData.data.reviews);
-          }
-        }
-      } catch (reviewError) {
-        console.error("Failed to load reviews:", reviewError);
       }
 
       // Check if user is enrolled (if authenticated)
@@ -193,18 +173,6 @@ export default function CourseDetailsPage() {
     );
   };
 
-  const averageRating =
-    reviews.length > 0
-      ? (
-          reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
-        ).toFixed(1)
-      : course?.rating || 0;
-
-  const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
-    star,
-    count: reviews.filter((r) => r.rating === star).length,
-  }));
-
   if (loading) {
     return (
       <div className="container-custom py-12">
@@ -270,7 +238,7 @@ export default function CourseDetailsPage() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                🎉 Successfully Enrolled!
+                Successfully Enrolled!
               </h2>
               <p className="text-gray-600 mb-4">
                 Welcome to{" "}
@@ -326,7 +294,6 @@ export default function CourseDetailsPage() {
           <div className="md:col-span-2">
             {course.isUpcoming && (
               <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-6 mb-6 text-center">
-                <div className="text-4xl mb-3">🚀</div>
                 <h2 className="text-2xl font-bold text-orange-900 mb-2">
                   Coming Soon!
                 </h2>
@@ -351,28 +318,15 @@ export default function CourseDetailsPage() {
             {/* Quick Stats */}
             <div className="flex flex-wrap gap-6 items-center mb-6">
               <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span key={star} className="text-lg text-yellow-400">
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <span className="font-semibold text-gray-900">
-                  {averageRating}
-                </span>
-                <span className="text-gray-600">
-                  ({reviews.length} reviews)
-                </span>
+                <span className="text-gray-700 text-sm">Average Rating:</span>
+                <span className="font-semibold text-gray-900">-</span>
               </div>
               <div className="flex items-center gap-2 text-gray-700">
-                <span>👥</span>
-                <span className="font-medium">
-                  {course.enrolledCount || course.enrollmentCount || 0} students
-                </span>
+                <span className="text-sm">Active Students:</span>
+                <span className="font-medium">10+</span>
               </div>
               <div className="flex items-center gap-2 text-gray-700">
-                <span>⏱️</span>
+                <span className="text-sm">Duration:</span>
                 <span className="font-medium">
                   {Math.floor((course.duration || 0) / 60)} hours
                 </span>
@@ -395,29 +349,8 @@ export default function CourseDetailsPage() {
                 <p className="text-xs text-gray-500">Instructor</p>
               </div>
             </div>
-            {/* Tab Navigation */}
-            <div className="flex gap-8 border-b border-gray-200 mb-8">
-              {["about", "reviews"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab as typeof activeTab)}
-                  className={`py-4 font-medium text-lg relative transition-colors ${
-                    activeTab === tab
-                      ? "text-primary-600"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  {tab === "about" && "About"}
-                  {tab === "reviews" && "Reviews"}
-                  {activeTab === tab && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-600"></div>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* About Tab */}
-            {activeTab === "about" && course.aboutCourse && (
+            {/* About Section */}
+            {course.aboutCourse && (
               <div className="space-y-8">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -425,137 +358,6 @@ export default function CourseDetailsPage() {
                   </h2>
                   <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                     {course.aboutCourse}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Reviews Tab */}
-            {activeTab === "reviews" && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                    Student Reviews
-                  </h2>
-
-                  {/* Rating Summary */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-8 mb-8">
-                    <div className="grid md:grid-cols-2 gap-8">
-                      {/* Overall Rating */}
-                      <div>
-                        <div className="flex items-start gap-4">
-                          <div>
-                            <div className="text-5xl font-bold text-gray-900 mb-2">
-                              {averageRating}
-                            </div>
-                            <div className="flex gap-1 mb-4">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <span
-                                  key={star}
-                                  className={`text-2xl ${
-                                    star <= Math.round(Number(averageRating))
-                                      ? "text-yellow-400"
-                                      : "text-gray-300"
-                                  }`}
-                                >
-                                  ★
-                                </span>
-                              ))}
-                            </div>
-                            <p className="text-gray-600">
-                              Based on {reviews.length} reviews
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Rating Distribution */}
-                      <div className="space-y-3">
-                        {ratingDistribution.map(({ star, count }) => (
-                          <div key={star} className="flex items-center gap-3">
-                            <span className="text-gray-600 font-medium min-w-fit">
-                              {star} ★
-                            </span>
-                            <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-sm">
-                              <div
-                                className="bg-yellow-400 h-2 rounded-full transition-all"
-                                style={{
-                                  width: `${
-                                    reviews.length > 0
-                                      ? (count / reviews.length) * 100
-                                      : 0
-                                  }%`,
-                                }}
-                              ></div>
-                            </div>
-                            <span className="text-gray-600 text-sm min-w-fit">
-                              {count}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Individual Reviews */}
-                  <div className="space-y-6">
-                    {reviews && reviews.length > 0 ? (
-                      reviews.map((review) => (
-                        <div
-                          key={review.id}
-                          className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition"
-                        >
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={
-                                  review.user?.profilePhoto ||
-                                  review.userImage ||
-                                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                    review.userName || "User",
-                                  )}&background=random`
-                                }
-                                alt={review.userName || "Reviewer"}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                              <div>
-                                <h4 className="font-semibold text-gray-900">
-                                  {review.user?.firstName &&
-                                  review.user?.lastName
-                                    ? `${review.user.firstName} ${review.user.lastName}`
-                                    : review.userName || "Anonymous"}
-                                </h4>
-                                <p className="text-sm text-gray-500">
-                                  {new Date(
-                                    review.createdAt,
-                                  ).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                            <div>{renderStars(review.rating)}</div>
-                          </div>
-
-                          {review.title && (
-                            <h5 className="font-semibold text-gray-900 mb-2">
-                              {review.title}
-                            </h5>
-                          )}
-                          {review.comment && (
-                            <p className="text-gray-700 mb-4 leading-relaxed">
-                              {review.comment}
-                            </p>
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-12 text-gray-500">
-                        No reviews yet. Be the first to review this course!
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -596,7 +398,7 @@ export default function CourseDetailsPage() {
                     onClick={handleEnroll}
                     className="btn-primary w-full flex items-center justify-center gap-2 hover:shadow-lg transition-all text-lg py-3 bg-orange-500 hover:bg-orange-600"
                   >
-                    🔔 Notify Me
+                    Notify Me
                   </button>
                 ) : isEnrolled ? (
                   <button

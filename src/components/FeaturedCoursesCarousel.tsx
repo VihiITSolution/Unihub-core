@@ -279,7 +279,7 @@ export default function FeaturedCoursesCarousel() {
                       <div className="flex items-center gap-2 flex-wrap mb-3">
                         {course.isUpcoming && (
                           <Badge className="bg-orange-100 text-orange-800 text-xs font-semibold">
-                            🚀 UPCOMING
+                            UPCOMING
                           </Badge>
                         )}
                         {course.year ? (
@@ -295,7 +295,7 @@ export default function FeaturedCoursesCarousel() {
                         )}
                         {course.rating && course.rating > 0 && (
                           <Badge className="bg-yellow-100 text-yellow-800 text-xs font-semibold">
-                            ⭐ {Number(course.rating).toFixed(1)}
+                            {Number(course.rating).toFixed(1)} Rating
                           </Badge>
                         )}
                       </div>
@@ -335,7 +335,7 @@ export default function FeaturedCoursesCarousel() {
                               }
                             }}
                           >
-                            🔔 Notify Me
+                            Notify Me
                           </Button>
                         ) : user && course.tutorId === user.id ? (
                           <Link href={`/tutor/edit-course/${course.id}`}>

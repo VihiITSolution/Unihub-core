@@ -377,7 +377,7 @@ export default function CoursesPage() {
                             variant="warning"
                             className="absolute top-3 left-3 bg-orange-400 text-white font-bold"
                           >
-                            🚀 UPCOMING
+                            UPCOMING
                           </Badge>
                           {course.year ? (
                             <Badge

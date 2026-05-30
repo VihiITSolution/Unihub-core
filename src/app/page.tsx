@@ -20,48 +20,42 @@ export default function Home() {
   const categories = [
     {
       name: "IT & Computing",
-      icon: "💻",
       courses: 312,
       color: "bg-purple-100 text-purple-700",
     },
     {
       name: "Engineering",
-      icon: "⚙️",
       courses: 245,
       color: "bg-blue-100 text-blue-700",
     },
     {
       name: "Medicine",
-      icon: "🩺",
       courses: 189,
       color: "bg-green-100 text-green-700",
     },
 
     {
       name: "Business & Management",
-      icon: "💼",
       courses: 198,
       color: "bg-pink-100 text-pink-700",
     },
     {
       name: "Science",
-      icon: "🔬",
       courses: 156,
       color: "bg-orange-100 text-orange-700",
     },
     {
       name: "Arts & Humanities",
-      icon: "📚",
       courses: 134,
       color: "bg-indigo-100 text-indigo-700",
     },
   ];
 
   const stats = [
-    { value: "5K+", label: "Active Students" },
-    { value: "50+", label: "Student Tutors" },
-    { value: "100+", label: "Kuppi Sessions" },
-    { value: "4.8/5", label: "Average Rating" },
+    { value: "10+", label: "Active Students" },
+    { value: "5+", label: "Student Tutors" },
+    { value: "3+", label: "Kuppi Sessions (Upcoming)" },
+    { value: "-", label: "Average Rating" },
   ];
 
   return (
