@@ -457,7 +457,11 @@ export default function CoursesPage() {
                         <div className="flex items-center justify-between pt-4 border-t">
                           <div>
                             <span className="text-2xl font-bold text-gray-900">
-                              Rs. {course.price}
+                              {course.price === 0 ||
+                              course.price === "0" ||
+                              parseFloat(course.price) === 0
+                                ? "FREE"
+                                : `Rs. ${course.price}`}
                             </span>
                           </div>
                           {user && course.tutorId === user.id ? (

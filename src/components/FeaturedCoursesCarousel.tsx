@@ -312,7 +312,11 @@ export default function FeaturedCoursesCarousel() {
                       {/* Price and Enroll Button */}
                       <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
                         <span className="text-lg font-bold text-gray-900">
-                          Rs. {course.price}
+                          {course.price === 0 ||
+                          course.price === "0" ||
+                          parseFloat(course.price) === 0
+                            ? "FREE"
+                            : `Rs. ${course.price}`}
                         </span>
                         {user && course.tutorId === user.id ? (
                           <Link href={`/tutor/edit-course/${course.id}`}>
