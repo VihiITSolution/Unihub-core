@@ -126,6 +126,14 @@ export default function CourseDetailsPage() {
   };
 
   const handleEnroll = async () => {
+    // Check if course is upcoming
+    if (course?.isUpcoming) {
+      alert(
+        `${course.title} is coming soon! We'll notify you when it's available.`,
+      );
+      return;
+    }
+
     // Check if user is logged in
     if (!isAuthenticated) {
       router.push("/auth/login");
@@ -316,6 +324,20 @@ export default function CourseDetailsPage() {
         <div className="grid md:grid-cols-3 gap-4">
           {/* Main Content */}
           <div className="md:col-span-2">
+            {course.isUpcoming && (
+              <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-6 mb-6 text-center">
+                <div className="text-4xl mb-3">🚀</div>
+                <h2 className="text-2xl font-bold text-orange-900 mb-2">
+                  Coming Soon!
+                </h2>
+                <p className="text-orange-700 mb-4">
+                  This course is currently under preparation and will be
+                  available soon. Click "Notify Me" below to get notified as
+                  soon as it launches.
+                </p>
+              </div>
+            )}
+
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
               {course.title}
             </h1>
@@ -569,7 +591,14 @@ export default function CourseDetailsPage() {
                   </div>
                 </div>
 
-                {isEnrolled ? (
+                {course.isUpcoming ? (
+                  <button
+                    onClick={handleEnroll}
+                    className="btn-primary w-full flex items-center justify-center gap-2 hover:shadow-lg transition-all text-lg py-3 bg-orange-500 hover:bg-orange-600"
+                  >
+                    🔔 Notify Me
+                  </button>
+                ) : isEnrolled ? (
                   <button
                     onClick={handleEnroll}
                     className="btn-primary w-full flex items-center justify-center gap-2 hover:shadow-lg transition-all text-lg py-3"

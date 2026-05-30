@@ -277,6 +277,11 @@ export default function FeaturedCoursesCarousel() {
                       )}
                       {/* Year/Level and Rating Tags */}
                       <div className="flex items-center gap-2 flex-wrap mb-3">
+                        {course.isUpcoming && (
+                          <Badge className="bg-orange-100 text-orange-800 text-xs font-semibold">
+                            🚀 UPCOMING
+                          </Badge>
+                        )}
                         {course.year ? (
                           <Badge className="bg-purple-100 text-purple-700 text-xs font-semibold">
                             Year {course.year}
@@ -317,7 +322,22 @@ export default function FeaturedCoursesCarousel() {
                             ? "FREE"
                             : `Rs. ${course.price}`}
                         </span>
-                        {user && course.tutorId === user.id ? (
+                        {course.isUpcoming ? (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="text-xs bg-orange-500 hover:bg-orange-600"
+                            onClick={() => {
+                              if (!user) {
+                                window.location.href = "/auth/login";
+                              } else {
+                                alert(`${course.title} is coming soon!`);
+                              }
+                            }}
+                          >
+                            🔔 Notify Me
+                          </Button>
+                        ) : user && course.tutorId === user.id ? (
                           <Link href={`/tutor/edit-course/${course.id}`}>
                             <Button
                               variant="secondary"

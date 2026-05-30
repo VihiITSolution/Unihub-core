@@ -142,6 +142,7 @@ export interface Course {
   rating?: number;
   reviewCount?: number;
   isEnrolled?: boolean;
+  isUpcoming?: boolean; // Mark course as upcoming
   approvalStatus?: "pending" | "approved" | "rejected" | "draft";
   rejectionReason?: string;
   createdAt: string;

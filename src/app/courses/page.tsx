@@ -353,148 +353,257 @@ export default function CoursesPage() {
               /* Courses Grid */
               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {courses.map((course) => (
-                  <Link key={course.id} href={`/courses/${course.id}`}>
-                    <Card hover padding="sm" className="h-full group">
-                      <div className="relative overflow-hidden rounded-lg mb-4">
-                        <img
-                          src={
-                            course.thumbnail &&
-                            course.thumbnail.startsWith("http")
-                              ? course.thumbnail
-                              : `${BACKEND_URL}${course.thumbnail || ""}`
-                          }
-                          alt={course.title}
-                          className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src =
-                              "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop&q=80";
-                          }}
-                        />
-                        {course.rating && course.rating > 0 && (
+                  <div key={course.id}>
+                    {course.isUpcoming ? (
+                      // Upcoming course - no link, just div
+                      <Card hover padding="sm" className="h-full group">
+                        <div className="relative overflow-hidden rounded-lg mb-4">
+                          <img
+                            src={
+                              course.thumbnail &&
+                              course.thumbnail.startsWith("http")
+                                ? course.thumbnail
+                                : `${BACKEND_URL}${course.thumbnail || ""}`
+                            }
+                            alt={course.title}
+                            className="w-full h-48 object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src =
+                                "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop&q=80";
+                            }}
+                          />
                           <Badge
                             variant="warning"
-                            className="absolute top-3 left-3 bg-yellow-400 text-gray-900"
+                            className="absolute top-3 left-3 bg-orange-400 text-white font-bold"
                           >
-                            ⭐ {Number(course.rating).toFixed(1)}
+                            🚀 UPCOMING
                           </Badge>
-                        )}
-                        {course.year ? (
-                          <Badge
-                            variant="gray"
-                            className="absolute top-3 right-3 bg-purple-100 text-purple-700 font-medium"
-                          >
-                            Year {course.year}
-                          </Badge>
-                        ) : (
-                          course.level && (
+                          {course.year ? (
                             <Badge
                               variant="gray"
-                              className="absolute top-3 right-3 bg-white capitalize"
+                              className="absolute top-3 right-3 bg-purple-100 text-purple-700 font-medium"
                             >
-                              {course.level}
+                              Year {course.year}
                             </Badge>
-                          )
-                        )}
-                      </div>
-
-                      <div className="p-4">
-                        {course.faculty ? (
-                          <Badge variant="primary" size="sm" className="mb-2">
-                            {course.faculty.name}
-                          </Badge>
-                        ) : course.categoryObj?.name ? (
-                          <Badge variant="primary" size="sm" className="mb-2">
-                            {course.categoryObj.name}
-                          </Badge>
-                        ) : (
-                          course.category && (
-                            <Badge variant="primary" size="sm" className="mb-2">
-                              {course.category}
-                            </Badge>
-                          )
-                        )}
-
-                        <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
-                          {course.title}
-                        </h3>
-
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                          {course.description}
-                        </p>
-
-                        <p className="text-sm text-gray-600 mb-3">
-                          By{" "}
-                          {course.tutorName ||
-                            (course.tutor
-                              ? `${course.tutor.firstName} ${course.tutor.lastName}`
-                              : "Instructor")}
-                        </p>
-
-                        <div className="flex items-center gap-3 text-sm text-gray-600 mb-4">
-                          <span className="flex items-center gap-1">
-                            <svg
-                              className="w-4 h-4"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-                            </svg>
-                            {(course.enrollmentCount || 0).toLocaleString()}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <svg
-                              className="w-4 h-4"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" />
-                            </svg>
-                            {formatDuration(course.duration)}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-4 border-t">
-                          <div>
-                            <span className="text-2xl font-bold text-gray-900">
-                              {course.price === 0 ||
-                              parseFloat(String(course.price)) === 0
-                                ? "FREE"
-                                : `Rs. ${course.price}`}
-                            </span>
-                          </div>
-                          {user && course.tutorId === user.id ? (
-                            <Link href={`/tutor/edit-course/${course.id}`}>
-                              <Button variant="secondary" size="sm">
-                                Manage
-                              </Button>
-                            </Link>
-                          ) : course.isEnrolled ? (
-                            <Link href={`/student/learn/${course.id}`}>
-                              <Button variant="success" size="sm">
-                                {course.price === 0
-                                  ? "View Course"
-                                  : "Watch Now"}
-                              </Button>
-                            </Link>
                           ) : (
-                            <Button
-                              variant={
-                                user && course.tutorId === user.id
-                                  ? "secondary"
-                                  : "primary"
-                              }
-                              size="sm"
-                            >
-                              {user && course.tutorId === user.id
-                                ? "View"
-                                : "Enroll Now"}
-                            </Button>
+                            course.level && (
+                              <Badge
+                                variant="gray"
+                                className="absolute top-3 right-3 bg-white capitalize"
+                              >
+                                {course.level}
+                              </Badge>
+                            )
                           )}
                         </div>
-                      </div>
-                    </Card>
-                  </Link>
+
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors mb-2 line-clamp-2">
+                            {course.title}
+                          </h3>
+
+                          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                            {course.shortDescription ||
+                              course.description ||
+                              "Course details coming soon"}
+                          </p>
+
+                          <div className="flex items-center justify-between text-gray-500 text-sm mb-4">
+                            <span className="flex items-center gap-1">
+                              <svg
+                                className="w-4 h-4"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" />
+                              </svg>
+                              Coming Soon
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-4 border-t">
+                            <div>
+                              <span className="text-2xl font-bold text-gray-900">
+                                FREE
+                              </span>
+                            </div>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => {
+                                if (!user) {
+                                  window.location.href = "/auth/login";
+                                } else {
+                                  alert(
+                                    `${course.title} is coming soon! Notify me when available.`,
+                                  );
+                                }
+                              }}
+                            >
+                              Notify Me
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ) : (
+                      // Regular course - with link
+                      <Link key={course.id} href={`/courses/${course.id}`}>
+                        <Card hover padding="sm" className="h-full group">
+                          <div className="relative overflow-hidden rounded-lg mb-4">
+                            <img
+                              src={
+                                course.thumbnail &&
+                                course.thumbnail.startsWith("http")
+                                  ? course.thumbnail
+                                  : `${BACKEND_URL}${course.thumbnail || ""}`
+                              }
+                              alt={course.title}
+                              className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src =
+                                  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop&q=80";
+                              }}
+                            />
+                            {course.rating && course.rating > 0 && (
+                              <Badge
+                                variant="warning"
+                                className="absolute top-3 left-3 bg-yellow-400 text-gray-900"
+                              >
+                                ⭐ {Number(course.rating).toFixed(1)}
+                              </Badge>
+                            )}
+                            {course.year ? (
+                              <Badge
+                                variant="gray"
+                                className="absolute top-3 right-3 bg-purple-100 text-purple-700 font-medium"
+                              >
+                                Year {course.year}
+                              </Badge>
+                            ) : (
+                              course.level && (
+                                <Badge
+                                  variant="gray"
+                                  className="absolute top-3 right-3 bg-white capitalize"
+                                >
+                                  {course.level}
+                                </Badge>
+                              )
+                            )}
+                          </div>
+
+                          <div className="p-4">
+                            {course.faculty ? (
+                              <Badge
+                                variant="primary"
+                                size="sm"
+                                className="mb-2"
+                              >
+                                {course.faculty.name}
+                              </Badge>
+                            ) : course.categoryObj?.name ? (
+                              <Badge
+                                variant="primary"
+                                size="sm"
+                                className="mb-2"
+                              >
+                                {course.categoryObj.name}
+                              </Badge>
+                            ) : (
+                              course.category && (
+                                <Badge
+                                  variant="primary"
+                                  size="sm"
+                                  className="mb-2"
+                                >
+                                  {course.category}
+                                </Badge>
+                              )
+                            )}
+
+                            <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
+                              {course.title}
+                            </h3>
+
+                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                              {course.description}
+                            </p>
+
+                            <p className="text-sm text-gray-600 mb-3">
+                              By{" "}
+                              {course.tutorName ||
+                                (course.tutor
+                                  ? `${course.tutor.firstName} ${course.tutor.lastName}`
+                                  : "Instructor")}
+                            </p>
+
+                            <div className="flex items-center gap-3 text-sm text-gray-600 mb-4">
+                              <span className="flex items-center gap-1">
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
+                                </svg>
+                                {(course.enrollmentCount || 0).toLocaleString()}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" />
+                                </svg>
+                                {formatDuration(course.duration)}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-4 border-t">
+                              <div>
+                                <span className="text-2xl font-bold text-gray-900">
+                                  {course.price === 0 ||
+                                  parseFloat(String(course.price)) === 0
+                                    ? "FREE"
+                                    : `Rs. ${course.price}`}
+                                </span>
+                              </div>
+                              {user && course.tutorId === user.id ? (
+                                <Link href={`/tutor/edit-course/${course.id}`}>
+                                  <Button variant="secondary" size="sm">
+                                    Manage
+                                  </Button>
+                                </Link>
+                              ) : course.isEnrolled ? (
+                                <Link href={`/student/learn/${course.id}`}>
+                                  <Button variant="success" size="sm">
+                                    {course.price === 0
+                                      ? "View Course"
+                                      : "Watch Now"}
+                                  </Button>
+                                </Link>
+                              ) : (
+                                <Button
+                                  variant={
+                                    user && course.tutorId === user.id
+                                      ? "secondary"
+                                      : "primary"
+                                  }
+                                  size="sm"
+                                >
+                                  {user && course.tutorId === user.id
+                                    ? "View"
+                                    : "Enroll Now"}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      </Link>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
