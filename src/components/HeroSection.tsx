@@ -70,10 +70,10 @@ export default function HeroSection() {
             {/* Left Content */}
             <div className="animate-fade-in">
               <Badge
-                              variant="primary"
-                              className="mb-6 bg-white/10 text-white border border-white/20" children={undefined}              >
-                
-              </Badge>
+                variant="primary"
+                className="mb-6 bg-white/10 text-white border border-white/20"
+                children={undefined}
+              ></Badge>
 
               <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
                 Master Your{" "}
@@ -259,11 +259,8 @@ export default function HeroSection() {
               {/* Floating stats cards */}
               <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-2xl p-6 max-w-xs">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl">
-                    👥
-                  </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">5K+</p>
+                    <p className="text-2xl font-bold text-gray-900">10+</p>
                     <p className="text-sm text-gray-600">Active Students</p>
                   </div>
                 </div>
@@ -271,11 +268,8 @@ export default function HeroSection() {
 
               <div className="absolute -top-6 -right-6 bg-white rounded-2xl shadow-2xl p-6 max-w-xs">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center text-2xl">
-                    ⭐
-                  </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">4.8/5</p>
+                    <p className="text-2xl font-bold text-gray-900">-</p>
                     <p className="text-sm text-gray-600">Avg. Rating</p>
                   </div>
                 </div>
