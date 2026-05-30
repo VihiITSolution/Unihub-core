@@ -563,8 +563,7 @@ export default function CourseDetailsPage() {
                 <div className="mb-4">
                   <div className="text-4xl font-bold text-primary-600 mb-2">
                     {course.price === 0 ||
-                    course.price === "0" ||
-                    parseFloat(course.price) === 0
+                    parseFloat(String(course.price)) === 0
                       ? "FREE"
                       : `Rs. ${course.price}`}
                   </div>

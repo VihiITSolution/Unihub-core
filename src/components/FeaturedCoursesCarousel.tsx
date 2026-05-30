@@ -313,8 +313,7 @@ export default function FeaturedCoursesCarousel() {
                       <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
                         <span className="text-lg font-bold text-gray-900">
                           {course.price === 0 ||
-                          course.price === "0" ||
-                          parseFloat(course.price) === 0
+                          parseFloat(String(course.price)) === 0
                             ? "FREE"
                             : `Rs. ${course.price}`}
                         </span>

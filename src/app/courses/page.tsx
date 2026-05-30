@@ -458,8 +458,7 @@ export default function CoursesPage() {
                           <div>
                             <span className="text-2xl font-bold text-gray-900">
                               {course.price === 0 ||
-                              course.price === "0" ||
-                              parseFloat(course.price) === 0
+                              parseFloat(String(course.price)) === 0
                                 ? "FREE"
                                 : `Rs. ${course.price}`}
                             </span>
