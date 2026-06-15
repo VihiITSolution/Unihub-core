@@ -69,12 +69,12 @@ export default function CreateListingPage() {
       if (response.success && response.data) {
         const item = response.data.item;
 
-        // Check if payment is required
-        if (item.requiresPayment && !item.isPaid) {
-          // Redirect to payment page
+        if (response.data.isFreeTrialAd) {
+          // Free trial ad submitted — awaiting admin approval, no payment needed
+          router.push("/vendor/listings?submitted=free-trial");
+        } else if (item.requiresPayment && !item.isPaid) {
           router.push(`/vendor/listings/${item.id}/pay`);
         } else {
-          // If no payment required or already paid, go to listings
           router.push("/vendor/listings");
         }
       } else {
@@ -111,6 +111,19 @@ export default function CreateListingPage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Create New Listing</h1>
         <p className="text-gray-600">Add a new product to your shop</p>
+      </div>
+
+      {/* Limited-time free trial promotion banner */}
+      <div className="mb-6 p-4 bg-green-50 border border-green-300 rounded-lg flex items-start gap-3">
+        <div className="text-2xl">🎉</div>
+        <div>
+          <p className="font-semibold text-green-800">Limited-Time Offer — Post Ads for Free!</p>
+          <p className="text-sm text-green-700 mt-1">
+            During our promotional period, every listing is <strong>completely free</strong> for
+            3 months. Your ad will be reviewed by our admin team and, once approved, will be
+            visible to everyone on the marketplace for 3 months at no cost.
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="card">
@@ -259,7 +272,7 @@ export default function CreateListingPage() {
             disabled={loading}
             className="btn-primary flex-1"
           >
-            {loading ? "Creating..." : "Create Listing"}
+            {loading ? "Submitting..." : "Submit for Review (Free)"}
           </button>
           <button
             type="button"
