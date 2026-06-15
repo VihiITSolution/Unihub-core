@@ -69,7 +69,7 @@ export default function CreateListingPage() {
       if (response.success && response.data) {
         const item = response.data.item;
 
-        if (response.data.isFreeTrialAd) {
+        if ((response.data as any).isFreeTrialAd) {
           // Free trial ad submitted — awaiting admin approval, no payment needed
           router.push("/vendor/listings?submitted=free-trial");
         } else if (item.requiresPayment && !item.isPaid) {

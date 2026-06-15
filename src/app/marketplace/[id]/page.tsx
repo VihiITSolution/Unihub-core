@@ -208,7 +208,7 @@ export default function ProductDetailsPage() {
                     className="px-4 py-2 hover:bg-gray-100 font-bold text-lg">+</button>
                 </div>
                 <span className="text-gray-600 text-sm">
-                  Total: Rs. {(product.price * quantity).toFixed(2)}
+                  Total: Rs. {(Number(product.price) * quantity).toFixed(2)}
                 </span>
               </div>
               {error && (

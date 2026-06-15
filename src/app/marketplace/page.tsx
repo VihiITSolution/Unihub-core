@@ -37,7 +37,6 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
       href={`/marketplace/${item.id}`}
       className="group block bg-white rounded-xl border border-gray-200 hover:border-primary-400 hover:shadow-lg transition-all duration-200 overflow-hidden"
     >
-      {/* Image / placeholder */}
       <div className="w-full aspect-[4/3] bg-gradient-to-br from-primary-400 to-secondary-400 flex items-center justify-center text-white text-5xl font-bold">
         {item.images && item.images.length > 0 ? (
           <img
@@ -51,7 +50,6 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
       </div>
 
       <div className="p-4">
-        {/* Category + condition */}
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
             {item.category}
@@ -69,13 +67,9 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
 
         <div className="flex items-center justify-between">
           <span className="text-xl font-bold text-primary-600">
-            ${Number(item.price).toFixed(2)}
+            Rs. {Number(item.price).toFixed(2)}
           </span>
-          <span
-            className={`text-xs font-medium ${
-              item.stock > 0 ? "text-green-600" : "text-red-500"
-            }`}
-          >
+          <span className={`text-xs font-medium ${item.stock > 0 ? "text-green-600" : "text-red-500"}`}>
             {item.stock > 0 ? `${item.stock} in stock` : "Out of stock"}
           </span>
         </div>
@@ -160,7 +154,6 @@ export default function MarketplacePage() {
 
   return (
     <div className="container-custom py-8">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Marketplace</h1>
         <p className="text-gray-600">
@@ -168,7 +161,6 @@ export default function MarketplacePage() {
         </p>
       </div>
 
-      {/* Search bar */}
       <form onSubmit={handleSearch} className="flex gap-3 mb-8">
         <input
           type="text"
@@ -181,68 +173,46 @@ export default function MarketplacePage() {
           Search
         </button>
         {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="btn-outline px-4 text-sm"
-          >
+          <button type="button" onClick={clearFilters} className="btn-outline px-4 text-sm">
             Clear
           </button>
         )}
       </form>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Filters sidebar */}
         <aside className="w-full lg:w-64 shrink-0">
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-6">
             <h2 className="font-semibold text-gray-900">Filters</h2>
 
-            {/* Category */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
               <select
                 value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value);
-                  handleFilterChange();
-                }}
+                onChange={(e) => { setCategory(e.target.value); handleFilterChange(); }}
                 className="input"
               >
                 {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
+                  <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </select>
             </div>
 
-            {/* Condition */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Condition
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Condition</label>
               <select
                 value={condition}
-                onChange={(e) => {
-                  setCondition(e.target.value);
-                  handleFilterChange();
-                }}
+                onChange={(e) => { setCondition(e.target.value); handleFilterChange(); }}
                 className="input"
               >
                 {CONDITIONS.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
+                  <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </select>
             </div>
 
-            {/* Price range */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price Range (USD)
+                Price Range (Rs.)
               </label>
               <div className="flex gap-2 items-center">
                 <input
@@ -250,10 +220,7 @@ export default function MarketplacePage() {
                   min="0"
                   placeholder="Min"
                   value={minPrice}
-                  onChange={(e) => {
-                    setMinPrice(e.target.value);
-                    handleFilterChange();
-                  }}
+                  onChange={(e) => { setMinPrice(e.target.value); handleFilterChange(); }}
                   className="input w-full"
                 />
                 <span className="text-gray-400">–</span>
@@ -262,10 +229,7 @@ export default function MarketplacePage() {
                   min="0"
                   placeholder="Max"
                   value={maxPrice}
-                  onChange={(e) => {
-                    setMaxPrice(e.target.value);
-                    handleFilterChange();
-                  }}
+                  onChange={(e) => { setMaxPrice(e.target.value); handleFilterChange(); }}
                   className="input w-full"
                 />
               </div>
@@ -281,7 +245,6 @@ export default function MarketplacePage() {
             )}
           </div>
 
-          {/* Sell CTA */}
           <div className="mt-4 bg-primary-50 border border-primary-200 rounded-xl p-5">
             <p className="font-semibold text-primary-900 mb-1">Have something to sell?</p>
             <p className="text-sm text-primary-700 mb-3">
@@ -293,9 +256,7 @@ export default function MarketplacePage() {
           </div>
         </aside>
 
-        {/* Items grid */}
         <div className="flex-1 min-w-0">
-          {/* Result count */}
           {!loading && (
             <p className="text-sm text-gray-500 mb-4">
               {total === 0
@@ -345,7 +306,6 @@ export default function MarketplacePage() {
                 ))}
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex justify-center items-center gap-2 mt-10">
                   <button
@@ -356,9 +316,7 @@ export default function MarketplacePage() {
                     Previous
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(
-                      (n) => n === 1 || n === totalPages || Math.abs(n - page) <= 1
-                    )
+                    .filter((n) => n === 1 || n === totalPages || Math.abs(n - page) <= 1)
                     .reduce<(number | "...")[]>((acc, n, idx, arr) => {
                       if (idx > 0 && n - (arr[idx - 1] as number) > 1) acc.push("...");
                       acc.push(n);
@@ -366,9 +324,7 @@ export default function MarketplacePage() {
                     }, [])
                     .map((n, i) =>
                       n === "..." ? (
-                        <span key={`ellipsis-${i}`} className="px-2 text-gray-400">
-                          …
-                        </span>
+                        <span key={`ellipsis-${i}`} className="px-2 text-gray-400">…</span>
                       ) : (
                         <button
                           key={n}
