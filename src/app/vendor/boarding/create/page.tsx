@@ -181,9 +181,12 @@ export default function CreateBoardingListing() {
     setLoading(true);
 
     try {
-      const result = await boardingService.createListing(formData);
-      alert(`Listing created! Please pay $${result.adFee} to activate.`);
-      router.push(`/vendor/boarding/${result.id}/pay`);
+      const result = await boardingService.createListing(formData) as any;
+      if (result.isFreeTrialAd) {
+        router.push("/vendor/boarding?submitted=free-trial");
+      } else {
+        router.push(`/vendor/boarding/${result.boardingPlace?.id}/pay`);
+      }
     } catch (error: any) {
       console.error("Error creating listing:", error);
       alert(error.message || "Failed to create listing");
@@ -224,6 +227,19 @@ export default function CreateBoardingListing() {
       <h1 className="text-3xl font-bold text-gray-900 mb-6">
         Create Boarding Place Listing
       </h1>
+
+      {/* Limited-time free trial promotion banner */}
+      <div className="mb-6 p-4 bg-green-50 border border-green-300 rounded-lg flex items-start gap-3">
+        <div className="text-2xl">🎉</div>
+        <div>
+          <p className="font-semibold text-green-800">Limited-Time Offer — List Your Place for Free!</p>
+          <p className="text-sm text-green-700 mt-1">
+            During our promotional period, every boarding listing is <strong>completely free</strong> for
+            3 months. Your listing will be reviewed by our admin team and, once approved, will be
+            visible to students for 3 months at no cost.
+          </p>
+        </div>
+      </div>
 
       <form
         onSubmit={handleSubmit}
@@ -611,15 +627,15 @@ export default function CreateBoardingListing() {
             disabled={loading}
             className="flex-1 bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 font-medium disabled:opacity-50"
           >
-            {loading ? "Creating..." : "Create Listing"}
+            {loading ? "Submitting..." : "Submit for Review (Free)"}
           </button>
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
           <p className="font-medium">📋 Note:</p>
           <p>
-            After creating the listing, you will need to pay $50 to activate it
-            for 30 days.
+            Your listing will be reviewed by the admin team. Once approved, it will be live for
+            3 months completely free during our promotional period.
           </p>
         </div>
       </form>

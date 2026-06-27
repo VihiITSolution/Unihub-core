@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { boardingService } from '@/services/boarding.service';
 import { BoardingPlace } from '@/types';
@@ -9,10 +9,12 @@ import Link from 'next/link';
 
 export default function VendorBoardingListings() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [listings, setListings] = useState<BoardingPlace[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all');
+  const submittedFreeTrial = searchParams.get('submitted') === 'free-trial';
 
   useEffect(() => {
     if (!user?.isVendorProfileComplete) {
@@ -64,6 +66,20 @@ export default function VendorBoardingListings() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Free trial submission success banner */}
+      {submittedFreeTrial && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-300 rounded-lg flex items-start gap-3">
+          <div className="text-2xl">🎉</div>
+          <div>
+            <p className="font-semibold text-green-800">Listing Submitted for Review!</p>
+            <p className="text-sm text-green-700 mt-1">
+              Your boarding listing has been submitted. Once approved by our admin team, it will be
+              live for 3 months completely free.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -129,8 +145,13 @@ export default function VendorBoardingListings() {
                   </div>
                 )}
                 {/* Status Badge */}
-                <div className="absolute top-2 right-2">
-                  {!listing.isPaid ? (
+                <div className="absolute top-2 right-2 flex gap-1">
+                  {(listing as any).isFreeTrialAd && (
+                    <span className="bg-purple-500 text-white px-2 py-1 rounded text-xs">
+                      Free Trial
+                    </span>
+                  )}
+                  {!listing.isPaid && !(listing as any).isFreeTrialAd ? (
                     <span className="bg-red-500 text-white px-2 py-1 rounded text-xs">
                       Unpaid
                     </span>
@@ -162,12 +183,12 @@ export default function VendorBoardingListings() {
 
                 {/* Actions */}
                 <div className="flex gap-2 mt-4">
-                  {!listing.isPaid ? (
+                  {!listing.isPaid && !(listing as any).isFreeTrialAd ? (
                     <Link
                       href={`/vendor/boarding/${listing.id}/pay`}
                       className="flex-1 bg-green-600 text-white text-center py-2 rounded hover:bg-green-700 text-sm"
                     >
-                      Pay ${listing.adFee}
+                      Pay Rs. {listing.adFee}
                     </Link>
                   ) : (
                     <>
