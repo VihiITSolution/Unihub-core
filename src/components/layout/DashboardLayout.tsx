@@ -6,7 +6,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div style={{ padding: "28px", minHeight: "calc(100vh - 72px)" }}>
+    <div style={{ padding: "28px", minHeight: "calc(100vh - 104px)" }}>
       {children}
     </div>
   );

@@ -347,6 +347,17 @@
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-brand to-brand-dark;
   }
+
+  /* Faculty nav hover — underline effect */
+  .hover-faculty-link:hover {
+    color: var(--brand) !important;
+    border-bottom-color: var(--brand) !important;
+  }
+
+  /* Header hover helpers */
+  .hover\:text-brand:hover { color: var(--brand) !important; }
+  .hover\:border-ink:hover { border-color: var(--ink) !important; }
+  .hover\:bg-soft:hover { background: var(--soft) !important; }
 }
 
 .input-field {

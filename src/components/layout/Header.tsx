@@ -7,6 +7,17 @@ import { RoleUpgradeModal, NotificationBell } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 
+const FACULTY_LINKS = [
+  { href: "/courses?faculty=computing", label: "Faculty of Computing" },
+  { href: "/courses?faculty=management", label: "Management Studies" },
+  { href: "/courses?faculty=engineering", label: "Faculty of Engineering" },
+  { href: "/courses?faculty=medicine", label: "Faculty of Medicine" },
+  { href: "/courses?faculty=humanities", label: "Humanities & Social Sciences" },
+  { href: "/courses?faculty=al-bridge", label: "A/L Bridge & Foundation" },
+  { href: "/courses?faculty=exam-prep", label: "Exam Prep" },
+  { href: "/courses?faculty=internship", label: "Internship Skills" },
+];
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -37,30 +48,24 @@ export default function Header() {
   }, [isProfileOpen]);
 
   const getDashboardLink = () => {
-    if (!isAuthenticated || !user) {
-      return { href: "/student/dashboard", label: "My Learning", requiresRole: null };
-    }
-    if (user.primaryRole === "tutor") {
-      return { href: "/tutor/dashboard", label: "My Teaching", requiresRole: null };
-    }
-    return { href: "/student/dashboard", label: "My Learning", requiresRole: null };
+    if (user?.primaryRole === "tutor") return { href: "/tutor/dashboard", label: "My Teaching" };
+    return { href: "/student/dashboard", label: "My Learning" };
   };
 
   const navLinks = [
-    { href: "/courses", label: "Courses", requiresRole: null },
     ...(user?.roles?.includes("tutor")
       ? []
       : [{ href: "/tutor/dashboard", label: "Teach", requiresRole: "tutor" as RoleType }]),
     { href: "/marketplace", label: "Marketplace", requiresRole: null },
     { href: "/boarding", label: "Boarding", requiresRole: null },
-    getDashboardLink(),
+    { ...getDashboardLink(), requiresRole: null },
   ];
 
   const handleNavClick = (e: React.MouseEvent, link: (typeof navLinks)[0]) => {
     if (!isAuthenticated) return;
     if (link.requiresRole) {
       const userRoles = user?.roles || [];
-      if (!userRoles.includes(link.requiresRole) || link.requiresRole === "tutor") {
+      if (!userRoles.includes(link.requiresRole)) {
         e.preventDefault();
         setRequiredRole(link.requiresRole);
         setRoleModalOpen(true);
@@ -85,36 +90,32 @@ export default function Header() {
         zIndex: 50,
         background: "var(--white)",
         borderBottom: "1px solid var(--line)",
-        boxShadow: isScrolled ? "0 2px 8px rgba(0,0,0,.08)" : "0 2px 4px rgba(0,0,0,.04)",
+        boxShadow: isScrolled ? "0 2px 8px rgba(0,0,0,.08)" : "0 1px 3px rgba(0,0,0,.04)",
         transition: "box-shadow .2s",
       }}
       suppressHydrationWarning
     >
-      {/* Main topbar */}
+      {/* ── Row 1: topbar ── */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 16,
-          minHeight: 72,
-          padding: "0 28px",
-          maxWidth: 1240,
-          margin: "0 auto",
+          gap: 12,
+          height: 64,
+          padding: "0 24px",
+          width: "100%",
         }}
       >
         {/* Mobile menu button */}
         <button
-          className="lg:hidden"
+          className="lg:hidden flex-shrink-0"
           style={{
-            width: 40,
-            minHeight: 40,
+            width: 36, height: 36,
             border: "1px solid var(--line)",
             background: "transparent",
-            fontSize: 18,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            fontSize: 16, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            borderRadius: 4,
           }}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
@@ -126,104 +127,88 @@ export default function Header() {
         <Link
           href="/"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            minWidth: 146,
-            fontWeight: 800,
-            textDecoration: "none",
-            color: "var(--ink)",
-            flexShrink: 0,
+            display: "flex", alignItems: "center", gap: 8,
+            fontWeight: 800, textDecoration: "none", color: "var(--ink)", flexShrink: 0,
           }}
         >
           <span
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: 7,
-              background: "var(--brand)",
-              color: "var(--white)",
-              fontSize: 20,
-              fontWeight: 800,
-              display: "grid",
-              placeItems: "center",
-              flexShrink: 0,
+              width: 34, height: 34, borderRadius: 6,
+              background: "var(--brand)", color: "#fff",
+              fontSize: 18, fontWeight: 800,
+              display: "grid", placeItems: "center", flexShrink: 0,
             }}
           >
             U
           </span>
-          <span style={{ lineHeight: 1 }}>
+          <span style={{ lineHeight: 1.1, fontSize: 15 }}>
             UniHub
-            <small
-              style={{
-                display: "block",
-                marginTop: 2,
-                color: "var(--muted)",
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-              }}
-            >
+            <small style={{ display: "block", color: "var(--muted)", fontSize: 9, fontWeight: 700, letterSpacing: "0.09em" }}>
               LEARN. EARN. GROW.
             </small>
           </span>
+        </Link>
+
+        {/* Faculties link — desktop */}
+        <Link
+          href="/courses"
+          className="hidden lg:inline-flex items-center flex-shrink-0"
+          style={{
+            gap: 4, fontSize: 14, fontWeight: 600,
+            color: "var(--ink)", textDecoration: "none",
+            padding: "0 8px", height: 36, borderRadius: 4,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Faculties
+          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" style={{ opacity: .5 }}>
+            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd" />
+          </svg>
         </Link>
 
         {/* Search bar — desktop */}
         <form
           onSubmit={handleSearch}
           className="hidden lg:flex"
-          style={{ flex: 1, minWidth: 280, maxWidth: 520 }}
+          style={{ flex: 1, minWidth: 0 }}
         >
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              width: "100%",
-              height: 46,
+              display: "flex", alignItems: "center", gap: 10,
+              width: "100%", height: 42,
               padding: "0 16px",
-              border: "1px solid var(--ink)",
+              border: "1.5px solid var(--ink)",
               borderRadius: 999,
               background: "var(--soft)",
             }}
           >
-            <span style={{ color: "var(--muted)", fontSize: 14, flexShrink: 0 }}>Find</span>
+            <span style={{ color: "var(--muted)", fontSize: 13, flexShrink: 0 }}>Find</span>
             <input
               type="search"
-              placeholder="Code, module, kuppi, lecturer, topic..."
+              placeholder="Code, module, lecturer, topic..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                flex: 1,
-                border: 0,
-                outline: 0,
-                background: "transparent",
-                color: "var(--ink)",
-                fontSize: 14,
+                flex: 1, border: 0, outline: 0,
+                background: "transparent", color: "var(--ink)", fontSize: 14,
+                minWidth: 0,
               }}
             />
           </div>
         </form>
 
         {/* Desktop nav links */}
-        <nav className="hidden lg:flex items-center" style={{ gap: 2, flexShrink: 0 }}>
+        <nav className="hidden lg:flex items-center flex-shrink-0" style={{ gap: 0 }}>
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={(e) => handleNavClick(e, link)}
               style={{
-                padding: "0 10px",
-                fontSize: 14,
-                fontWeight: 600,
-                color: "var(--ink)",
-                whiteSpace: "nowrap",
-                minHeight: 40,
-                display: "inline-flex",
-                alignItems: "center",
-                borderRadius: 4,
-                transition: "color .15s",
+                padding: "0 10px", fontSize: 14, fontWeight: 600,
+                color: "var(--ink)", whiteSpace: "nowrap",
+                height: 40, display: "inline-flex", alignItems: "center",
+                borderRadius: 4, transition: "color .15s", textDecoration: "none",
               }}
               className="hover:text-brand"
             >
@@ -232,23 +217,21 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Right actions — desktop */}
-        <div className="hidden lg:flex items-center" style={{ gap: 8, flexShrink: 0 }}>
+        {/* Desktop right actions */}
+        <div className="hidden lg:flex items-center flex-shrink-0" style={{ gap: 6 }}>
           {isAuthenticated && <NotificationBell />}
 
           {/* Cart */}
           <Link
             href="/marketplace"
             style={{
-              width: 42,
-              minHeight: 40,
-              border: "1px solid var(--ink)",
+              width: 38, height: 38,
+              border: "1px solid var(--line)",
               background: "var(--white)",
-              fontSize: 18,
-              display: "grid",
-              placeItems: "center",
-              cursor: "pointer",
-              transition: "background .15s",
+              display: "grid", placeItems: "center",
+              cursor: "pointer", borderRadius: 4,
+              transition: "background .15s", fontSize: 16,
+              textDecoration: "none",
             }}
             className="hover:bg-soft"
             aria-label="Marketplace"
@@ -256,47 +239,37 @@ export default function Header() {
             🛒
           </Link>
 
-          {/* Auth area */}
+          {/* Auth */}
           {isAuthenticated && user ? (
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  minHeight: 40,
-                  padding: "0 12px",
+                  display: "flex", alignItems: "center", gap: 7,
+                  height: 38, padding: "0 10px",
                   border: "1px solid var(--line)",
                   background: "var(--white)",
-                  cursor: "pointer",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  color: "var(--ink)",
+                  cursor: "pointer", fontWeight: 700, fontSize: 14,
+                  color: "var(--ink)", borderRadius: 4,
                   transition: "background .15s",
-                  borderRadius: 4,
                 }}
                 className="hover:bg-soft"
               >
                 <div
                   style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: "50%",
-                    background: "var(--brand)",
-                    color: "var(--white)",
-                    fontSize: 12,
-                    fontWeight: 800,
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
+                    width: 26, height: 26, borderRadius: "50%",
+                    background: "var(--brand)", color: "#fff",
+                    fontSize: 11, fontWeight: 800,
+                    display: "grid", placeItems: "center", flexShrink: 0,
                   }}
                 >
                   {user.firstName?.[0]}{user.lastName?.[0]}
                 </div>
-                <span className="hidden md:block">{user.firstName}</span>
-                <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <span className="hidden md:block" style={{ maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user.firstName}
+                </span>
+                <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" style={{ opacity: .5 }}>
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd" />
                 </svg>
               </button>
 
@@ -304,120 +277,65 @@ export default function Header() {
               {isProfileOpen && (
                 <div
                   style={{
-                    position: "absolute",
-                    right: 0,
-                    top: "calc(100% + 8px)",
-                    width: 280,
-                    background: "var(--white)",
-                    border: "1px solid var(--line)",
-                    boxShadow: "var(--shadow)",
-                    zIndex: 50,
-                    padding: "8px 0",
+                    position: "absolute", right: 0, top: "calc(100% + 6px)",
+                    width: 268, background: "var(--white)",
+                    border: "1px solid var(--line)", boxShadow: "var(--shadow)",
+                    zIndex: 50, padding: "8px 0", borderRadius: 6,
                   }}
                 >
-                  {/* Current mode */}
-                  <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)" }}>
-                    <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)" }}>
+                    <p style={{ margin: "0 0 5px", fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                       Current Mode
                     </p>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: "50%",
-                          background: user.primaryRole === "student" ? "#3b82f6" : user.primaryRole === "tutor" ? "var(--brand)" : "#8b5cf6",
-                        }}
-                      />
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: user.primaryRole === "student" ? "#3b82f6" : user.primaryRole === "tutor" ? "var(--brand)" : "#8b5cf6" }} />
                       <span style={{ fontSize: 14, fontWeight: 600, textTransform: "capitalize" }}>{user.primaryRole}</span>
                     </div>
                   </div>
 
-                  {/* Role switcher */}
                   {user.roles && user.roles.length > 1 && (
-                    <div style={{ padding: "8px 16px", borderBottom: "1px solid var(--line)" }}>
-                      <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    <div style={{ padding: "8px 14px", borderBottom: "1px solid var(--line)" }}>
+                      <p style={{ margin: "0 0 5px", fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                         Switch Mode
                       </p>
-                      <div style={{ display: "grid", gap: 4 }}>
-                        {user.roles.includes("student") && (
+                      {(["student", "tutor"] as const).map((role) =>
+                        user.roles?.includes(role) ? (
                           <button
+                            key={role}
                             onClick={async () => {
-                              if (user.primaryRole !== "student") {
-                                const result = await switchRole("student");
-                                if (result.success) { router.push("/student/dashboard"); setIsProfileOpen(false); }
+                              if (user.primaryRole !== role) {
+                                const result = await switchRole(role);
+                                if (result.success) { router.push(`/${role}/dashboard`); setIsProfileOpen(false); }
                               }
                             }}
                             style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              padding: "8px 10px",
-                              border: "none",
-                              background: user.primaryRole === "student" ? "#eff6ff" : "transparent",
-                              color: user.primaryRole === "student" ? "#1d4ed8" : "var(--ink)",
-                              fontSize: 14,
-                              fontWeight: user.primaryRole === "student" ? 700 : 400,
-                              cursor: "pointer",
-                              borderRadius: 4,
-                              textAlign: "left",
-                              width: "100%",
+                              display: "flex", alignItems: "center", justifyContent: "space-between",
+                              padding: "7px 8px", border: "none", width: "100%", textAlign: "left",
+                              background: user.primaryRole === role ? (role === "student" ? "#eff6ff" : "#f0fdf4") : "transparent",
+                              color: user.primaryRole === role ? (role === "student" ? "#1d4ed8" : "#15803d") : "var(--ink)",
+                              fontSize: 14, fontWeight: user.primaryRole === role ? 700 : 400,
+                              cursor: "pointer", borderRadius: 4,
                             }}
                           >
-                            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b82f6" }} />
-                              Student
+                            <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                              <div style={{ width: 7, height: 7, borderRadius: "50%", background: role === "student" ? "#3b82f6" : "var(--brand)" }} />
+                              {role.charAt(0).toUpperCase() + role.slice(1)}
                             </span>
-                            {user.primaryRole === "student" && (
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            {user.primaryRole === role && (
+                              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
                             )}
                           </button>
-                        )}
-                        {user.roles.includes("tutor") && (
-                          <button
-                            onClick={async () => {
-                              if (user.primaryRole !== "tutor") {
-                                const result = await switchRole("tutor");
-                                if (result.success) { router.push("/tutor/dashboard"); setIsProfileOpen(false); }
-                              }
-                            }}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              padding: "8px 10px",
-                              border: "none",
-                              background: user.primaryRole === "tutor" ? "#f0fdf4" : "transparent",
-                              color: user.primaryRole === "tutor" ? "#15803d" : "var(--ink)",
-                              fontSize: 14,
-                              fontWeight: user.primaryRole === "tutor" ? 700 : 400,
-                              cursor: "pointer",
-                              borderRadius: 4,
-                              textAlign: "left",
-                              width: "100%",
-                            }}
-                          >
-                            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--brand)" }} />
-                              Tutor
-                            </span>
-                            {user.primaryRole === "tutor" && (
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                          </button>
-                        )}
-                      </div>
+                        ) : null
+                      )}
                     </div>
                   )}
 
                   <Link
                     href="/settings"
                     onClick={() => setIsProfileOpen(false)}
-                    style={{ display: "block", padding: "10px 16px", fontSize: 14, color: "var(--ink)" }}
+                    style={{ display: "block", padding: "9px 14px", fontSize: 14, color: "var(--ink)", textDecoration: "none" }}
                     className="hover:bg-soft"
                   >
                     Settings
@@ -426,15 +344,9 @@ export default function Header() {
                   <button
                     onClick={() => { setIsProfileOpen(false); logout(); router.push("/"); }}
                     style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "10px 16px",
-                      border: "none",
-                      background: "transparent",
-                      fontSize: 14,
-                      color: "#dc2626",
-                      cursor: "pointer",
+                      display: "block", width: "100%", textAlign: "left",
+                      padding: "9px 14px", border: "none", background: "transparent",
+                      fontSize: 14, color: "#dc2626", cursor: "pointer",
                     }}
                     className="hover:bg-red-50"
                   >
@@ -448,34 +360,28 @@ export default function Header() {
               <Link
                 href="/auth/login"
                 style={{
-                  minHeight: 40,
-                  display: "inline-grid",
-                  placeItems: "center",
+                  height: 38, display: "inline-flex", alignItems: "center",
                   padding: "0 14px",
-                  border: "1px solid var(--ink)",
+                  border: "1.5px solid var(--line)",
                   background: "var(--white)",
-                  color: "var(--ink)",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  transition: "background .15s",
+                  color: "var(--ink)", fontSize: 14, fontWeight: 700,
+                  transition: "border-color .15s", textDecoration: "none",
+                  borderRadius: 4,
                 }}
-                className="hover:bg-soft"
+                className="hover:border-ink"
               >
                 Log in
               </Link>
               <Link
                 href="/auth/register"
                 style={{
-                  minHeight: 40,
-                  display: "inline-grid",
-                  placeItems: "center",
-                  padding: "0 14px",
-                  border: "1px solid var(--ink)",
+                  height: 38, display: "inline-flex", alignItems: "center",
+                  padding: "0 16px",
+                  border: "1.5px solid var(--ink)",
                   background: "var(--ink)",
-                  color: "var(--white)",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  transition: "background .15s",
+                  color: "#fff", fontSize: 14, fontWeight: 700,
+                  transition: "background .15s", textDecoration: "none",
+                  borderRadius: 4,
                 }}
                 className="hover:bg-gray-900"
               >
@@ -486,18 +392,16 @@ export default function Header() {
         </div>
 
         {/* Mobile right actions */}
-        <div className="flex lg:hidden items-center ml-auto" style={{ gap: 8 }}>
+        <div className="flex lg:hidden items-center ml-auto" style={{ gap: 6 }}>
           {isAuthenticated && <NotificationBell />}
           <Link
             href="/marketplace"
             style={{
-              width: 40,
-              minHeight: 40,
+              width: 36, height: 36,
               border: "1px solid var(--line)",
-              background: "var(--white)",
-              fontSize: 18,
-              display: "grid",
-              placeItems: "center",
+              background: "var(--white)", fontSize: 16,
+              display: "grid", placeItems: "center",
+              textDecoration: "none", borderRadius: 4,
             }}
             aria-label="Marketplace"
           >
@@ -506,30 +410,56 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile navigation */}
-      {isMenuOpen && (
+      {/* ── Row 2: Faculty nav bar (desktop only) ── */}
+      <div
+        className="hidden lg:block"
+        style={{
+          borderTop: "1px solid var(--line)",
+          overflowX: "auto",
+          scrollbarWidth: "none",
+        }}
+      >
         <div
           style={{
-            background: "var(--white)",
-            borderTop: "1px solid var(--line)",
+            display: "flex", alignItems: "center",
+            padding: "0 24px", gap: 0,
+            whiteSpace: "nowrap",
           }}
-          className="lg:hidden"
         >
+          {FACULTY_LINKS.map((f) => (
+            <Link
+              key={f.href}
+              href={f.href}
+              style={{
+                display: "inline-flex", alignItems: "center",
+                height: 40, padding: "0 14px",
+                fontSize: 13, fontWeight: 500,
+                color: "var(--ink)", textDecoration: "none",
+                borderBottom: "2px solid transparent",
+                transition: "color .15s, border-color .15s",
+                flexShrink: 0,
+              }}
+              className="hover:text-brand hover-faculty-link"
+            >
+              {f.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Mobile menu ── */}
+      {isMenuOpen && (
+        <div style={{ background: "var(--white)", borderTop: "1px solid var(--line)" }} className="lg:hidden">
           {/* Mobile search */}
-          <form onSubmit={handleSearch} style={{ padding: "12px 16px", borderBottom: "1px solid var(--line)" }}>
+          <form onSubmit={handleSearch} style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)" }}>
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                height: 46,
-                padding: "0 16px",
-                border: "1px solid var(--ink)",
-                borderRadius: 999,
-                background: "var(--soft)",
+                display: "flex", alignItems: "center", gap: 8,
+                height: 42, padding: "0 14px",
+                border: "1.5px solid var(--ink)", borderRadius: 999, background: "var(--soft)",
               }}
             >
-              <span style={{ color: "var(--muted)", fontSize: 14 }}>Find</span>
+              <span style={{ color: "var(--muted)", fontSize: 13 }}>Find</span>
               <input
                 type="search"
                 placeholder="Search kuppi sessions, modules..."
@@ -541,12 +471,15 @@ export default function Header() {
           </form>
 
           {/* Nav links */}
-          <div style={{ padding: "8px 0" }}>
+          <div style={{ padding: "6px 0" }}>
+            <Link href="/courses" style={{ display: "block", padding: "11px 18px", fontSize: 14, fontWeight: 600, color: "var(--ink)", textDecoration: "none" }} className="hover:bg-soft" onClick={() => setIsMenuOpen(false)}>
+              Faculties
+            </Link>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                style={{ display: "block", padding: "12px 20px", fontSize: 14, fontWeight: 600, color: "var(--ink)" }}
+                style={{ display: "block", padding: "11px 18px", fontSize: 14, fontWeight: 600, color: "var(--ink)", textDecoration: "none" }}
                 className="hover:bg-soft"
                 onClick={(e) => { handleNavClick(e, link); setIsMenuOpen(false); }}
               >
@@ -557,14 +490,14 @@ export default function Header() {
 
           {/* Mobile auth */}
           {!isAuthenticated ? (
-            <div style={{ borderTop: "1px solid var(--line)", padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ borderTop: "1px solid var(--line)", padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
               <Link
                 href="/auth/login"
                 onClick={() => setIsMenuOpen(false)}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  minHeight: 42, border: "1px solid var(--ink)", color: "var(--ink)",
-                  fontSize: 14, fontWeight: 800,
+                  height: 42, border: "1.5px solid var(--line)", color: "var(--ink)",
+                  fontSize: 14, fontWeight: 700, textDecoration: "none", borderRadius: 4,
                 }}
               >
                 Log in
@@ -574,21 +507,21 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  minHeight: 42, background: "var(--ink)", color: "var(--white)",
-                  fontSize: 14, fontWeight: 800,
+                  height: 42, background: "var(--ink)", color: "#fff",
+                  fontSize: 14, fontWeight: 700, textDecoration: "none", borderRadius: 4,
                 }}
               >
                 Sign up
               </Link>
             </div>
           ) : user && (
-            <div style={{ borderTop: "1px solid var(--line)", padding: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ borderTop: "1px solid var(--line)", padding: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <div
                   style={{
-                    width: 38, height: 38, borderRadius: "50%",
-                    background: "var(--brand)", color: "var(--white)",
-                    fontSize: 14, fontWeight: 800,
+                    width: 36, height: 36, borderRadius: "50%",
+                    background: "var(--brand)", color: "#fff",
+                    fontSize: 13, fontWeight: 800,
                     display: "grid", placeItems: "center",
                   }}
                 >

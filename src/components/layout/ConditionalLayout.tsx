@@ -68,7 +68,7 @@ export default function ConditionalLayout({
           <div
             onClick={() => setSidebarOpen(false)}
             style={{
-              position: "fixed", inset: 0, top: 72,
+              position: "fixed", inset: 0, top: 104,
               background: "rgba(0,0,0,.5)", zIndex: 39,
             }}
           />
@@ -78,7 +78,7 @@ export default function ConditionalLayout({
         <div
           style={{
             position: "fixed",
-            top: 72,
+            top: 104,
             bottom: 0,
             left: 0,
             width: isMobile ? (sidebarOpen ? 256 : 0) : sidebarWidth,
