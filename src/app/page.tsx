@@ -23,10 +23,10 @@ const PROMISE_CARDS = [
 ];
 
 const CAMPUS_AREAS = [
-  { title: "Colombo & suburbs", detail: "Private institutes, external degrees, evening classes, and internship prep." },
-  { title: "Kandy & Peradeniya", detail: "Engineering, science, medicine, humanities, and research support." },
-  { title: "Galle & Matara", detail: "Management, IT, foundation, and final exam revision groups." },
-  { title: "Jaffna & Eastern campuses", detail: "Remote-friendly tutoring, English support, and degree module catch-up." },
+  { title: "Module & assignment help", detail: "Find kuppi sessions mapped to your exact course code, lecturer, and semester week." },
+  { title: "Peer-led study groups", detail: "Join or host group sessions for lab reports, vivas, final exams, and group projects." },
+  { title: "Semester-aware planning", detail: "Sessions are tagged by year, faculty, and deadline season — not just topic." },
+  { title: "Flexible & remote-friendly", detail: "Online and on-campus options for all faculties, including evening and part-time students." },
 ];
 
 const PATHWAYS = [
