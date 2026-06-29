@@ -13,8 +13,8 @@ export function HoverCard({ trigger, popup, popupWidth = 316 }: HoverCardProps) 
   const [side, setSide] = useState<"right" | "left">("right");
   const [topOffset, setTopOffset] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const showTimer = useRef<ReturnType<typeof setTimeout>>();
-  const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+  const showTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const calcPosition = useCallback(() => {
     if (!containerRef.current) return;
