@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { boardingService } from "@/services/boarding.service";
+import { HoverCard } from "@/components/ui";
 import type { BoardingPlace, BoardingPlaceFilters, RoomType, GenderPreference } from "@/types";
 
 const ROOM_TYPES: { value: RoomType | ""; label: string }[] = [
@@ -40,54 +41,42 @@ const GUIDE_CARDS = [
 ];
 
 function PlaceCard({ place }: { place: BoardingPlace }) {
-  return (
-    <Link href={`/boarding/${place.id}`} style={{ textDecoration: "none" }}>
+  const descLines = (place.description || "")
+    .split(/[.\n]/).map((s) => s.trim()).filter((s) => s.length > 10).slice(0, 3);
+
+  const cardTrigger = (
+    <Link href={`/boarding/${place.id}`} style={{ textDecoration: "none", display: "block" }}>
       <article
         style={{
           border: "1px solid var(--line)", borderRadius: 6,
           overflow: "hidden", background: "var(--white)",
-          transition: "transform .18s, box-shadow .18s",
-          cursor: "pointer",
+          transition: "transform .18s, box-shadow .18s", cursor: "pointer",
         }}
         className="course-card-hover"
       >
-        {/* Thumb */}
-        <div
-          style={{
-            width: "100%", aspectRatio: "16/10",
-            background: "var(--soft)", fontSize: 44,
-            display: "grid", placeItems: "center",
-            position: "relative", overflow: "hidden",
-          }}
-        >
+        <div style={{ width: "100%", aspectRatio: "16/10", background: "var(--soft)", display: "grid", placeItems: "center", position: "relative", overflow: "hidden" }}>
           {place.images && place.images.length > 0 ? (
             <img src={place.images[0]} alt={place.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
-            <span>🏠</span>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5"><path d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75"/></svg>
           )}
           <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 4, flexWrap: "wrap" }}>
-            <span style={{ padding: "4px 8px", background: "rgba(255,255,255,.9)", color: "var(--ink)", fontSize: 12, fontWeight: 800 }}>
+            <span style={{ padding: "4px 8px", background: "rgba(255,255,255,.92)", color: "var(--ink)", fontSize: 12, fontWeight: 800, borderRadius: 3 }}>
               {roomTypeLabel(place.roomType)}
             </span>
             {place.genderPreference !== "any" && (
-              <span style={{ padding: "4px 8px", background: "rgba(255,255,255,.9)", color: "var(--ink)", fontSize: 12, fontWeight: 800 }}>
+              <span style={{ padding: "4px 8px", background: "rgba(255,255,255,.92)", color: "var(--ink)", fontSize: 12, fontWeight: 800, borderRadius: 3 }}>
                 {genderLabel(place.genderPreference)}
               </span>
             )}
           </div>
         </div>
-
-        {/* Body */}
         <div style={{ padding: 16 }}>
-          <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: "var(--ink)" }}>
-            {place.title}
-          </h3>
-          <p style={{ margin: 0, color: "var(--muted)", fontSize: 13, lineHeight: 1.45 }}>
-            📍 {place.city}{place.district ? `, ${place.district}` : ""}
+          <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: "var(--ink)" }}>{place.title}</h3>
+          <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
+            {place.city}{place.district ? `, ${place.district}` : ""}
             {place.nearestUniversity && ` · Near ${place.nearestUniversity}`}
           </p>
-
-          {/* Amenity tags */}
           {place.amenities && place.amenities.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 }}>
               {place.amenities.slice(0, 3).map((a) => (
@@ -102,8 +91,6 @@ function PlaceCard({ place }: { place: BoardingPlace }) {
               )}
             </div>
           )}
-
-          {/* Price row */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 14, fontWeight: 800 }}>
             <span>Rs. {Number(place.monthlyRent).toLocaleString()}<span style={{ fontWeight: 400, fontSize: 12, color: "var(--muted)" }}>/mo</span></span>
             <span style={{ fontSize: 12, fontWeight: 800, color: place.availableSlots > 0 ? "var(--brand)" : "#dc2626" }}>
@@ -114,6 +101,76 @@ function PlaceCard({ place }: { place: BoardingPlace }) {
       </article>
     </Link>
   );
+
+  const popup = (
+    <div style={{ padding: 18 }}>
+      {/* Room type + gender badges */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+        <span style={{ padding: "3px 8px", background: "#e8f6f1", color: "var(--brand-dark)", fontSize: 11, fontWeight: 700, borderRadius: 3 }}>
+          {roomTypeLabel(place.roomType)}
+        </span>
+        {place.genderPreference !== "any" && (
+          <span style={{ padding: "3px 8px", background: "#fef3c7", color: "#92400e", fontSize: 11, fontWeight: 700, borderRadius: 3 }}>
+            {genderLabel(place.genderPreference)}
+          </span>
+        )}
+        <span style={{ padding: "3px 8px", background: place.availableSlots > 0 ? "#dcfce7" : "#fee2e2", color: place.availableSlots > 0 ? "#166534" : "#dc2626", fontSize: 11, fontWeight: 700, borderRadius: 3 }}>
+          {place.availableSlots > 0 ? `${place.availableSlots} slot(s) available` : "Fully booked"}
+        </span>
+      </div>
+
+      <h4 style={{ margin: "0 0 5px", fontSize: 15, fontWeight: 800, lineHeight: 1.3, color: "#111" }}>
+        {place.title}
+      </h4>
+      <p style={{ margin: "0 0 10px", fontSize: 12, color: "#64748b" }}>
+        📍 {place.city}{place.district ? `, ${place.district}` : ""}
+        {place.nearestUniversity ? ` · Near ${place.nearestUniversity}` : ""}
+      </p>
+
+      {/* Amenities */}
+      {place.amenities && place.amenities.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 12 }}>
+          {place.amenities.slice(0, 5).map((a) => (
+            <span key={a} style={{ padding: "3px 7px", background: "#f1f5f9", color: "#475569", fontSize: 11, fontWeight: 600, borderRadius: 3 }}>
+              {a}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Description bullets */}
+      {descLines.length > 0 && (
+        <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none" }}>
+          {descLines.map((line, i) => (
+            <li key={i} style={{ display: "flex", gap: 7, fontSize: 12.5, color: "#374151", marginBottom: 5 }}>
+              <span style={{ color: "var(--brand)", flexShrink: 0 }}>✓</span>
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div style={{ fontSize: 22, fontWeight: 800, color: "#111", marginBottom: 14 }}>
+        Rs. {Number(place.monthlyRent).toLocaleString()}
+        <span style={{ fontSize: 13, fontWeight: 400, color: "#64748b" }}> /month</span>
+      </div>
+
+      <Link
+        href={`/boarding/${place.id}`}
+        style={{
+          display: "block", width: "100%", textAlign: "center",
+          padding: "11px 0",
+          background: "var(--brand)", color: "#fff",
+          fontWeight: 800, fontSize: 14, borderRadius: 5,
+          textDecoration: "none",
+        }}
+      >
+        View Details
+      </Link>
+    </div>
+  );
+
+  return <HoverCard trigger={cardTrigger} popup={popup} />;
 }
 
 export default function BoardingPage() {

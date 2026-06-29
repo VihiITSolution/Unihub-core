@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { marketplaceService } from "@/services/marketplace.service";
+import { HoverCard } from "@/components/ui";
 import type { MarketplaceItem } from "@/types";
 import type { MarketplaceFilters } from "@/services/marketplace.service";
 
@@ -36,62 +37,104 @@ const SELLER_STEPS = [
 ];
 
 function ItemCard({ item }: { item: MarketplaceItem }) {
-  return (
-    <Link href={`/marketplace/${item.id}`} style={{ textDecoration: "none" }}>
+  const sellerName = item.seller?.vendorProfile?.shopName
+    || (item.seller ? `${item.seller.firstName} ${item.seller.lastName}` : "Seller");
+
+  const descSnippet = (item.description || "")
+    .split(/[.\n]/).map((s) => s.trim()).filter((s) => s.length > 10).slice(0, 3);
+
+  const cardTrigger = (
+    <Link href={`/marketplace/${item.id}`} style={{ textDecoration: "none", display: "block" }}>
       <article
         style={{
           border: "1px solid var(--line)", borderRadius: 6,
           overflow: "hidden", background: "var(--white)",
-          transition: "transform .18s, box-shadow .18s",
-          cursor: "pointer",
+          transition: "transform .18s, box-shadow .18s", cursor: "pointer",
         }}
         className="course-card-hover"
       >
-        {/* Thumb */}
-        <div
-          style={{
-            width: "100%", aspectRatio: "16/10",
-            display: "grid", placeItems: "center",
-            background: "var(--soft)", fontSize: 42,
-            overflow: "hidden",
-          }}
-        >
+        <div style={{ width: "100%", aspectRatio: "16/10", display: "grid", placeItems: "center", background: "var(--soft)", overflow: "hidden" }}>
           {item.images && item.images.length > 0 ? (
             <img src={item.images[0]} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
-            <span>🛍️</span>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5"><path d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/></svg>
           )}
         </div>
-
-        {/* Body */}
         <div style={{ padding: 14 }}>
           <h3 style={{ minHeight: 44, margin: "0 0 6px", fontSize: 16, lineHeight: 1.25, fontWeight: 800, color: "var(--ink)" }}>
             {item.title}
           </h3>
-          <p style={{ margin: 0, color: "var(--muted)", fontSize: 13, lineHeight: 1.45 }}>
+          <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
             {item.category} · {conditionLabel(item.condition)}
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 12, fontWeight: 800 }}>
             <span>Rs. {Number(item.price).toLocaleString()}</span>
-            <span
-              style={{
-                padding: "5px 8px",
-                background: "#e8f6f1", color: "var(--brand-dark)",
-                fontSize: 12, fontWeight: 800,
-              }}
-            >
+            <span style={{ padding: "5px 8px", background: item.stock > 0 ? "#e8f6f1" : "#fee2e2", color: item.stock > 0 ? "var(--brand-dark)" : "#dc2626", fontSize: 12, fontWeight: 800 }}>
               {item.stock > 0 ? "Available" : "Sold"}
             </span>
           </div>
           {item.seller && (
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
-              by {item.seller.vendorProfile?.shopName || `${item.seller.firstName} ${item.seller.lastName}`}
-            </p>
+            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>by {sellerName}</p>
           )}
         </div>
       </article>
     </Link>
   );
+
+  const popup = (
+    <div style={{ padding: 18 }}>
+      {/* Condition + category badges */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+        <span style={{ padding: "3px 8px", background: "#f1f5f9", color: "#475569", fontSize: 11, fontWeight: 700, borderRadius: 3 }}>
+          {conditionLabel(item.condition)}
+        </span>
+        {item.category && (
+          <span style={{ padding: "3px 8px", background: "#e8f6f1", color: "var(--brand-dark)", fontSize: 11, fontWeight: 700, borderRadius: 3 }}>
+            {item.category}
+          </span>
+        )}
+        <span style={{ padding: "3px 8px", background: item.stock > 0 ? "#dcfce7" : "#fee2e2", color: item.stock > 0 ? "#166534" : "#dc2626", fontSize: 11, fontWeight: 700, borderRadius: 3 }}>
+          {item.stock > 0 ? `${item.stock} in stock` : "Sold out"}
+        </span>
+      </div>
+
+      <h4 style={{ margin: "0 0 5px", fontSize: 15, fontWeight: 800, lineHeight: 1.3, color: "#111" }}>
+        {item.title}
+      </h4>
+      <p style={{ margin: "0 0 10px", fontSize: 12, color: "#64748b" }}>Sold by {sellerName}</p>
+
+      {/* Description bullets */}
+      {descSnippet.length > 0 && (
+        <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none" }}>
+          {descSnippet.map((line, i) => (
+            <li key={i} style={{ display: "flex", gap: 7, fontSize: 12.5, color: "#374151", marginBottom: 5 }}>
+              <span style={{ color: "var(--brand)", flexShrink: 0 }}>✓</span>
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div style={{ fontSize: 22, fontWeight: 800, color: "#111", marginBottom: 14 }}>
+        Rs. {Number(item.price).toLocaleString()}
+      </div>
+
+      <Link
+        href={`/marketplace/${item.id}`}
+        style={{
+          display: "block", width: "100%", textAlign: "center",
+          padding: "11px 0",
+          background: "var(--brand)", color: "#fff",
+          fontWeight: 800, fontSize: 14, borderRadius: 5,
+          textDecoration: "none",
+        }}
+      >
+        View Listing
+      </Link>
+    </div>
+  );
+
+  return <HoverCard trigger={cardTrigger} popup={popup} />;
 }
 
 export default function MarketplacePage() {

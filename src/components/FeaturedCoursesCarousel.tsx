@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { HoverCard } from "@/components/ui";
 import type { Course } from "@/types";
 import { API_BASE_URL } from "@/lib/constants";
 
@@ -313,106 +314,146 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
       : `LKR ${Number(course.price).toLocaleString()}`;
 
   const badge = course.isUpcoming ? "Upcoming" : course.year ? `Year ${course.year}` : course.level || "Course";
-
   const isOwner = user && course.tutorId === user.id;
 
-  const cardContent = (
-    <article
-      style={{
-        position: "relative",
-        minWidth: 0,
-        background: "var(--white)",
-        border: "1px solid var(--line)",
-        borderRadius: 6,
-        overflow: "hidden",
-        transition: "transform .18s ease, box-shadow .18s ease",
-        cursor: "pointer",
-        display: "flex",
-        flexDirection: "column",
-      }}
-      className="course-card-hover"
-    >
-      {/* Thumbnail */}
-      <img
-        style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", background: "#e6e6e6" }}
-        src={
-          course.thumbnail ||
-          "/library-study-group.png"
-        }
-        alt={course.title}
-        onError={(e) => {
-          (e.target as HTMLImageElement).src =
-            "/library-study-group.png";
+  const href = isOwner
+    ? `/tutor/edit-course/${course.id}`
+    : (course as any).isEnrolled
+      ? `/student/learn/${course.id}`
+      : `/courses/${course.id}`;
+
+  // Parse description into bullet lines
+  const descLines = (course.description || "")
+    .split(/[.\n]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 12)
+    .slice(0, 3);
+
+  const cardTrigger = (
+    <Link href={href} style={{ textDecoration: "none", display: "block" }}>
+      <article
+        style={{
+          position: "relative", minWidth: 0,
+          background: "var(--white)", border: "1px solid var(--line)",
+          borderRadius: 6, overflow: "hidden",
+          transition: "transform .18s ease, box-shadow .18s ease",
+          cursor: "pointer", display: "flex", flexDirection: "column",
         }}
-      />
-
-      {/* Body */}
-      <div style={{ padding: 12, flex: 1, display: "flex", flexDirection: "column" }}>
-        <h4
-          style={{
-            minHeight: 44, margin: "0 0 6px",
-            fontSize: 15, lineHeight: 1.25, fontWeight: 800, color: "var(--ink)",
-          }}
-        >
-          {course.title}
-        </h4>
-        <div style={{ color: "var(--muted)", fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          By {tutorName}
-        </div>
-
-        {/* Meta tags */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "8px 0 0" }}>
-          {facultyLabel && (
-            <span style={{ padding: "3px 6px", background: "var(--soft)", border: "1px solid #ececec", color: "var(--muted)", fontSize: 12 }}>
-              {facultyLabel}
-            </span>
+        className="course-card-hover"
+      >
+        <img
+          style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", background: "#e6e6e6" }}
+          src={course.thumbnail || "/library-study-group.png"}
+          alt={course.title}
+          onError={(e) => { (e.target as HTMLImageElement).src = "/library-study-group.png"; }}
+        />
+        <div style={{ padding: 12, flex: 1, display: "flex", flexDirection: "column" }}>
+          <h4 style={{ minHeight: 44, margin: "0 0 6px", fontSize: 15, lineHeight: 1.25, fontWeight: 800, color: "var(--ink)" }}>
+            {course.title}
+          </h4>
+          <div style={{ color: "var(--muted)", fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            By {tutorName}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "8px 0 0" }}>
+            {facultyLabel && (
+              <span style={{ padding: "3px 6px", background: "var(--soft)", border: "1px solid #ececec", color: "var(--muted)", fontSize: 12 }}>
+                {facultyLabel}
+              </span>
+            )}
+            {course.year && (
+              <span style={{ padding: "3px 6px", background: "var(--soft)", border: "1px solid #ececec", color: "var(--muted)", fontSize: 12 }}>
+                Year {course.year}
+              </span>
+            )}
+          </div>
+          {course.rating && Number(course.rating) > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, margin: "8px 0", color: "var(--gold)", fontSize: 14, fontWeight: 800 }}>
+              {Number(course.rating).toFixed(1)} ★
+              <span style={{ color: "var(--muted)", fontWeight: 400 }}>({(course.enrollmentCount || 0).toLocaleString()})</span>
+            </div>
           )}
-          {course.year && (
-            <span style={{ padding: "3px 6px", background: "var(--soft)", border: "1px solid #ececec", color: "var(--muted)", fontSize: 12 }}>
-              Year {course.year}
-            </span>
-          )}
-        </div>
-
-        {/* Rating */}
-        {course.rating && Number(course.rating) > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, margin: "8px 0", color: "var(--gold)", fontSize: 14, fontWeight: 800 }}>
-            {Number(course.rating).toFixed(1)} ★
-            <span style={{ color: "var(--muted)", fontWeight: 400 }}>
-              ({(course.enrollmentCount || 0).toLocaleString()})
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: "auto", paddingTop: 8, fontWeight: 800, fontSize: 14 }}>
+            <span>{priceLabel}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", height: 25, padding: "0 8px", background: "#e8f6f1", color: "var(--brand-dark)", fontSize: 12, fontWeight: 800 }}>
+              {badge}
             </span>
           </div>
-        )}
-
-        {/* Price row */}
-        <div
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            gap: 8, marginTop: "auto", paddingTop: 8,
-            fontWeight: 800, fontSize: 14,
-          }}
-        >
-          <span>{priceLabel}</span>
-          <span
-            style={{
-              display: "inline-flex", alignItems: "center",
-              height: 25, padding: "0 8px",
-              background: "#e8f6f1", color: "var(--brand-dark)",
-              fontSize: 12, fontWeight: 800,
-            }}
-          >
-            {badge}
-          </span>
         </div>
-      </div>
-    </article>
+      </article>
+    </Link>
   );
 
-  if (isOwner) {
-    return <Link href={`/tutor/edit-course/${course.id}`} style={{ textDecoration: "none" }}>{cardContent}</Link>;
-  }
-  if ((course as any).isEnrolled) {
-    return <Link href={`/student/learn/${course.id}`} style={{ textDecoration: "none" }}>{cardContent}</Link>;
-  }
-  return <Link href={`/courses/${course.id}`} style={{ textDecoration: "none" }}>{cardContent}</Link>;
+  const popup = (
+    <div style={{ padding: 18 }}>
+      {/* Badges */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        {course.level && (
+          <span style={{ padding: "3px 8px", background: "#dbeafe", color: "#1e40af", fontSize: 11, fontWeight: 700, borderRadius: 3 }}>
+            {course.level}
+          </span>
+        )}
+        {facultyLabel && (
+          <span style={{ padding: "3px 8px", background: "#e8f6f1", color: "var(--brand-dark)", fontSize: 11, fontWeight: 700, borderRadius: 3 }}>
+            {facultyLabel}
+          </span>
+        )}
+      </div>
+
+      {/* Title */}
+      <h4 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 800, lineHeight: 1.3, color: "#111" }}>
+        {course.title}
+      </h4>
+      <p style={{ margin: "0 0 10px", fontSize: 12, color: "#64748b" }}>
+        By {tutorName}{course.year ? ` · Year ${course.year}` : ""}
+      </p>
+
+      {/* Rating */}
+      {course.rating && Number(course.rating) > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 10, fontSize: 13 }}>
+          <span style={{ color: "#f59e0b", fontWeight: 800 }}>{"★".repeat(Math.round(Number(course.rating)))}</span>
+          <span style={{ fontWeight: 700 }}>{Number(course.rating).toFixed(1)}</span>
+          {course.enrollmentCount ? (
+            <span style={{ color: "#94a3b8", fontSize: 12 }}>({course.enrollmentCount.toLocaleString()} students)</span>
+          ) : null}
+        </div>
+      )}
+
+      {/* Description bullets */}
+      {descLines.length > 0 && (
+        <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none" }}>
+          {descLines.map((line, i) => (
+            <li key={i} style={{ display: "flex", gap: 7, fontSize: 12.5, color: "#374151", marginBottom: 5 }}>
+              <span style={{ color: "var(--brand)", flexShrink: 0, marginTop: 1 }}>✓</span>
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Price + CTA */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
+        <span style={{ fontSize: 20, fontWeight: 800, color: "#111" }}>{priceLabel}</span>
+        {(course as any).originalPrice && (
+          <span style={{ fontSize: 13, color: "#94a3b8", textDecoration: "line-through" }}>
+            LKR {Number((course as any).originalPrice).toLocaleString()}
+          </span>
+        )}
+      </div>
+
+      <Link
+        href={href}
+        style={{
+          display: "block", width: "100%", textAlign: "center",
+          padding: "11px 0",
+          background: "var(--brand)", color: "#fff",
+          fontWeight: 800, fontSize: 14, borderRadius: 5,
+          textDecoration: "none", transition: "background .15s",
+        }}
+      >
+        {(course as any).isEnrolled ? "Continue Learning" : priceLabel === "FREE" ? "Enrol Free" : "View Course"}
+      </Link>
+    </div>
+  );
+
+  return <HoverCard trigger={cardTrigger} popup={popup} />;
 }

@@ -7,3 +7,4 @@ export { RoleUpgradeModal } from "./RoleUpgradeModal";
 export { Loading, Skeleton } from "./Loading";
 export { default as PaymentModal } from "./PaymentModal";
 export { NotificationBell } from "./NotificationBell";
+export { HoverCard } from "./HoverCard";
