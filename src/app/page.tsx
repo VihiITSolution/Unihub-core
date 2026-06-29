@@ -1,266 +1,294 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Button, Card, Badge, RoleUpgradeModal } from "@/components/ui";
-import { courseService } from "@/services/course.service";
+import { RoleUpgradeModal } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Course } from "@/types";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
-import { API_BASE_URL } from "@/lib/constants";
 import FeaturedCoursesCarousel from "@/components/FeaturedCoursesCarousel";
 import HeroSection from "@/components/HeroSection";
 
+const STATS = [
+  { value: "25+", label: "Faculty pathways" },
+  { value: "480+", label: "Semester modules" },
+  { value: "120+", label: "Verified tutors" },
+  { value: "9", label: "Study cities supported" },
+];
+
+const PROMISE_CARDS = [
+  { title: "Catch up fast", body: "Search by module, year, faculty, assignment type, or exam topic when lectures move faster than your notes." },
+  { title: "Save money", body: "Buy used calculators, lab coats, laptops, books, drawing boards, and hostel items from other students." },
+  { title: "Find a place", body: "Compare boarding, annexes, shared rooms, and hostels near universities before semester starts." },
+  { title: "Feel ready", body: "Prepare for presentations, vivas, internships, repeat exams, and final-year research with practical guidance." },
+];
+
+const CAMPUS_AREAS = [
+  { title: "Colombo & suburbs", detail: "Private institutes, external degrees, evening classes, and internship prep." },
+  { title: "Kandy & Peradeniya", detail: "Engineering, science, medicine, humanities, and research support." },
+  { title: "Galle & Matara", detail: "Management, IT, foundation, and final exam revision groups." },
+  { title: "Jaffna & Eastern campuses", detail: "Remote-friendly tutoring, English support, and degree module catch-up." },
+];
+
+const PATHWAYS = [
+  { title: "IT undergraduate pathway", desc: "Cover programming, databases, web projects, software engineering assignments, and internship portfolio work.", meta: ["6 modules", "42 hours", "Portfolio ready"] },
+  { title: "Management studies pathway", desc: "Prepare for presentations, marketing plans, accounting basics, research methods, and group assignments.", meta: ["5 modules", "31 hours", "Viva practice"] },
+  { title: "Engineering support pathway", desc: "Get help with circuit theory, lab reports, design calculations, and exam revision.", meta: ["7 modules", "54 hours", "Lab support"] },
+];
+
+const TESTIMONIALS = [
+  { quote: '"I searched by my department and found help for the exact assignment week I was stuck in."', author: "Hashan M., Computing" },
+  { quote: '"The viva practice made our final presentation feel much less scary."', author: "Nimali S., Management" },
+  { quote: '"It felt like a study group that understood Sri Lankan university pressure."', author: "Yohan P., Engineering" },
+];
+
+const TRUST_LABELS = ["Public Universities", "Private Institutes", "External Degrees", "A/L Leavers", "Student Clubs", "Internship Prep"];
+
 export default function Home() {
-  const router = useRouter();
-  const { user, token, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
 
-  const categories = [
-    {
-      name: "IT & Computing",
-      courses: 312,
-      color: "bg-purple-100 text-purple-700",
-    },
-    {
-      name: "Engineering",
-      courses: 245,
-      color: "bg-blue-100 text-blue-700",
-    },
-    {
-      name: "Medicine",
-      courses: 189,
-      color: "bg-green-100 text-green-700",
-    },
-
-    {
-      name: "Business & Management",
-      courses: 198,
-      color: "bg-pink-100 text-pink-700",
-    },
-    {
-      name: "Science",
-      courses: 156,
-      color: "bg-orange-100 text-orange-700",
-    },
-    {
-      name: "Arts & Humanities",
-      courses: 134,
-      color: "bg-indigo-100 text-indigo-700",
-    },
-  ];
-
-  const stats = [
-    { value: "10+", label: "Active Students" },
-    { value: "5+", label: "Student Tutors" },
-    { value: "3+", label: "Kuppi Sessions (Upcoming)" },
-    { value: "-", label: "Average Rating" },
-  ];
-
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
+    <div style={{ minHeight: "100vh", background: "var(--white)" }}>
+      {/* Hero */}
       <HeroSection />
 
-      {/* Stats Section */}
-      <section className="py-12 bg-white border-y">
-        <div className="container-custom">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl font-bold text-primary-600 mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-600">{stat.label}</div>
-              </div>
-            ))}
-          </div>
+      {/* Stats band */}
+      <section style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "#f2fbf8" }}>
+        <div
+          style={{
+            width: "min(1180px, calc(100% - 40px))",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 16,
+            padding: "28px 0",
+            textAlign: "center",
+          }}
+          className="stats-grid-responsive"
+        >
+          {STATS.map((s) => (
+            <div key={s.label}>
+              <strong style={{ display: "block", fontSize: 28, fontWeight: 800, color: "var(--ink)" }}>{s.value}</strong>
+              <span style={{ color: "var(--muted)" }}>{s.label}</span>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Categories Section */}
-      {/* <section className="section bg-gray-50">
-        <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="heading-2 text-gray-900 mb-4">
-              Popular University Faculties
-            </h2>
-            <p className="text-lg text-gray-600">
-              Find kuppi sessions for your degree program
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((category) => (
-              <Card
-                key={category.name}
-                hover
-                padding="md"
-                className="text-center cursor-pointer group"
-              >
-                <div
-                  className={`text-5xl mb-3 transform group-hover:scale-110 transition-transform duration-200`}
-                >
-                  {category.icon}
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  {category.name}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {category.courses} courses
-                </p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section> */}
-
-      {/* Featured Courses Carousel */}
+      {/* Featured courses / kuppi sessions */}
       <FeaturedCoursesCarousel />
 
-      {/* Features Section */}
-      <section className="section bg-gray-50">
-        <div className="container-custom">
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card hover padding="lg" className="text-center">
-              <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
-                📚
-              </div>
-              <h3 className="heading-4 text-gray-900 mb-3">Learn from Peers</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Access peer-led kuppi sessions created by fellow university
-                students who've mastered the modules you're studying.
+      {/* Promise grid — what UniHub is */}
+      <section style={{ background: "var(--soft)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "34px 0" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 18, marginBottom: 18 }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800, lineHeight: 1.15 }}>
+                Built for the week before everything is due
+              </h2>
+              <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.45 }}>
+                UniHub is not just a kuppi list. It is a student survival space for learning, earning, moving rooms, finding deals, and getting ready for the next semester.
               </p>
-              <Link
-                href="/courses"
-                className="text-primary-600 hover:text-primary-700 font-medium mt-4 inline-flex items-center gap-2"
+            </div>
+          </div>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}
+            className="promise-grid-responsive"
+          >
+            {PROMISE_CARDS.map((card) => (
+              <article
+                key={card.title}
+                style={{ padding: 18, border: "1px solid var(--line)", borderRadius: 6, background: "var(--white)" }}
               >
-                Browse Kuppis
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </Link>
-            </Card>
-
-            <Card hover padding="lg" className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
-                🎓
-              </div>
-              <h3 className="heading-4 text-gray-900 mb-3">Create Kuppi</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Share your knowledge with fellow students and earn while helping
-                them ace their exams and assignments.
-              </p>
-              <Link
-                href="/tutor/dashboard"
-                className="text-primary-600 hover:text-primary-700 font-medium mt-4 inline-flex items-center gap-2"
-              >
-                Start Teaching
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </Link>
-            </Card>
-
-            <Card hover padding="lg" className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
-                🛒
-              </div>
-              <h3 className="heading-4 text-gray-900 mb-3">
-                Academic Marketplace
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                Buy and sell university essentials - calculators, drawing
-                instruments, textbooks, electronics, and more.
-              </p>
-              <Link
-                href="/marketplace"
-                className="text-primary-600 hover:text-primary-700 font-medium mt-4 inline-flex items-center gap-2"
-              >
-                Visit Marketplace
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </Link>
-            </Card>
+                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800 }}>{card.title}</h3>
+                <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>{card.body}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="section gradient-primary text-white">
-        <div className="container-custom text-center">
-          <h2 className="heading-2 mb-6">
-            Ready to Ace Your University Exams?
-          </h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Join UniHub today and get access to peer-led kuppi sessions,
-            simplified module guides, and connect with fellow Sri Lankan
-            university students.
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            {!isAuthenticated && (
-              <Link href="/auth/register">
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className="bg-white text-primary-600 hover:bg-gray-100"
+      {/* Campus spotlight */}
+      <section style={{ background: "#fff8ec", borderTop: "1px solid #f0dfc4", borderBottom: "1px solid #f0dfc4" }}>
+        <div
+          style={{
+            width: "min(1180px, calc(100% - 40px))",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "1fr 1.05fr",
+            gap: 24,
+            alignItems: "center",
+            padding: "34px 0",
+          }}
+          className="campus-layout-responsive"
+        >
+          <div>
+            <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 800 }}>
+              Built around Sri Lankan campus life
+            </h2>
+            <p style={{ margin: "0 0 18px", color: "var(--muted)", lineHeight: 1.45 }}>
+              From A/L transition to final-year research, UniHub organises kuppi sessions around the rhythm students already know: semester weeks, group projects, lab reports, vivas, hostel study nights, and internship season.
+            </p>
+            <div
+              style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}
+            >
+              {CAMPUS_AREAS.map((area) => (
+                <div
+                  key={area.title}
+                  style={{ padding: 14, background: "var(--white)", border: "1px solid #ead9bd", borderRadius: 6, fontWeight: 800 }}
                 >
-                  Join Free
-                </Button>
-              </Link>
-            )}
-            <Link href="/courses">
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-white text-white hover:bg-white hover:text-primary-600"
+                  {area.title}
+                  <span style={{ display: "block", marginTop: 5, color: "var(--muted)", fontSize: 13, fontWeight: 400, lineHeight: 1.35 }}>
+                    {area.detail}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <img
+            style={{ width: "100%", aspectRatio: "16/10", objectFit: "cover", borderRadius: 6, border: "1px solid #e8d6b7", boxShadow: "var(--shadow)" }}
+            src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=700&h=440&fit=crop&q=80"
+            alt="Sri Lankan university students walking between lectures"
+          />
+        </div>
+      </section>
+
+      {/* Pathways */}
+      <section style={{ padding: "34px 0" }}>
+        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
+          <div style={{ marginBottom: 18 }}>
+            <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800 }}>From semester pass to graduate-ready</h2>
+            <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.45 }}>
+              Structured pathways combine module support, projects, GPA recovery, and mentor guidance.
+            </p>
+          </div>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}
+            className="career-grid-responsive"
+          >
+            {PATHWAYS.map((p) => (
+              <article
+                key={p.title}
+                style={{ minHeight: 192, padding: 20, border: "1px solid var(--line)", borderRadius: 6, background: "var(--white)" }}
               >
-                Browse Kuppi Sessions
-              </Button>
+                <h3 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800 }}>{p.title}</h3>
+                <p style={{ margin: "0 0 18px", color: "var(--muted)", lineHeight: 1.45 }}>{p.desc}</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, color: "var(--muted)", fontSize: 13 }}>
+                  {p.meta.map((m) => <span key={m}>{m}</span>)}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust section */}
+      <section style={{ background: "#202124", color: "var(--white)", padding: "34px 0" }}>
+        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
+          <div style={{ marginBottom: 20 }}>
+            <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800 }}>Designed for local study culture</h2>
+            <p style={{ margin: "8px 0 0", color: "#cfd2d5", lineHeight: 1.45 }}>
+              Support for public university students, private institute students, external degree learners, and A/L leavers entering higher education.
+            </p>
+          </div>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginTop: 20 }}
+            className="trust-grid-responsive"
+          >
+            {TRUST_LABELS.map((label) => (
+              <div
+                key={label}
+                style={{
+                  display: "grid", placeItems: "center", minHeight: 58,
+                  border: "1px solid rgba(255,255,255,.28)",
+                  color: "#f3f4f6", fontWeight: 800, fontSize: 13, textAlign: "center",
+                  padding: "0 8px",
+                }}
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section style={{ padding: "34px 0" }}>
+        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
+          <div style={{ marginBottom: 18 }}>
+            <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800 }}>Student stories that feel familiar</h2>
+          </div>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}
+            className="testimonials-responsive"
+          >
+            {TESTIMONIALS.map((t) => (
+              <article
+                key={t.author}
+                style={{ padding: 20, border: "1px solid var(--line)", borderRadius: 6, background: "var(--white)", lineHeight: 1.45 }}
+              >
+                {t.quote}
+                <strong style={{ display: "block", marginTop: 16, color: "var(--ink)" }}>{t.author}</strong>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA banner */}
+      {!isAuthenticated && (
+        <section style={{ background: "var(--brand-dark)", color: "#fff", padding: "34px 28px", textAlign: "center" }}>
+          <h2 style={{ margin: "0 0 12px", fontSize: 30, fontWeight: 800 }}>Ready to ace your university exams?</h2>
+          <p style={{ margin: "0 0 24px", fontSize: 18, color: "#d7f4ec", maxWidth: 600, marginLeft: "auto", marginRight: "auto" }}>
+            Join UniHub today and get access to peer-led kuppi sessions, simplified module guides, and connect with fellow Sri Lankan university students.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link
+              href="/auth/register"
+              style={{
+                height: 48, display: "inline-flex", alignItems: "center", padding: "0 24px",
+                background: "#fff", color: "var(--ink)", fontSize: 14, fontWeight: 800, border: "1px solid #fff",
+              }}
+            >
+              Join Free
+            </Link>
+            <Link
+              href="/courses"
+              style={{
+                height: 48, display: "inline-flex", alignItems: "center", padding: "0 24px",
+                background: "transparent", color: "#fff", fontSize: 14, fontWeight: 800,
+                border: "1px solid rgba(255,255,255,.6)",
+              }}
+            >
+              Browse Kuppi Sessions
             </Link>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Become Your Tutor Modal */}
+      {/* Role Upgrade Modal */}
       <RoleUpgradeModal
         isOpen={roleModalOpen}
         onClose={() => setRoleModalOpen(false)}
         roleType="tutor"
         featureName="Create Kuppi"
       />
+
+      <style jsx>{`
+        @media (max-width: 980px) {
+          .stats-grid-responsive { grid-template-columns: repeat(2, 1fr) !important; }
+          .promise-grid-responsive { grid-template-columns: repeat(2, 1fr) !important; }
+          .campus-layout-responsive { grid-template-columns: 1fr !important; }
+          .career-grid-responsive { grid-template-columns: 1fr !important; }
+          .trust-grid-responsive { grid-template-columns: repeat(3, 1fr) !important; }
+          .testimonials-responsive { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 640px) {
+          .stats-grid-responsive { grid-template-columns: 1fr !important; }
+          .promise-grid-responsive { grid-template-columns: 1fr !important; }
+          .trust-grid-responsive { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+      `}</style>
     </div>
   );
 }

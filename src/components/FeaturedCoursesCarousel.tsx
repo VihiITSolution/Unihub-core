@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { Badge, Button } from "@/components/ui";
 import type { Course } from "@/types";
 import { API_BASE_URL } from "@/lib/constants";
 
@@ -12,97 +11,66 @@ interface CategoryTab {
   name: string;
 }
 
-interface CoursesGrouped {
-  [key: string]: Course[];
-}
+const TOPICS = [
+  { id: "all", label: "Featured" },
+  { id: "computing", label: "Computing" },
+  { id: "business", label: "Management" },
+  { id: "engineering", label: "Engineering" },
+  { id: "medicine", label: "Medicine" },
+  { id: "humanities", label: "Humanities" },
+  { id: "exam", label: "Exams" },
+];
+
+const YEARS = [
+  { id: "all", label: "All Years" },
+  { id: "1", label: "First Year" },
+  { id: "2", label: "Second Year" },
+  { id: "3", label: "Third Year" },
+  { id: "4", label: "Fourth Year" },
+];
+
+const QUICK_FILTERS = [
+  { label: "Assignment help", query: "assignment" },
+  { label: "Final exam prep", query: "final exam" },
+  { label: "Viva practice", query: "viva" },
+  { label: "Research project", query: "research" },
+  { label: "Internship skills", query: "internship" },
+  { label: "Foundation year", query: "foundation" },
+];
+
+const TOPIC_TEXT: Record<string, [string, string]> = {
+  all: ["Featured kuppi sessions", "Browse sessions mapped to Sri Lankan faculties, course codes, assessments, and semester needs."],
+  computing: ["Faculty of Computing", "Software engineering, data science, information systems, research projects, and portfolio-ready technical modules."],
+  business: ["Faculty of Management Studies", "Marketing, management, accounting, entrepreneurship, group assignments, vivas, and internship communication."],
+  engineering: ["Faculty of Engineering", "Lab support, circuit theory, reports, design calculations, and final exam revision."],
+  medicine: ["Faculty of Medicine", "Health science, nursing, public health, anatomy, and evidence-based study support."],
+  humanities: ["Humanities and Social Sciences", "Academic English, presentations, writing, psychology, law, and foundation-year support."],
+  exam: ["Exam prep and certification support", "Prepare for final exams, supplementary exams, vivas, and professional certification pathways."],
+};
 
 export default function FeaturedCoursesCarousel() {
   const { user, token, isAuthenticated } = useAuth();
-  const [allCourses, setAllCourses] = useState<Course[]>([]);
-  const [groupedCourses, setGroupedCourses] = useState<CoursesGrouped>({});
-  const [categories, setCategories] = useState<CategoryTab[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [allCourses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [activeTopic, setActiveTopic] = useState("all");
+  const [activeYear, setActiveYear] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    loadAllCourses();
+    loadCourses();
   }, [isAuthenticated, token]);
 
-  useEffect(() => {
-    checkScroll();
-    window.addEventListener("resize", checkScroll);
-    return () => window.removeEventListener("resize", checkScroll);
-  }, [groupedCourses, activeCategory]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") {
-        scrollLeft();
-      } else if (e.key === "ArrowRight") {
-        scrollRight();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [scrollContainerRef]);
-
-  const loadAllCourses = async () => {
+  const loadCourses = async () => {
     try {
       setLoading(true);
-
       const headers: Record<string, string> = {};
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      // Fetch all courses without limit
-      const response = await fetch(`${API_BASE_URL}/courses?limit=100&page=1`, {
-        headers,
-      });
-
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const response = await fetch(`${API_BASE_URL}/courses?limit=100&page=1`, { headers });
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data) {
-          const coursesData = (result.data as any).courses || result.data;
-          setAllCourses(coursesData);
-
-          // Group courses by faculty
-          const grouped: CoursesGrouped = {};
-          const categorySet = new Set<string>();
-
-          coursesData.forEach((course: any) => {
-            // Prefer category name from categoryObj if present
-            const categoryName =
-              course.categoryObj?.name ||
-              course.faculty?.name ||
-              course.category ||
-              "Other";
-            if (!grouped[categoryName]) {
-              grouped[categoryName] = [];
-            }
-            grouped[categoryName].push(course);
-            categorySet.add(categoryName);
-          });
-
-          setGroupedCourses(grouped);
-
-          // Create category tabs (limit to 5 total)
-          const allTabs: CategoryTab[] = [
-            { id: "all", name: "All Categories" },
-            ...Array.from(categorySet).map((cat) => ({
-              id: cat.toLowerCase().replace(/\s+/g, "-"),
-              name: cat,
-            })),
-          ];
-
-          // Limit to 5 categories
-          const tabs = allTabs.slice(0, 5);
-
-          setCategories(tabs);
+          const data = (result.data as any).courses || result.data;
+          setCourses(Array.isArray(data) ? data : []);
         }
       }
     } catch (error) {
@@ -112,315 +80,339 @@ export default function FeaturedCoursesCarousel() {
     }
   };
 
-  const checkScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } =
-        scrollContainerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
+  const getFilteredCourses = (): Course[] => {
+    return allCourses.filter((course) => {
+      const facultyName = (course.categoryObj?.name || course.faculty?.name || course.category || "").toLowerCase();
+
+      const topicMatch =
+        activeTopic === "all" ||
+        (activeTopic === "computing" && (facultyName.includes("computing") || facultyName.includes("it") || facultyName.includes("software"))) ||
+        (activeTopic === "business" && (facultyName.includes("management") || facultyName.includes("business") || facultyName.includes("commerce"))) ||
+        (activeTopic === "engineering" && facultyName.includes("engineer")) ||
+        (activeTopic === "medicine" && (facultyName.includes("medicine") || facultyName.includes("health") || facultyName.includes("nursing"))) ||
+        (activeTopic === "humanities" && (facultyName.includes("humanit") || facultyName.includes("arts") || facultyName.includes("english"))) ||
+        (activeTopic === "exam" && (facultyName.includes("exam") || facultyName.includes("foundation") || facultyName.includes("prep")));
+
+      const yearVal = String(course.year || "");
+      const yearMatch =
+        activeYear === "all" ||
+        (activeYear === "1" && yearVal === "1") ||
+        (activeYear === "2" && yearVal === "2") ||
+        (activeYear === "3" && yearVal === "3") ||
+        (activeYear === "4" && yearVal === "4");
+
+      const q = searchQuery.toLowerCase();
+      const textMatch =
+        !q ||
+        course.title.toLowerCase().includes(q) ||
+        (course.description || "").toLowerCase().includes(q) ||
+        (course.tutor
+          ? `${course.tutor.firstName} ${course.tutor.lastName}`.toLowerCase().includes(q)
+          : false);
+
+      return topicMatch && yearMatch && textMatch;
+    });
   };
 
-  const scroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 320; // Card width + gap
-      scrollContainerRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-
-      setTimeout(checkScroll, 300);
-    }
-  };
-
-  const scrollLeft = () => scroll("left");
-  const scrollRight = () => scroll("right");
-
-  const getCoursesToDisplay = (): Course[] => {
-    if (activeCategory === "all") {
-      return allCourses;
-    }
-
-    const categoryName = Object.keys(groupedCourses).find(
-      (cat) => cat.toLowerCase().replace(/\s+/g, "-") === activeCategory,
-    );
-
-    return categoryName ? groupedCourses[categoryName] : [];
-  };
-
-  const coursesToDisplay = getCoursesToDisplay();
+  const courses = getFilteredCourses();
+  const [titleText, copyText] = TOPIC_TEXT[activeTopic] || TOPIC_TEXT.all;
+  const showYearFilter = activeTopic === "all" || activeTopic === "computing";
 
   return (
-    <section className="section">
-      <div className="container-custom">
-        {/* Header */}
-        <div className="mb-12">
-          <h2 className="heading-2 text-gray-900 mb-2">
-            Master Your Modules & Ace Your Exams
-          </h2>
-          <p className="text-lg text-gray-600">
-            Join university students covering hard lessons and difficult
-            modules. Get peer-to-peer kuppi sessions to prepare for exams.
-          </p>
-        </div>
-
-        {/* Category Tabs and Explore Button */}
-        {categories.length > 0 && (
-          <div className="mb-8 flex items-center justify-between gap-4">
-            <div className="flex-1 overflow-x-auto scrollbar-hide">
-              <div className="flex gap-3 pb-2">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => {
-                      setActiveCategory(category.id);
-                      setTimeout(checkScroll, 100);
-                    }}
-                    className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all duration-300 bg-gray-100 text-gray-700 hover:bg-gray-200 ${
-                      activeCategory === category.id
-                        ? "border-2 border-primary-600"
-                        : "border-2 border-transparent"
-                    }`}
-                  >
-                    {category.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <Link href="/courses" className="flex-shrink-0">
-              <Button variant="outline">Explore All</Button>
-            </Link>
-          </div>
-        )}
-
-        {/* Loading State */}
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : coursesToDisplay.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-lg text-gray-600">
-              No courses available in this category yet
+    <section style={{ padding: "34px 0" }}>
+      <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
+        {/* Section head */}
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 18, marginBottom: 18 }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800, lineHeight: 1.15 }}>
+              Search like you are planning your semester
+            </h2>
+            <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.45 }}>
+              Filter by faculty, then search course codes, lecturers, modules, GPA support, assignments, vivas, or exam topics.
             </p>
           </div>
-        ) : (
-          <div className="relative group">
-            {/* Carousel Container */}
-            <div
-              ref={scrollContainerRef}
-              onScroll={checkScroll}
-              className="flex gap-6 overflow-x-auto scroll-smooth pb-4 scrollbar-hide snap-x snap-mandatory"
+          <Link
+            href="/courses"
+            style={{
+              minHeight: 40, display: "inline-grid", placeItems: "center",
+              padding: "0 14px", border: "1px solid var(--ink)",
+              background: "var(--white)", color: "var(--ink)",
+              fontSize: 14, fontWeight: 800, whiteSpace: "nowrap", flexShrink: 0,
+            }}
+          >
+            View all
+          </Link>
+        </div>
+
+        {/* Topic tabs */}
+        <div
+          style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}
+          className="scrollbar-hide"
+          role="tablist"
+        >
+          {TOPICS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveTopic(tab.id); setActiveYear("all"); setSearchQuery(""); }}
+              style={{
+                minHeight: 42, padding: "0 16px",
+                border: `1px solid ${activeTopic === tab.id ? "var(--ink)" : "var(--line)"}`,
+                borderRadius: 999,
+                background: activeTopic === tab.id ? "var(--ink)" : "var(--white)",
+                color: activeTopic === tab.id ? "#fff" : "var(--ink)",
+                fontSize: 14, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap",
+                transition: "all .15s",
+              }}
+              role="tab"
+              aria-selected={activeTopic === tab.id}
             >
-              {coursesToDisplay.map((course) => (
-                <Link
-                  key={course.id}
-                  href={`/courses/${course.id}`}
-                  className="flex-shrink-0 w-80 snap-center"
-                >
-                  <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 h-full flex flex-col group/card border border-gray-100">
-                    {/* Image Container */}
-                    <div className="relative overflow-hidden bg-gray-200 h-48">
-                      <img
-                        src={
-                          course.thumbnail ||
-                          "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&h=280&fit=crop&q=80"
-                        }
-                        alt={course.title}
-                        className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src =
-                            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&h=280&fit=crop&q=80";
-                        }}
-                      />
-                    </div>
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-                    {/* Content */}
-                    <div className="p-4 flex-1 flex flex-col">
-                      {/* Faculty/Category */}
-                      {/* Category Name Badge */}
-                      {course.categoryObj?.name && (
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="primary" size="sm">
-                            {course.categoryObj.name}
-                          </Badge>
-                        </div>
-                      )}
-                      {/* Fallback to faculty name if no categoryObj */}
-                      {!course.categoryObj?.name && course.faculty?.name && (
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="primary" size="sm">
-                            {course.faculty.name}
-                          </Badge>
-                        </div>
-                      )}
-
-                      {/* Title */}
-                      <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-sm group-hover/card:text-primary-600 transition-colors">
-                        {course.title}
-                      </h3>
-
-                      {/* Tutor Name */}
-                      <p className="text-xs text-gray-600 mb-3 font-medium">
-                        by{" "}
-                        {course.tutor
-                          ? `${course.tutor.firstName} ${course.tutor.lastName}`
-                          : course.tutorName || "Unknown Instructor"}
-                      </p>
-
-                      {/* Short Description */}
-                      {course.shortDescription && (
-                        <p className="text-gray-700 text-sm mb-3 line-clamp-3">
-                          {course.shortDescription}
-                        </p>
-                      )}
-                      {/* Year/Level and Rating Tags */}
-                      <div className="flex items-center gap-2 flex-wrap mb-3">
-                        {course.isUpcoming && (
-                          <Badge className="bg-orange-100 text-orange-800 text-xs font-semibold">
-                            UPCOMING
-                          </Badge>
-                        )}
-                        {course.year ? (
-                          <Badge className="bg-purple-100 text-purple-700 text-xs font-semibold">
-                            Year {course.year}
-                          </Badge>
-                        ) : (
-                          course.level && (
-                            <Badge className="bg-gray-200 text-gray-800 text-xs font-semibold capitalize">
-                              {course.level}
-                            </Badge>
-                          )
-                        )}
-                        {course.rating && course.rating > 0 && (
-                          <Badge className="bg-yellow-100 text-yellow-800 text-xs font-semibold">
-                            {Number(course.rating).toFixed(1)} Rating
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Rating and Reviews */}
-                      <div className="flex items-center gap-2 mb-4 text-xs">
-                        {course.rating && course.rating > 0 && (
-                          <>
-                            <div className="flex text-yellow-400">
-                              {"★".repeat(Math.floor(Number(course.rating)))}
-                            </div>
-                            <span className="text-gray-600">
-                              ({(course.enrollmentCount || 0).toLocaleString()})
-                            </span>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Price and Enroll Button */}
-                      <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
-                        <span className="text-lg font-bold text-gray-900">
-                          {course.price === 0 ||
-                          parseFloat(String(course.price)) === 0
-                            ? "FREE"
-                            : `Rs. ${course.price}`}
-                        </span>
-                        {course.isUpcoming ? (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            className="text-xs bg-orange-500 hover:bg-orange-600"
-                            onClick={() => {
-                              if (!user) {
-                                window.location.href = "/auth/login";
-                              } else {
-                                alert(`${course.title} is coming soon!`);
-                              }
-                            }}
-                          >
-                            Notify Me
-                          </Button>
-                        ) : user && course.tutorId === user.id ? (
-                          <Link href={`/tutor/edit-course/${course.id}`}>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              className="text-xs"
-                            >
-                              Manage
-                            </Button>
-                          </Link>
-                        ) : course.isEnrolled ? (
-                          <Link href={`/student/learn/${course.id}`}>
-                            <Button
-                              variant="success"
-                              size="sm"
-                              className="text-xs"
-                            >
-                              {course.price === 0 ? "View" : "Watch Now"}
-                            </Button>
-                          </Link>
-                        ) : (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            className="text-xs"
-                          >
-                            Enroll
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {/* Left Arrow Button */}
-            {canScrollLeft && (
+        {/* Year filter chips */}
+        {showYearFilter && (
+          <div
+            style={{
+              display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8,
+              margin: "12px 0 2px", padding: 12,
+              border: "1px solid #d7ebe5", borderRadius: 6, background: "#f2fbf8",
+            }}
+          >
+            <span style={{ marginRight: 4, color: "var(--brand-dark)", fontSize: 13, fontWeight: 800 }}>
+              Year filter:
+            </span>
+            {YEARS.map((yr) => (
               <button
-                onClick={scrollLeft}
-                className="absolute -left-5 top-1/3 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100"
-                aria-label="Scroll left"
+                key={yr.id}
+                onClick={() => setActiveYear(yr.id)}
+                style={{
+                  minHeight: 34, padding: "0 12px",
+                  border: `1px solid ${activeYear === yr.id ? "var(--brand)" : "var(--line)"}`,
+                  borderRadius: 999,
+                  background: activeYear === yr.id ? "#e8f6f1" : "var(--white)",
+                  color: activeYear === yr.id ? "var(--brand-dark)" : "var(--ink)",
+                  fontSize: 13, fontWeight: 800, cursor: "pointer",
+                }}
               >
-                <svg
-                  className="w-6 h-6 text-gray-900"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
+                {yr.label}
               </button>
-            )}
-
-            {/* Right Arrow Button */}
-            {canScrollRight && (
-              <button
-                onClick={scrollRight}
-                className="absolute -right-5 top-1/3 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100"
-                aria-label="Scroll right"
-              >
-                <svg
-                  className="w-6 h-6 text-gray-900"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            )}
+            ))}
           </div>
         )}
+
+        {/* Quick filter chips */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "12px 0 2px" }}>
+          {QUICK_FILTERS.map((chip) => (
+            <button
+              key={chip.query}
+              onClick={() => setSearchQuery(chip.query)}
+              style={{
+                minHeight: 34, padding: "0 12px",
+                border: `1px solid ${searchQuery === chip.query ? "var(--brand)" : "var(--line)"}`,
+                borderRadius: 999,
+                background: searchQuery === chip.query ? "#e8f6f1" : "var(--white)",
+                color: searchQuery === chip.query ? "var(--brand-dark)" : "var(--ink)",
+                fontSize: 13, fontWeight: 800, cursor: "pointer",
+              }}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Panel with title */}
+        <div
+          style={{
+            marginTop: 12, padding: 22,
+            border: "1px solid var(--line)", background: "var(--soft)",
+          }}
+        >
+          <h3 style={{ margin: "0 0 8px", fontSize: 23, fontWeight: 800 }}>{titleText}</h3>
+          <p style={{ maxWidth: 760, margin: "0 0 18px", color: "var(--muted)", lineHeight: 1.45 }}>
+            {copyText}
+          </p>
+
+          {/* Course grid */}
+          {loading ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                gap: 18,
+              }}
+              className="course-grid-responsive"
+            >
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{ border: "1px solid var(--line)", borderRadius: 6, overflow: "hidden", background: "var(--white)" }}
+                >
+                  <div style={{ width: "100%", aspectRatio: "16/9", background: "#e6e6e6" }} className="skeleton" />
+                  <div style={{ padding: 12 }}>
+                    <div className="skeleton" style={{ height: 16, marginBottom: 8 }} />
+                    <div className="skeleton" style={{ height: 12, width: "60%" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : courses.length === 0 ? (
+            <div
+              style={{
+                padding: 24, border: "1px dashed var(--line)",
+                background: "var(--white)", color: "var(--muted)", textAlign: "center",
+              }}
+            >
+              No kuppi sessions match your search yet.
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                gap: 18,
+              }}
+              className="course-grid-responsive"
+            >
+              {courses.slice(0, 12).map((course) => (
+                <CourseCard key={course.id} course={course} user={user} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      <style jsx>{`
+        @media (max-width: 980px) {
+          .course-grid-responsive {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .course-grid-responsive {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </section>
   );
+}
+
+function CourseCard({ course, user }: { course: Course; user: any }) {
+  const tutorName = course.tutor
+    ? `${course.tutor.firstName} ${course.tutor.lastName}`
+    : (course as any).tutorName || "Instructor";
+
+  const facultyLabel =
+    course.categoryObj?.name || course.faculty?.name || (course as any).category || "";
+
+  const priceLabel =
+    course.price === 0 || parseFloat(String(course.price)) === 0
+      ? "FREE"
+      : `LKR ${Number(course.price).toLocaleString()}`;
+
+  const badge = course.isUpcoming ? "Upcoming" : course.year ? `Year ${course.year}` : course.level || "Course";
+
+  const isOwner = user && course.tutorId === user.id;
+
+  const cardContent = (
+    <article
+      style={{
+        position: "relative",
+        minWidth: 0,
+        background: "var(--white)",
+        border: "1px solid var(--line)",
+        borderRadius: 6,
+        overflow: "hidden",
+        transition: "transform .18s ease, box-shadow .18s ease",
+        cursor: "pointer",
+        display: "flex",
+        flexDirection: "column",
+      }}
+      className="course-card-hover"
+    >
+      {/* Thumbnail */}
+      <img
+        style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", background: "#e6e6e6" }}
+        src={
+          course.thumbnail ||
+          "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop&q=80"
+        }
+        alt={course.title}
+        onError={(e) => {
+          (e.target as HTMLImageElement).src =
+            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop&q=80";
+        }}
+      />
+
+      {/* Body */}
+      <div style={{ padding: 12, flex: 1, display: "flex", flexDirection: "column" }}>
+        <h4
+          style={{
+            minHeight: 44, margin: "0 0 6px",
+            fontSize: 15, lineHeight: 1.25, fontWeight: 800, color: "var(--ink)",
+          }}
+        >
+          {course.title}
+        </h4>
+        <div style={{ color: "var(--muted)", fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          By {tutorName}
+        </div>
+
+        {/* Meta tags */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "8px 0 0" }}>
+          {facultyLabel && (
+            <span style={{ padding: "3px 6px", background: "var(--soft)", border: "1px solid #ececec", color: "var(--muted)", fontSize: 12 }}>
+              {facultyLabel}
+            </span>
+          )}
+          {course.year && (
+            <span style={{ padding: "3px 6px", background: "var(--soft)", border: "1px solid #ececec", color: "var(--muted)", fontSize: 12 }}>
+              Year {course.year}
+            </span>
+          )}
+        </div>
+
+        {/* Rating */}
+        {course.rating && Number(course.rating) > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, margin: "8px 0", color: "var(--gold)", fontSize: 14, fontWeight: 800 }}>
+            {Number(course.rating).toFixed(1)} ★
+            <span style={{ color: "var(--muted)", fontWeight: 400 }}>
+              ({(course.enrollmentCount || 0).toLocaleString()})
+            </span>
+          </div>
+        )}
+
+        {/* Price row */}
+        <div
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: 8, marginTop: "auto", paddingTop: 8,
+            fontWeight: 800, fontSize: 14,
+          }}
+        >
+          <span>{priceLabel}</span>
+          <span
+            style={{
+              display: "inline-flex", alignItems: "center",
+              height: 25, padding: "0 8px",
+              background: "#e8f6f1", color: "var(--brand-dark)",
+              fontSize: 12, fontWeight: 800,
+            }}
+          >
+            {badge}
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+
+  if (isOwner) {
+    return <Link href={`/tutor/edit-course/${course.id}`} style={{ textDecoration: "none" }}>{cardContent}</Link>;
+  }
+  if ((course as any).isEnrolled) {
+    return <Link href={`/student/learn/${course.id}`} style={{ textDecoration: "none" }}>{cardContent}</Link>;
+  }
+  return <Link href={`/courses/${course.id}`} style={{ textDecoration: "none" }}>{cardContent}</Link>;
 }

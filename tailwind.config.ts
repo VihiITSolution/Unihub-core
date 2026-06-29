@@ -10,6 +10,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Reference design system
+        brand: {
+          DEFAULT: '#0b6b5f',
+          dark: '#073f38',
+          light: '#e8f6f1',
+        },
+        ink: {
+          DEFAULT: '#151515',
+        },
+        muted: {
+          DEFAULT: '#5f6368',
+        },
+        line: {
+          DEFAULT: '#d8d8d8',
+        },
+        soft: {
+          DEFAULT: '#f7f8fa',
+        },
+        gold: {
+          DEFAULT: '#b4690e',
+        },
+        accent: {
+          DEFAULT: '#c92a63',
+        },
         // Logo-derived color palette
         navy: {
           50: "#e6edf5",

@@ -7,14 +7,12 @@ import type { MarketplaceItem } from "@/types";
 import type { MarketplaceFilters } from "@/services/marketplace.service";
 
 const CATEGORIES = [
-  { value: "", label: "All Categories" },
-  { value: "books", label: "Books & Textbooks" },
+  { value: "", label: "All items" },
+  { value: "books", label: "Textbooks" },
   { value: "electronics", label: "Electronics" },
-  { value: "stationery", label: "Stationery" },
-  { value: "accessories", label: "Accessories" },
-  { value: "furniture", label: "Furniture" },
-  { value: "clothing", label: "Clothing" },
-  { value: "sports", label: "Sports Equipment" },
+  { value: "stationery", label: "Lab & Medical" },
+  { value: "furniture", label: "Hostel room" },
+  { value: "sports", label: "Transport" },
   { value: "other", label: "Other" },
 ];
 
@@ -31,57 +29,67 @@ function conditionLabel(c: string) {
   return CONDITIONS.find((x) => x.value === c)?.label ?? c;
 }
 
+const SELLER_STEPS = [
+  { title: "1. List in minutes", body: "Add condition, price, campus area, photos, and whether it is used or new." },
+  { title: "2. Meet near campus", body: "Use university gates, libraries, cafes, or safe public spots students already know." },
+  { title: "3. Keep money in student hands", body: "Make campus life cheaper while reducing waste from one-semester items." },
+];
+
 function ItemCard({ item }: { item: MarketplaceItem }) {
   return (
-    <Link
-      href={`/marketplace/${item.id}`}
-      className="group block bg-white rounded-xl border border-gray-200 hover:border-primary-400 hover:shadow-lg transition-all duration-200 overflow-hidden"
-    >
-      <div className="w-full aspect-[4/3] bg-gradient-to-br from-primary-400 to-secondary-400 flex items-center justify-center text-white text-5xl font-bold">
-        {item.images && item.images.length > 0 ? (
-          <img
-            src={item.images[0]}
-            alt={item.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          item.title.charAt(0)
-        )}
-      </div>
-
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
-            {item.category}
-          </span>
-          <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">
-            {conditionLabel(item.condition)}
-          </span>
+    <Link href={`/marketplace/${item.id}`} style={{ textDecoration: "none" }}>
+      <article
+        style={{
+          border: "1px solid var(--line)", borderRadius: 6,
+          overflow: "hidden", background: "var(--white)",
+          transition: "transform .18s, box-shadow .18s",
+          cursor: "pointer",
+        }}
+        className="course-card-hover"
+      >
+        {/* Thumb */}
+        <div
+          style={{
+            width: "100%", aspectRatio: "16/10",
+            display: "grid", placeItems: "center",
+            background: "var(--soft)", fontSize: 42,
+            overflow: "hidden",
+          }}
+        >
+          {item.images && item.images.length > 0 ? (
+            <img src={item.images[0]} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <span>🛍️</span>
+          )}
         </div>
 
-        <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 line-clamp-2 mb-1">
-          {item.title}
-        </h3>
-
-        <p className="text-sm text-gray-500 line-clamp-2 mb-3">{item.description}</p>
-
-        <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-primary-600">
-            Rs. {Number(item.price).toFixed(2)}
-          </span>
-          <span className={`text-xs font-medium ${item.stock > 0 ? "text-green-600" : "text-red-500"}`}>
-            {item.stock > 0 ? `${item.stock} in stock` : "Out of stock"}
-          </span>
-        </div>
-
-        {item.seller && (
-          <p className="mt-2 text-xs text-gray-400 truncate">
-            by{" "}
-            {item.seller.vendorProfile?.shopName ||
-              `${item.seller.firstName} ${item.seller.lastName}`}
+        {/* Body */}
+        <div style={{ padding: 14 }}>
+          <h3 style={{ minHeight: 44, margin: "0 0 6px", fontSize: 16, lineHeight: 1.25, fontWeight: 800, color: "var(--ink)" }}>
+            {item.title}
+          </h3>
+          <p style={{ margin: 0, color: "var(--muted)", fontSize: 13, lineHeight: 1.45 }}>
+            {item.category} · {conditionLabel(item.condition)}
           </p>
-        )}
-      </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 12, fontWeight: 800 }}>
+            <span>Rs. {Number(item.price).toLocaleString()}</span>
+            <span
+              style={{
+                padding: "5px 8px",
+                background: "#e8f6f1", color: "var(--brand-dark)",
+                fontSize: 12, fontWeight: 800,
+              }}
+            >
+              {item.stock > 0 ? "Available" : "Sold"}
+            </span>
+          </div>
+          {item.seller && (
+            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
+              by {item.seller.vendorProfile?.shopName || `${item.seller.firstName} ${item.seller.lastName}`}
+            </p>
+          )}
+        </div>
+      </article>
     </Link>
   );
 }
@@ -98,7 +106,6 @@ export default function MarketplacePage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-
   const LIMIT = 12;
 
   const loadItems = useCallback(async () => {
@@ -110,7 +117,6 @@ export default function MarketplacePage() {
       if (condition) filters.condition = condition;
       if (minPrice) filters.minPrice = Number(minPrice);
       if (maxPrice) filters.maxPrice = Number(maxPrice);
-
       const response = await marketplaceService.getItems(filters);
       if (response.success && response.data) {
         setItems(response.data as unknown as MarketplaceItem[]);
@@ -126,9 +132,7 @@ export default function MarketplacePage() {
     }
   }, [search, category, condition, minPrice, maxPrice, page]);
 
-  useEffect(() => {
-    loadItems();
-  }, [loadItems]);
+  useEffect(() => { loadItems(); }, [loadItems]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,222 +140,283 @@ export default function MarketplacePage() {
     setPage(1);
   };
 
-  const handleFilterChange = () => {
-    setPage(1);
-  };
-
   const clearFilters = () => {
-    setSearch("");
-    setSearchInput("");
-    setCategory("");
-    setCondition("");
-    setMinPrice("");
-    setMaxPrice("");
-    setPage(1);
+    setSearch(""); setSearchInput(""); setCategory("");
+    setCondition(""); setMinPrice(""); setMaxPrice(""); setPage(1);
   };
 
   const hasActiveFilters = search || category || condition || minPrice || maxPrice;
 
   return (
-    <div className="container-custom py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Marketplace</h1>
-        <p className="text-gray-600">
-          Buy and sell items with other students — textbooks, electronics, stationery and more.
-        </p>
-      </div>
-
-      <form onSubmit={handleSearch} className="flex gap-3 mb-8">
-        <input
-          type="text"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search for textbooks, electronics, and more..."
-          className="input flex-1"
-        />
-        <button type="submit" className="btn-primary px-6">
-          Search
-        </button>
-        {hasActiveFilters && (
-          <button type="button" onClick={clearFilters} className="btn-outline px-4 text-sm">
-            Clear
-          </button>
-        )}
-      </form>
-
-      <div className="flex flex-col lg:flex-row gap-8">
-        <aside className="w-full lg:w-64 shrink-0">
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-6">
-            <h2 className="font-semibold text-gray-900">Filters</h2>
-
+    <div style={{ minHeight: "100vh", background: "var(--white)" }}>
+      {/* Hero */}
+      <section style={{ background: "#073f38", color: "#fff" }}>
+        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
+          <div
+            style={{ minHeight: 320, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 30, alignItems: "center", padding: "34px 0" }}
+            className="marketplace-hero-grid"
+          >
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-              <select
-                value={category}
-                onChange={(e) => { setCategory(e.target.value); handleFilterChange(); }}
-                className="input"
+              <p style={{ margin: "0 0 10px", color: "#a9f0df", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Student Marketplace
+              </p>
+              <h1 style={{ margin: 0, fontSize: "clamp(30px, 4vw, 48px)", lineHeight: 1.02, fontWeight: 800 }}>
+                Buy it for less. Sell it before it gathers dust.
+              </h1>
+              <p style={{ margin: "16px 0 24px", maxWidth: 480, fontSize: 17, lineHeight: 1.45, color: "#d7f4ec" }}>
+                UniHub Marketplace helps university students buy and sell used or new items for campus life: books, laptops, calculators, lab coats, drawing boards, bicycles, hostel furniture, and everything in between.
+              </p>
+              <a
+                href="#listings"
+                style={{
+                  minHeight: 42, display: "inline-grid", placeItems: "center",
+                  padding: "0 20px", border: "1px solid #fff",
+                  background: "#fff", color: "var(--ink)",
+                  fontSize: 14, fontWeight: 800, textDecoration: "none",
+                }}
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
+                Browse student deals
+              </a>
             </div>
+            <img
+              style={{ width: "100%", aspectRatio: "16/10", objectFit: "cover", borderRadius: 6, boxShadow: "var(--shadow)" }}
+              src="https://images.unsplash.com/photo-1522202176988-696231b784d3?w=600&h=375&fit=crop&q=80"
+              alt="Sri Lankan university students buying and selling items"
+            />
+          </div>
+        </div>
+      </section>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Condition</label>
-              <select
-                value={condition}
-                onChange={(e) => { setCondition(e.target.value); handleFilterChange(); }}
-                className="input"
-              >
-                {CONDITIONS.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
+      {/* Listings */}
+      <section id="listings" style={{ padding: "34px 0" }}>
+        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
+          <h2 style={{ margin: "0 0 6px", fontSize: 30, fontWeight: 800 }}>Useful things students actually search for</h2>
+          <p style={{ margin: "0 0 18px", color: "var(--muted)", lineHeight: 1.45 }}>
+            Filter by the things you need for lectures, labs, hostel life, commuting, assignments, or internship season.
+          </p>
+
+          {/* Search */}
+          <form onSubmit={handleSearch} style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+            <div
+              style={{
+                flex: 1, display: "flex", alignItems: "center", gap: 10,
+                height: 46, padding: "0 16px",
+                border: "1px solid var(--ink)", borderRadius: 999, background: "var(--soft)",
+              }}
+            >
+              <span style={{ color: "var(--muted)", fontSize: 14 }}>Find</span>
+              <input
+                type="search"
+                placeholder="Laptop, books, calculator, lab coat..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                style={{ flex: 1, border: 0, outline: 0, background: "transparent", fontSize: 14, color: "var(--ink)" }}
+              />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price Range (Rs.)
-              </label>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="Min"
-                  value={minPrice}
-                  onChange={(e) => { setMinPrice(e.target.value); handleFilterChange(); }}
-                  className="input w-full"
-                />
-                <span className="text-gray-400">–</span>
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="Max"
-                  value={maxPrice}
-                  onChange={(e) => { setMaxPrice(e.target.value); handleFilterChange(); }}
-                  className="input w-full"
-                />
-              </div>
-            </div>
-
+            <button
+              type="submit"
+              style={{ height: 46, padding: "0 20px", background: "var(--ink)", color: "#fff", border: "none", fontWeight: 800, cursor: "pointer" }}
+            >
+              Search
+            </button>
             {hasActiveFilters && (
               <button
+                type="button"
                 onClick={clearFilters}
-                className="w-full text-sm text-primary-600 hover:underline text-left"
+                style={{ height: 46, padding: "0 14px", border: "1px solid var(--line)", background: "var(--white)", fontSize: 14, cursor: "pointer" }}
               >
-                Clear all filters
+                Clear
               </button>
             )}
+          </form>
+
+          {/* Category chips */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.value}
+                onClick={() => { setCategory(c.value); setPage(1); }}
+                style={{
+                  minHeight: 36, padding: "0 12px",
+                  border: `1px solid ${category === c.value ? "var(--brand)" : "var(--line)"}`,
+                  borderRadius: 999,
+                  background: category === c.value ? "#e8f6f1" : "var(--white)",
+                  color: category === c.value ? "var(--brand-dark)" : "var(--ink)",
+                  fontSize: 13, fontWeight: 800, cursor: "pointer",
+                }}
+              >
+                {c.label}
+              </button>
+            ))}
           </div>
 
-          <div className="mt-4 bg-primary-50 border border-primary-200 rounded-xl p-5">
-            <p className="font-semibold text-primary-900 mb-1">Have something to sell?</p>
-            <p className="text-sm text-primary-700 mb-3">
-              Post your ad free for 3 months during our limited-time promotion.
-            </p>
-            <Link href="/vendor/listings/create" className="btn-primary block text-center text-sm">
-              Post an Ad
-            </Link>
-          </div>
-        </aside>
-
-        <div className="flex-1 min-w-0">
-          {!loading && (
-            <p className="text-sm text-gray-500 mb-4">
-              {total === 0
-                ? "No items found"
-                : `${total} item${total !== 1 ? "s" : ""} found`}
-              {hasActiveFilters && " — filtered"}
-            </p>
-          )}
-
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse"
-                >
-                  <div className="aspect-[4/3] bg-gray-200" />
-                  <div className="p-4 space-y-2">
-                    <div className="h-3 bg-gray-200 rounded w-1/2" />
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    <div className="h-3 bg-gray-200 rounded w-full" />
-                    <div className="h-5 bg-gray-200 rounded w-1/3" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : items.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
-              <div className="text-6xl mb-4">🛍️</div>
-              <h3 className="text-xl font-semibold mb-2">No items found</h3>
-              <p className="text-gray-500 mb-6">
-                {hasActiveFilters
-                  ? "Try adjusting your filters or search query."
-                  : "Be the first to list something!"}
-              </p>
-              {hasActiveFilters && (
-                <button onClick={clearFilters} className="btn-outline">
-                  Clear filters
-                </button>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {items.map((item) => (
-                  <ItemCard key={item.id} item={item} />
+          <div style={{ display: "flex", gap: 24 }} className="marketplace-layout">
+            {/* Sidebar */}
+            <aside style={{ width: 220, flexShrink: 0 }} className="marketplace-sidebar">
+              <h4 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
+                Condition
+              </h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 20 }}>
+                {CONDITIONS.map((c) => (
+                  <button
+                    key={c.value}
+                    onClick={() => { setCondition(c.value); setPage(1); }}
+                    style={{
+                      display: "block", width: "100%", textAlign: "left",
+                      padding: "8px 10px", border: "none", cursor: "pointer",
+                      background: condition === c.value ? "#e8f6f1" : "transparent",
+                      color: condition === c.value ? "var(--brand-dark)" : "var(--ink)",
+                      fontWeight: condition === c.value ? 800 : 400, fontSize: 14, borderRadius: 4,
+                    }}
+                  >
+                    {c.label}
+                  </button>
                 ))}
               </div>
 
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 mt-10">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="btn-outline px-4 py-2 text-sm disabled:opacity-40"
-                  >
-                    Previous
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter((n) => n === 1 || n === totalPages || Math.abs(n - page) <= 1)
-                    .reduce<(number | "...")[]>((acc, n, idx, arr) => {
-                      if (idx > 0 && n - (arr[idx - 1] as number) > 1) acc.push("...");
-                      acc.push(n);
-                      return acc;
-                    }, [])
-                    .map((n, i) =>
-                      n === "..." ? (
-                        <span key={`ellipsis-${i}`} className="px-2 text-gray-400">…</span>
-                      ) : (
-                        <button
-                          key={n}
-                          onClick={() => setPage(n as number)}
-                          className={`w-9 h-9 rounded-lg text-sm font-medium transition ${
-                            page === n
-                              ? "bg-primary-600 text-white"
-                              : "border border-gray-300 hover:bg-gray-50"
-                          }`}
-                        >
-                          {n}
-                        </button>
-                      )
-                    )}
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="btn-outline px-4 py-2 text-sm disabled:opacity-40"
-                  >
-                    Next
-                  </button>
-                </div>
+              <h4 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
+                Price Range (Rs.)
+              </h4>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="number" min="0" placeholder="Min"
+                  value={minPrice}
+                  onChange={(e) => { setMinPrice(e.target.value); setPage(1); }}
+                  style={{ width: "100%", height: 38, padding: "0 10px", border: "1px solid var(--line)", fontSize: 14, outline: "none" }}
+                />
+                <span style={{ color: "var(--muted)" }}>–</span>
+                <input
+                  type="number" min="0" placeholder="Max"
+                  value={maxPrice}
+                  onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }}
+                  style={{ width: "100%", height: 38, padding: "0 10px", border: "1px solid var(--line)", fontSize: 14, outline: "none" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 16, padding: 16, background: "#fff8ec", border: "1px solid #f0dfc4", borderRadius: 6 }}>
+                <p style={{ margin: "0 0 6px", fontWeight: 800, color: "#92400e", fontSize: 14 }}>Have something to sell?</p>
+                <p style={{ margin: "0 0 10px", fontSize: 13, color: "#b45309", lineHeight: 1.4 }}>
+                  Post your ad free for 3 months.
+                </p>
+                <Link
+                  href="/vendor/listings/create"
+                  style={{
+                    display: "block", textAlign: "center", height: 36, lineHeight: "36px",
+                    background: "var(--ink)", color: "#fff", fontSize: 13, fontWeight: 800,
+                  }}
+                >
+                  Sell item
+                </Link>
+              </div>
+            </aside>
+
+            {/* Grid */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {!loading && (
+                <p style={{ margin: "0 0 14px", color: "var(--muted)", fontSize: 13 }}>
+                  {total === 0 ? "No items found" : `${total} item${total !== 1 ? "s" : ""} found`}
+                  {hasActiveFilters && " — filtered"}
+                </p>
               )}
-            </>
-          )}
+
+              {loading ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }} className="mp-grid">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} style={{ border: "1px solid var(--line)", borderRadius: 6, overflow: "hidden" }}>
+                      <div className="skeleton" style={{ width: "100%", aspectRatio: "16/10" }} />
+                      <div style={{ padding: 14 }}>
+                        <div className="skeleton" style={{ height: 16, marginBottom: 8 }} />
+                        <div className="skeleton" style={{ height: 12, width: "60%" }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : items.length === 0 ? (
+                <div style={{ padding: 48, border: "1px solid var(--line)", borderRadius: 6, textAlign: "center" }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>🛍️</div>
+                  <h3 style={{ margin: "0 0 8px" }}>No items found</h3>
+                  <p style={{ margin: 0, color: "var(--muted)" }}>
+                    {hasActiveFilters ? "Try adjusting your filters." : "Be the first to list something!"}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }} className="mp-grid">
+                    {items.map((item) => <ItemCard key={item.id} item={item} />)}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 32 }}>
+                      <button
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        style={{ height: 38, padding: "0 14px", border: "1px solid var(--line)", background: "var(--white)", cursor: "pointer", fontSize: 14, fontWeight: 800 }}
+                      >
+                        Previous
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((n) => n === 1 || n === totalPages || Math.abs(n - page) <= 1)
+                        .map((n, i, arr) => (
+                          <button
+                            key={n}
+                            onClick={() => setPage(n)}
+                            style={{
+                              width: 36, height: 38,
+                              border: `1px solid ${page === n ? "var(--ink)" : "var(--line)"}`,
+                              background: page === n ? "var(--ink)" : "var(--white)",
+                              color: page === n ? "#fff" : "var(--ink)",
+                              fontSize: 14, fontWeight: 800, cursor: "pointer",
+                            }}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      <button
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                        style={{ height: 38, padding: "0 14px", border: "1px solid var(--line)", background: "var(--white)", cursor: "pointer", fontSize: 14, fontWeight: 800 }}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Why sell section */}
+      <section style={{ background: "#fff8ec", borderTop: "1px solid #f0dfc4", borderBottom: "1px solid #f0dfc4", padding: "34px 0" }}>
+        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
+          <h2 style={{ margin: "0 0 6px", fontSize: 30, fontWeight: 800 }}>Why students sell here</h2>
+          <p style={{ margin: "0 0 20px", color: "var(--muted)", lineHeight: 1.45 }}>
+            A senior can pass useful items to a junior, a hostel student can clear a room before moving, and a graduate can recover money from items another student needs tomorrow.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }} className="seller-steps-grid">
+            {SELLER_STEPS.map((step) => (
+              <article key={step.title} style={{ padding: 18, border: "1px solid #ead9bd", borderRadius: 6, background: "var(--white)" }}>
+                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800 }}>{step.title}</h3>
+                <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>{step.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <style jsx>{`
+        @media (max-width: 980px) {
+          .marketplace-hero-grid { grid-template-columns: 1fr !important; }
+          .marketplace-layout { flex-direction: column !important; }
+          .marketplace-sidebar { width: 100% !important; }
+          .mp-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .seller-steps-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 640px) {
+          .mp-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }
