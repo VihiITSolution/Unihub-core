@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -319,51 +318,32 @@ export default function Sidebar({
 
       {/* Sidebar */}
       <aside
-        className={`sidebar shadow-sidebar flex flex-col ${
-          isOpen ? "sidebar-expanded" : "sidebar-collapsed"
-        } ${isMobile && !isOpen ? "-translate-x-full" : "translate-x-0"}`}
+        className={`flex flex-col h-full`}
+        style={{
+          width: "100%",
+          background: "var(--ink)",
+          color: "#fff",
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
       >
-        {/* Logo Section */}
-        <div className="h-20 flex items-center justify-between px-4 border-b border-white/10 flex-shrink-0">
-          <Link href="/" className="flex items-center gap-3 overflow-hidden">
-            <div className="w-10 h-10 flex-shrink-0 relative">
-              <Image
-                src="/Unihub.webp"
-                alt="UniHub"
-                width={40}
-                height={40}
-                className="rounded-lg object-contain"
-              />
-            </div>
-            {isOpen && (
-              <div className="flex flex-col animate-fade-in">
-                <span className="text-xl font-bold text-white">UniHub</span>
-                <span className="text-xs text-ocean-400">
-                  Learn. Earn. Grow.
-                </span>
-              </div>
-            )}
-          </Link>
-
-          {/* Toggle Button - Desktop */}
+        {/* Collapse toggle - Desktop */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
+          {isOpen && (
+            <span style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#a9f0df" }}>
+              Navigation
+            </span>
+          )}
           <button
             onClick={onToggle}
-            className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-colors"
+            className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-colors ml-auto"
+            aria-label="Toggle sidebar"
           >
             <svg
-              className={`w-5 h-5 text-gray-300 transition-transform duration-300 ${
-                isOpen ? "rotate-0" : "rotate-180"
-              }`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+              className={`w-5 h-5 text-gray-300 transition-transform duration-300 ${isOpen ? "rotate-0" : "rotate-180"}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
             </svg>
           </button>
         </div>
@@ -533,35 +513,25 @@ export default function Sidebar({
         {/* User Profile Section */}
         <div className="border-t border-white/10 p-4 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="avatar flex-shrink-0">
-              <span>JD</span>
+            <div
+              style={{
+                width: 36, height: 36, borderRadius: "50%",
+                background: "var(--brand)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#fff", fontWeight: 800, fontSize: 14, flexShrink: 0,
+              }}
+            >
+              {user?.firstName?.[0] || ""}{user?.lastName?.[0] || ""}
             </div>
             {isOpen && (
-              <div className="flex-1 min-w-0 animate-fade-in">
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
-                  John Doe
+                  {user?.firstName} {user?.lastName}
                 </p>
                 <p className="text-xs text-gray-400 truncate capitalize">
-                  {userType}
+                  {user?.primaryRole || userType}
                 </p>
               </div>
-            )}
-            {isOpen && (
-              <button className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-              </button>
             )}
           </div>
         </div>
