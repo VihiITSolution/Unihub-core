@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type RefObject } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import enrollmentService, { Enrollment } from "@/services/enrollment.service";
@@ -133,11 +133,16 @@ export default function StudentDashboard() {
     { id: "profile",     label: "Profile and certificates" },
   ];
 
-  const sectionRefs: Record<string, React.RefObject<HTMLDivElement>> = {
-    courses:  useRef<HTMLDivElement>(null),
-    wishlist: useRef<HTMLDivElement>(null),
-    saved:    useRef<HTMLDivElement>(null),
-    profile:  useRef<HTMLDivElement>(null),
+  const coursesRef  = useRef<HTMLDivElement>(null);
+  const wishlistRef = useRef<HTMLDivElement>(null);
+  const savedRef    = useRef<HTMLDivElement>(null);
+  const profileRef  = useRef<HTMLDivElement>(null);
+
+  const sectionRefs: Record<string, RefObject<HTMLDivElement | null>> = {
+    courses:  coursesRef,
+    wishlist: wishlistRef,
+    saved:    savedRef,
+    profile:  profileRef,
   };
 
   const scrollTo = (id: string) => {
@@ -239,7 +244,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Continue Learning */}
-        <div ref={sectionRefs.courses}>
+        <div ref={coursesRef}>
           <Section
             title="Continue learning"
             subtitle="Pick up from your last lecture, assignment checklist, or revision video."
@@ -286,7 +291,7 @@ export default function StudentDashboard() {
         {/* Wishlist + Saved — two columns */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }} className="ml-two-col">
           {/* Wishlist */}
-          <div ref={sectionRefs.wishlist}>
+          <div ref={wishlistRef}>
             <Section
               title="Wishlist"
               subtitle="Modules, tutors, videos, and marketplace items you want to return to later."
@@ -299,7 +304,7 @@ export default function StudentDashboard() {
           </div>
 
           {/* Saved student life */}
-          <div ref={sectionRefs.saved}>
+          <div ref={savedRef}>
             <Section
               title="Saved student life"
               subtitle="Track the non-course things that still decide how your semester feels."
@@ -313,7 +318,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Profile & Certificates */}
-        <div ref={sectionRefs.profile}>
+        <div ref={profileRef}>
           <Section
             title="Profile, certificates, and account"
             subtitle="Your account can hold student details, faculty, year, certificates, payment history, tutor bookings, and privacy settings."
