@@ -174,7 +174,7 @@ export default function BoardingPage() {
         style={{
           background: `
             linear-gradient(90deg, rgba(7,63,56,.95), rgba(7,63,56,.72)),
-            url("https://images.unsplash.com/photo-1522202176988-696231b784d3?w=1400&h=500&fit=crop&q=80") center/cover
+            url("/campus-walkway.png") center/cover
           `,
           color: "#fff",
         }}

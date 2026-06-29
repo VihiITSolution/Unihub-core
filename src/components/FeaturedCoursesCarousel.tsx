@@ -337,12 +337,12 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
         style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", background: "#e6e6e6" }}
         src={
           course.thumbnail ||
-          "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop&q=80"
+          "/library-study-group.png"
         }
         alt={course.title}
         onError={(e) => {
           (e.target as HTMLImageElement).src =
-            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop&q=80";
+            "/library-study-group.png";
         }}
       />
 

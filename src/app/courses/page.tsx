@@ -345,7 +345,7 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
       ? course.thumbnail
       : course.thumbnail
       ? `${BACKEND_URL}${course.thumbnail}`
-      : "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop&q=80";
+      : "/library-study-group.png";
 
   const priceLabel =
     course.price === 0 || parseFloat(String(course.price)) === 0
@@ -373,7 +373,7 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
           src={thumbnail}
           alt={course.title}
           style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
-          onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop&q=80"; }}
+          onError={(e) => { (e.target as HTMLImageElement).src = "/library-study-group.png"; }}
         />
         {course.isUpcoming && (
           <span

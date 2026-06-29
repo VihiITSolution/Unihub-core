@@ -147,7 +147,7 @@ export default function Home() {
           </div>
           <img
             style={{ width: "100%", aspectRatio: "16/10", objectFit: "cover", borderRadius: 6, border: "1px solid #e8d6b7", boxShadow: "var(--shadow)" }}
-            src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=700&h=440&fit=crop&q=80"
+            src="/campus-walkway.png"
             alt="Sri Lankan university students walking between lectures"
           />
         </div>

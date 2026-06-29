@@ -29,7 +29,7 @@ export default function HeroSection() {
         alignItems: "center",
         background: `
           linear-gradient(90deg, rgba(7,63,56,.95) 0%, rgba(7,63,56,.80) 48%, rgba(7,63,56,.12) 78%),
-          url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1400&h=600&fit=crop&q=80") center/cover
+          url("/hero-sri-lankan-students.png") center/cover
         `,
         color: "#fff",
       }}

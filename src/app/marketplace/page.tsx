@@ -180,7 +180,7 @@ export default function MarketplacePage() {
             </div>
             <img
               style={{ width: "100%", aspectRatio: "16/10", objectFit: "cover", borderRadius: 6, boxShadow: "var(--shadow)" }}
-              src="https://images.unsplash.com/photo-1522202176988-696231b784d3?w=600&h=375&fit=crop&q=80"
+              src="/library-study-group.png"
               alt="Sri Lankan university students buying and selling items"
             />
           </div>
