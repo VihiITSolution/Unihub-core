@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSidebar } from "@/contexts/SidebarContext";
 import Header from "./Header";
 import Footer from "./Footer";
 import Sidebar from "./Sidebar";
@@ -16,42 +16,18 @@ export default function ConditionalLayout({
 }) {
   const pathname = usePathname();
   const { isAuthenticated, user, isLoading } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const { isOpen: sidebarOpen, isMobile, toggle } = useSidebar();
 
   const isDashboard = DASHBOARD_PREFIXES.some((p) => pathname?.startsWith(p));
-
-  useEffect(() => {
-    const check = () => {
-      const mobile = window.innerWidth < 1024;
-      setIsMobile(mobile);
-      if (mobile) setSidebarOpen(false);
-    };
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
   const sidebarWidth = !isMobile ? (sidebarOpen ? 256 : 80) : 0;
 
-  // Still checking auth — render public layout to avoid flash
-  if (isLoading) {
+  // Loading or not authenticated — simple public layout
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1">{children}</main>
-        <Footer />
-      </div>
-    );
-  }
-
-  // Not authenticated — simple public layout
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        {!isLoading && <Footer />}
       </div>
     );
   }
@@ -59,14 +35,13 @@ export default function ConditionalLayout({
   // Authenticated — sidebar visible on ALL pages
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f7f8fa" }}>
-      {/* Same header everywhere */}
       <Header />
 
       <div style={{ display: "flex", flex: 1, position: "relative" }}>
         {/* Mobile overlay */}
         {isMobile && sidebarOpen && (
           <div
-            onClick={() => setSidebarOpen(false)}
+            onClick={toggle}
             style={{
               position: "fixed", inset: 0, top: 104,
               background: "rgba(0,0,0,.5)", zIndex: 39,
@@ -74,7 +49,7 @@ export default function ConditionalLayout({
           />
         )}
 
-        {/* Fixed sidebar */}
+        {/* Fixed sidebar — starts below full header (64px topbar + 40px faculty nav) */}
         <div
           style={{
             position: "fixed",
@@ -89,12 +64,12 @@ export default function ConditionalLayout({
         >
           <Sidebar
             isOpen={sidebarOpen}
-            onToggle={() => setSidebarOpen(!sidebarOpen)}
+            onToggle={toggle}
             userType={user?.primaryRole as "student" | "tutor" | "admin" | undefined}
           />
         </div>
 
-        {/* Page content — offset by sidebar */}
+        {/* Page content */}
         <div
           style={{
             flex: 1,
@@ -105,23 +80,7 @@ export default function ConditionalLayout({
             flexDirection: "column",
           }}
         >
-          {/* Mobile sidebar toggle */}
-          <div className="lg:hidden" style={{ padding: "12px 16px", background: "#fff", borderBottom: "1px solid var(--line)" }}>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              style={{
-                display: "flex", alignItems: "center", gap: 8,
-                fontSize: 14, fontWeight: 800, color: "var(--ink)",
-                background: "none", border: "none", cursor: "pointer",
-              }}
-            >
-              ☰ Menu
-            </button>
-          </div>
-
           <main style={{ flex: 1 }}>{children}</main>
-
-          {/* Footer only on non-dashboard public pages */}
           {!isDashboard && <Footer />}
         </div>
       </div>

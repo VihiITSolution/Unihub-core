@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { RoleUpgradeModal, NotificationBell } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSidebar } from "@/contexts/SidebarContext";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 
 const FACULTY_LINKS = [
@@ -26,6 +27,7 @@ export default function Header() {
   const [requiredRole, setRequiredRole] = useState<RoleType | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { user, logout, isAuthenticated, switchRole } = useAuth();
+  const { toggle: toggleSidebar, isOpen: sidebarOpen } = useSidebar();
   const router = useRouter();
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -106,21 +108,26 @@ export default function Header() {
           width: "100%",
         }}
       >
-        {/* Mobile menu button */}
+        {/* Sidebar / menu toggle — works on all screen sizes */}
         <button
-          className="lg:hidden flex-shrink-0"
           style={{
-            width: 36, height: 36,
+            width: 36, height: 36, flexShrink: 0,
             border: "1px solid var(--line)",
             background: "transparent",
             fontSize: 16, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
-            borderRadius: 4,
+            borderRadius: 4, transition: "background .15s",
           }}
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
+          onClick={() => {
+            if (isAuthenticated) {
+              toggleSidebar();
+            } else {
+              setIsMenuOpen(!isMenuOpen);
+            }
+          }}
+          aria-label="Toggle sidebar"
         >
-          {isMenuOpen ? "✕" : "☰"}
+          {(!isAuthenticated && isMenuOpen) ? "✕" : "☰"}
         </button>
 
         {/* Brand */}

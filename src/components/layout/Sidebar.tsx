@@ -117,43 +117,20 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
         overflow: "hidden",
       }}
     >
-      {/* Toggle button */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: isOpen ? "space-between" : "center",
-          padding: isOpen ? "12px 16px" : "12px 0",
-          borderBottom: "1px solid rgba(255,255,255,.08)",
-          flexShrink: 0,
-        }}
-      >
-        {isOpen && (
+      {/* Section label */}
+      {isOpen && (
+        <div
+          style={{
+            padding: "12px 16px",
+            borderBottom: "1px solid rgba(255,255,255,.08)",
+            flexShrink: 0,
+          }}
+        >
           <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--brand)" }}>
             Navigation
           </span>
-        )}
-        <button
-          onClick={onToggle}
-          className="hidden lg:flex"
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            width: 28,
-            height: 28,
-            background: "rgba(255,255,255,.08)",
-            border: "none",
-            borderRadius: 4,
-            color: "#b0b8c1",
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: 800,
-          }}
-          aria-label="Toggle sidebar"
-        >
-          {isOpen ? "‹‹" : "››"}
-        </button>
-      </div>
+        </div>
+      )}
 
       {/* Nav links */}
       <nav style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "8px 0" }}>

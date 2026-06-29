@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SidebarProvider } from "@/contexts/SidebarContext";
 
 export const metadata: Metadata = {
   title: "UniHub - E-Learning & Marketplace",
@@ -17,10 +18,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans" suppressHydrationWarning>
         <AuthProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
+          <SidebarProvider>
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </SidebarProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
-
