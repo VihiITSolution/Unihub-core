@@ -157,6 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasRole = useCallback(
     (role: UserRole) => {
+      if (role === "vendor" && user?.isVendorProfileComplete) return true;
       return user?.roles?.includes(role) ?? false;
     },
     [user],
@@ -241,6 +242,10 @@ export function useDashboardPath() {
   const { user } = useAuth();
 
   if (!user) return '/auth/login';
+
+  if (user.isVendorProfileComplete && user.primaryRole === "vendor") {
+    return "/vendor/dashboard";
+  }
 
   switch (user.primaryRole) {
     case "student":

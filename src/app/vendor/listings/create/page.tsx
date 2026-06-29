@@ -34,10 +34,10 @@ export default function CreateListingPage() {
   });
 
   useEffect(() => {
-    if (!user?.isVendorProfileComplete) {
+    if (!isChecking && !user?.isVendorProfileComplete) {
       router.push("/student/become-vendor");
     }
-  }, [user]);
+  }, [isChecking, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

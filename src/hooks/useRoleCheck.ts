@@ -41,12 +41,13 @@ export function useRoleCheck({
     }
 
     const userRoles = user?.roles || [];
-    const hasRole = userRoles.includes(requiredRole);
+    // isVendorProfileComplete is authoritative for vendor access
+    const effectivelyVendor = requiredRole === "vendor" && user?.isVendorProfileComplete;
+    const hasRole = userRoles.includes(requiredRole) || effectivelyVendor;
 
     if (!hasRole) {
       setRoleError(`You need ${requiredRole} role to access this page`);
 
-      // Redirect based on role type
       const roleRedirects: Record<string, string> = {
         tutor: "/student/become-tutor",
         vendor: "/student/become-vendor",
@@ -70,7 +71,8 @@ export function useRoleCheck({
       }
 
       if (requiredRole === "vendor") {
-        const isApproved = user?.vendorProfile?.isApproved;
+        // isVendorProfileComplete means the vendor is approved
+        const isApproved = user?.vendorProfile?.isApproved ?? user?.isVendorProfileComplete;
         if (!isApproved) {
           setRoleError("Your vendor profile is pending approval");
           router.push("/student/become-vendor");
@@ -90,12 +92,15 @@ export function useRoleCheck({
     router,
   ]);
 
-  const hasRole = user?.roles?.includes(requiredRole) || false;
+  const hasRole =
+    user?.roles?.includes(requiredRole) ||
+    (requiredRole === "vendor" && (user?.isVendorProfileComplete ?? false)) ||
+    false;
   const isApproved =
     requiredRole === "tutor"
       ? user?.tutorProfile?.isApproved || false
       : requiredRole === "vendor"
-        ? user?.vendorProfile?.isApproved || false
+        ? (user?.vendorProfile?.isApproved ?? user?.isVendorProfileComplete ?? false)
         : true;
 
   return {
