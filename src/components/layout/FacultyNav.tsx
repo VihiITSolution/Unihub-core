@@ -146,7 +146,10 @@ export default function FacultyNav() {
 
   useEffect(() => {
     facultyService.getAll(true).then((data) => {
-      if (data.length > 0) setFaculties(data);
+      // Only use backend data if it actually includes departments;
+      // if the backend hasn't seeded departments yet, keep FALLBACK_FACULTIES
+      const hasDepts = data.some((f) => (f.departments ?? []).length > 0);
+      if (hasDepts) setFaculties(data);
     });
   }, []);
 

@@ -1,26 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import facultyService, { type Faculty, type Department } from "@/services/faculty.service";
-
-// ── Sri Lankan seed data ─────────────────────────────────────────────────────
-const SL_SEED: Array<{ name: string; icon: string; departments: string[] }> = [
-  { name: "Computing & IT", icon: "💻", departments: ["Computer Science", "Software Engineering", "Information Systems", "Data Science & AI", "Cybersecurity", "Computer Engineering", "Information Technology"] },
-  { name: "Engineering", icon: "⚙️", departments: ["Civil Engineering", "Mechanical Engineering", "Electrical & Electronic Engineering", "Chemical & Process Engineering", "Production Engineering", "Electronics & Telecommunication Engineering", "Engineering Mathematics", "Environmental Engineering"] },
-  { name: "Medicine & Health Sciences", icon: "🏥", departments: ["Anatomy", "Physiology", "Biochemistry", "Pharmacology", "Community Medicine", "Surgery", "Internal Medicine", "Paediatrics", "Obstetrics & Gynaecology", "Nursing"] },
-  { name: "Management & Business", icon: "📊", departments: ["Business Administration", "Accountancy", "Finance", "Marketing", "Human Resource Management", "Economics", "Entrepreneurship", "Logistics & Transport Management", "Business Economics"] },
-  { name: "Arts & Humanities", icon: "📚", departments: ["English", "Sinhala", "Tamil", "History", "Geography", "Philosophy", "Political Science", "Sociology", "Psychology", "Mass Communication", "Fine Arts", "Music"] },
-  { name: "Science", icon: "🔬", departments: ["Mathematics", "Statistics", "Physics", "Chemistry", "Botany", "Zoology", "Microbiology", "Geology", "Environmental Sciences", "Food Science & Technology", "Biochemistry"] },
-  { name: "Law", icon: "⚖️", departments: ["Private Law", "Public & International Law", "Commercial Law", "Constitutional Law"] },
-  { name: "Education", icon: "🎓", departments: ["Science Education", "Language Education", "Educational Technology", "Physical Education", "Primary Education", "Educational Management"] },
-  { name: "Agriculture", icon: "🌾", departments: ["Agronomy", "Animal Science", "Agricultural Engineering", "Agricultural Biology", "Food Science", "Horticulture", "Agricultural Economics"] },
-  { name: "Architecture", icon: "🏛️", departments: ["Architecture", "Town & Country Planning", "Urban Design", "Landscape Architecture"] },
-  { name: "Allied Health Sciences", icon: "🩺", departments: ["Medical Laboratory Science", "Physiotherapy", "Radiography / Imaging Technology", "Occupational Therapy", "Pharmacy"] },
-  { name: "Dental Sciences", icon: "🦷", departments: ["Oral Biology", "Restorative Dentistry", "Oral Medicine & Periodontology", "Community Dentistry"] },
-  { name: "Indigenous Medicine", icon: "🌿", departments: ["Ayurveda", "Unani Medicine", "Deshiya Chikitsa"] },
-  { name: "Technology", icon: "🔧", departments: ["ICT", "Biomedical Engineering Technology", "Food Technology", "Quantity Surveying"] },
-  { name: "A/L & Foundation", icon: "📝", departments: ["Physical Science", "Biological Science", "Commerce", "Arts Stream", "English Foundation", "Mathematics Foundation"] },
-];
+import facultyService, { FALLBACK_FACULTIES, type Faculty, type Department } from "@/services/faculty.service";
 
 // ── Inline components ────────────────────────────────────────────────────────
 
@@ -165,18 +146,46 @@ export default function AdminFacultiesPage() {
   };
 
   // ── Seed ─────────────────────────────────────────────────────────────────
+  // Creates missing Sri Lankan faculties using the standard create endpoint.
+  // NOTE: The backend does not yet expose a department creation endpoint
+  // (POST /faculties/:id/departments returns 404). Departments are shown
+  // from FALLBACK_FACULTIES in the nav and filter until the backend adds
+  // that endpoint.
+
+  const [seedProgress, setSeedProgress] = useState("");
 
   const handleSeed = async () => {
     setSeeding(true);
+    setSeedProgress("Loading existing faculties…");
+    let created = 0;
+    let skipped = 0;
+    let errors = 0;
+
     try {
-      const res = await facultyService.seedDefaults();
-      if (res.success) {
-        showToast(`Seeded successfully (${res.data?.created ?? "?"} created)`, "ok");
-        load();
-      } else {
-        // If backend doesn't support /seed, show a message
-        showToast(res.error || "Seed endpoint not available on backend", "err");
+      const existing = await facultyService.getAll(false);
+      const existingNames = new Set(existing.map((f) => f.name.toLowerCase().trim()));
+
+      for (const seed of FALLBACK_FACULTIES) {
+        const normalised = seed.name.toLowerCase().trim();
+        if (existingNames.has(normalised)) {
+          skipped++;
+          continue;
+        }
+        setSeedProgress(`Creating "${seed.name}"…`);
+        const r = await facultyService.createFaculty({ name: seed.name, icon: seed.icon, order: seed.order });
+        if (r.success) created++; else errors++;
       }
+
+      setSeedProgress("");
+      if (errors === 0) {
+        showToast(`Done — ${created} faculties created, ${skipped} already existed`, "ok");
+      } else {
+        showToast(`Completed with ${errors} error(s) — ${created} created`, "err");
+      }
+      load();
+    } catch (err: any) {
+      setSeedProgress("");
+      showToast(err.message || "Seed failed", "err");
     } finally {
       setSeeding(false);
     }
@@ -200,18 +209,30 @@ export default function AdminFacultiesPage() {
             Manage faculties and their departments. Changes appear immediately in the header nav and course filters.
           </p>
         </div>
-        <button
-          onClick={handleSeed}
-          disabled={seeding}
-          style={{
-            height: 38, padding: "0 16px", flexShrink: 0,
-            background: seeding ? "#94a3b8" : "var(--brand)",
-            color: "#fff", border: "none", borderRadius: 6,
-            fontSize: 13, fontWeight: 800, cursor: seeding ? "not-allowed" : "pointer",
-          }}
-        >
-          {seeding ? "Seeding…" : "Seed Sri Lankan Defaults"}
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+          <button
+            onClick={handleSeed}
+            disabled={seeding}
+            style={{
+              height: 38, padding: "0 16px", flexShrink: 0,
+              background: seeding ? "#94a3b8" : "var(--brand)",
+              color: "#fff", border: "none", borderRadius: 6,
+              fontSize: 13, fontWeight: 800, cursor: seeding ? "not-allowed" : "pointer",
+            }}
+          >
+            {seeding ? "Seeding…" : "Seed Sri Lankan Defaults"}
+          </button>
+          {seedProgress && (
+            <span style={{ fontSize: 11, color: "var(--muted)", maxWidth: 220, textAlign: "right", lineHeight: 1.3 }}>
+              {seedProgress}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Backend capability notice */}
+      <div style={{ marginBottom: 16, padding: "10px 16px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 6, fontSize: 13, color: "#92400e" }}>
+        <strong>Note:</strong> Faculty creation/editing is fully supported. Department management (add/edit/delete) requires a backend endpoint that is not yet available — departments shown in the nav and course filters come from the built-in Sri Lankan defaults until the backend is updated.
       </div>
 
       {/* Add / Edit Faculty form */}
@@ -418,13 +439,13 @@ export default function AdminFacultiesPage() {
           View full Sri Lankan faculty / department reference data
         </summary>
         <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-          {SL_SEED.map((f) => (
+          {FALLBACK_FACULTIES.map((f) => (
             <div key={f.name} style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 6, padding: "12px 16px" }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)", marginBottom: 8 }}>{f.icon} {f.name}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {f.departments.map((d) => (
-                  <span key={d} style={{ fontSize: 12, padding: "3px 10px", background: "var(--soft)", border: "1px solid var(--line)", borderRadius: 999, color: "var(--muted)" }}>
-                    {d}
+                {(f.departments ?? []).map((d) => (
+                  <span key={d.name} style={{ fontSize: 12, padding: "3px 10px", background: "var(--soft)", border: "1px solid var(--line)", borderRadius: 999, color: "var(--muted)" }}>
+                    {d.name}
                   </span>
                 ))}
               </div>

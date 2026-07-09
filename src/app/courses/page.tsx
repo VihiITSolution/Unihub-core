@@ -68,10 +68,11 @@ function CoursesInner() {
   const activeFaculty = faculties.find((f) => String(f.id) === selectedFaculty);
   const depts = activeFaculty?.departments?.filter((d) => d.isActive) ?? [];
 
-  // Load faculties from backend; keep FALLBACK if backend returns nothing
+  // Load faculties from backend; only replace FALLBACK when backend data has departments
   useEffect(() => {
     facultyService.getAll(true).then((data) => {
-      if (data.length > 0) setFaculties(data);
+      const hasDepts = data.some((f) => (f.departments ?? []).length > 0);
+      if (hasDepts) setFaculties(data);
     });
   }, []);
 
