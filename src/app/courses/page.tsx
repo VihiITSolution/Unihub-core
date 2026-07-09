@@ -1,80 +1,106 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/types";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
-import facultyService, { type Faculty as FacultyFull } from "@/services/faculty.service";
-
-interface Faculty {
-  id: number;
-  name: string;
-  icon: string;
-}
+import facultyService, { FALLBACK_FACULTIES, type Faculty } from "@/services/faculty.service";
 
 const YEARS = [
   { id: "all", label: "All Years" },
-  { id: "1", label: "1st Year" },
-  { id: "2", label: "2nd Year" },
-  { id: "3", label: "3rd Year" },
-  { id: "4", label: "4th Year" },
+  { id: "1",   label: "1st Year" },
+  { id: "2",   label: "2nd Year" },
+  { id: "3",   label: "3rd Year" },
+  { id: "4",   label: "4th Year" },
 ];
 
-export default function CoursesPage() {
+// ── Filter button ─────────────────────────────────────────────────────────────
+function FilterBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "block", width: "100%", textAlign: "left",
+        padding: "8px 10px", border: "none", cursor: "pointer", borderRadius: 5,
+        background: active ? "#e8f6f1" : "transparent",
+        color: active ? "var(--brand-dark)" : "var(--ink)",
+        fontWeight: active ? 800 : 400, fontSize: 13,
+        transition: "background .12s",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── Section header ────────────────────────────────────────────────────────────
+function FilterSection({ title }: { title: string }) {
+  return (
+    <h4 style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted)" }}>
+      {title}
+    </h4>
+  );
+}
+
+// ── Inner page (uses useSearchParams — must be inside Suspense) ───────────────
+function CoursesInner() {
   const { user, token } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Load all faculties WITH departments once
+  const [faculties, setFaculties] = useState<Faculty[]>(FALLBACK_FACULTIES);
+
+  // Filter state — initialise from URL params
+  const [selectedFaculty, setSelectedFaculty] = useState(searchParams?.get("facultyId") || "all");
+  const [selectedDept,    setSelectedDept]    = useState(searchParams?.get("departmentId") || "all");
+  const [selectedYear,    setSelectedYear]    = useState(searchParams?.get("year") || "all");
+  const [searchQuery,     setSearchQuery]     = useState(searchParams?.get("search") || "");
+
+  // Courses + UI state
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [faculties, setFaculties] = useState<Faculty[]>([]);
-  const [selectedFaculty, setSelectedFaculty] = useState(searchParams?.get("facultyId") || "all");
-  const [selectedDept, setSelectedDept] = useState(searchParams?.get("departmentId") || "all");
-  const [selectedYear, setSelectedYear] = useState("all");
-  const [searchQuery, setSearchQuery] = useState(searchParams?.get("search") || "");
-  const [depts, setDepts] = useState<{ id: number; name: string }[]>([]);
+  const [error,   setError]   = useState<string | null>(null);
 
-  useEffect(() => { loadFaculties(); }, []);
+  // Departments derived from selected faculty (no extra fetch)
+  const activeFaculty = faculties.find((f) => String(f.id) === selectedFaculty);
+  const depts = activeFaculty?.departments?.filter((d) => d.isActive) ?? [];
+
+  // Load faculties from backend; keep FALLBACK if backend returns nothing
   useEffect(() => {
-    if (selectedFaculty !== "all") {
-      facultyService.getDepartments(Number(selectedFaculty)).then((d) => setDepts(d));
-    } else {
-      setDepts([]);
-      setSelectedDept("all");
-    }
-  }, [selectedFaculty]);
-  useEffect(() => { loadCourses(); }, [selectedFaculty, selectedDept, selectedYear, searchQuery, token]);
+    facultyService.getAll(true).then((data) => {
+      if (data.length > 0) setFaculties(data);
+    });
+  }, []);
 
-  const loadFaculties = async () => {
-    const data = await facultyService.getAll(false);
-    setFaculties([
-      { id: 0, name: "All Faculties", icon: "" },
-      ...data.map((f: FacultyFull) => ({ id: f.id, name: f.name, icon: f.icon || "" })),
-    ]);
+  // When faculty changes, reset department
+  const handleFacultyChange = (fId: string) => {
+    setSelectedFaculty(fId);
+    setSelectedDept("all");
   };
 
-  const loadCourses = async () => {
+  // Fetch courses whenever filters change
+  const loadCourses = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const filters: Record<string, string | number> = {};
-      if (selectedFaculty !== "all") filters.facultyId = selectedFaculty;
-      if (selectedDept !== "all") filters.departmentId = selectedDept;
-      if (selectedYear !== "all") filters.year = selectedYear;
-      if (searchQuery) filters.search = searchQuery;
+      const params = new URLSearchParams();
+      if (selectedFaculty !== "all") params.set("facultyId",    selectedFaculty);
+      if (selectedDept    !== "all") params.set("departmentId", selectedDept);
+      if (selectedYear    !== "all") params.set("year",         selectedYear);
+      if (searchQuery.trim())        params.set("search",       searchQuery.trim());
 
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const queryParams = new URLSearchParams();
-      Object.entries(filters).forEach(([k, v]) => queryParams.append(k, String(v)));
-      const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-      const response = await fetch(`${API_BASE_URL}/courses${query}`, { headers });
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          const data = Array.isArray(result.data) ? result.data : result.data.courses || [];
-          setCourses(data);
+      const qs = params.toString() ? `?${params.toString()}` : "";
+      const res = await fetch(`${API_BASE_URL}/courses${qs}`, { headers });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          setCourses(Array.isArray(json.data) ? json.data : json.data.courses ?? []);
         } else {
           setCourses([]);
         }
@@ -87,7 +113,9 @@ export default function CoursesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedFaculty, selectedDept, selectedYear, searchQuery, token]);
+
+  useEffect(() => { loadCourses(); }, [loadCourses]);
 
   const clearFilters = () => {
     setSelectedFaculty("all");
@@ -96,219 +124,198 @@ export default function CoursesPage() {
     setSearchQuery("");
   };
 
+  const hasFilters = selectedFaculty !== "all" || selectedDept !== "all" || selectedYear !== "all" || searchQuery.trim();
+
+  // Active filter labels for breadcrumb
+  const facultyName = activeFaculty?.name;
+  const deptName    = depts.find((d) => String(d.id) === selectedDept)?.name;
+  const yearLabel   = YEARS.find((y) => y.id === selectedYear)?.label;
+
   return (
     <div style={{ minHeight: "100vh", background: "var(--white)" }}>
       {/* Hero */}
-      <section
-        style={{
-          background: "linear-gradient(90deg, rgba(7,63,56,.95), rgba(7,63,56,.80))",
-          color: "#fff",
-        }}
-      >
-        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "48px 0" }}>
-          <p style={{ margin: "0 0 10px", color: "#a9f0df", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+      <section style={{ background: "linear-gradient(90deg, rgba(7,63,56,.95), rgba(7,63,56,.80))", color: "#fff" }}>
+        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "44px 0" }}>
+          <p style={{ margin: "0 0 8px", color: "#a9f0df", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             UniHub Kuppi Sessions
           </p>
-          <h1 style={{ margin: "0 0 12px", fontSize: "clamp(30px, 4vw, 48px)", lineHeight: 1.05, fontWeight: 800 }}>
-            Explore All Kuppi Sessions
+          <h1 style={{ margin: "0 0 10px", fontSize: "clamp(28px, 4vw, 44px)", lineHeight: 1.05, fontWeight: 800 }}>
+            {facultyName ? `${facultyName} Kuppi` : "Explore All Kuppi Sessions"}
           </h1>
-          <p style={{ margin: 0, fontSize: 17, color: "#d7f4ec", maxWidth: 580, lineHeight: 1.5 }}>
-            Discover peer-led sessions for every faculty, module, assignment type, and exam topic. Learn from students who have already mastered your course.
+          <p style={{ margin: 0, fontSize: 16, color: "#d7f4ec", maxWidth: 560, lineHeight: 1.5 }}>
+            Peer-led sessions for every faculty, module, assignment, and exam topic.
           </p>
         </div>
       </section>
 
       {/* Search bar */}
-      <div style={{ background: "var(--soft)", borderBottom: "1px solid var(--line)", padding: "14px 0" }}>
-        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
-          <form
-            onSubmit={(e) => { e.preventDefault(); loadCourses(); }}
-            style={{ display: "flex", gap: 10 }}
-          >
-            <div
-              style={{
-                flex: 1, display: "flex", alignItems: "center", gap: 10,
-                height: 46, padding: "0 16px",
-                border: "1px solid var(--ink)", borderRadius: 999, background: "var(--white)",
-              }}
+      <div style={{ background: "var(--soft)", borderBottom: "1px solid var(--line)", padding: "12px 0" }}>
+        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", display: "flex", gap: 10 }}>
+          <div style={{
+            flex: 1, display: "flex", alignItems: "center", gap: 10,
+            height: 44, padding: "0 16px",
+            border: "1.5px solid var(--ink)", borderRadius: 999, background: "var(--white)",
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--muted)", flexShrink: 0 }}>
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+              type="search"
+              placeholder="Search code, module, lecturer, topic…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ flex: 1, border: 0, outline: 0, background: "transparent", color: "var(--ink)", fontSize: 14 }}
+            />
+          </div>
+          {hasFilters && (
+            <button
+              onClick={clearFilters}
+              style={{ height: 44, padding: "0 16px", border: "1px solid var(--line)", background: "var(--white)", color: "var(--muted)", fontSize: 13, cursor: "pointer", borderRadius: 6, whiteSpace: "nowrap" }}
             >
-              <span style={{ color: "var(--muted)", fontSize: 14 }}>Find</span>
-              <input
-                type="search"
-                placeholder="Code, module, kuppi, lecturer, topic..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ flex: 1, border: 0, outline: 0, background: "transparent", color: "var(--ink)", fontSize: 14 }}
-              />
-            </div>
-            {(selectedFaculty !== "all" || selectedDept !== "all" || selectedYear !== "all" || searchQuery) && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                style={{
-                  height: 46, padding: "0 16px",
-                  border: "1px solid var(--line)", background: "var(--white)",
-                  color: "var(--muted)", fontSize: 14, cursor: "pointer", borderRadius: 4,
-                }}
-              >
-                Clear
-              </button>
-            )}
-          </form>
+              Clear all
+            </button>
+          )}
         </div>
       </div>
 
-      <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "28px 0" }}>
-        <div style={{ display: "flex", gap: 24 }} className="courses-layout">
-          {/* Sidebar filters */}
-          <aside style={{ width: 224, flexShrink: 0, alignSelf: "start" }} className="courses-sidebar">
+      {/* Active filter breadcrumb */}
+      {hasFilters && (
+        <div style={{ background: "#f0fdf9", borderBottom: "1px solid #c9f0e4", padding: "8px 0" }}>
+          <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>Filtering:</span>
+            {facultyName && (
+              <span style={{ fontSize: 12, padding: "3px 10px", background: "var(--brand)", color: "#fff", borderRadius: 999, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                {facultyName}
+                <button onClick={() => handleFacultyChange("all")} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 0, fontSize: 14, lineHeight: 1, opacity: .8 }}>×</button>
+              </span>
+            )}
+            {deptName && (
+              <span style={{ fontSize: 12, padding: "3px 10px", background: "var(--brand-dark)", color: "#fff", borderRadius: 999, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                {deptName}
+                <button onClick={() => setSelectedDept("all")} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 0, fontSize: 14, lineHeight: 1, opacity: .8 }}>×</button>
+              </span>
+            )}
+            {yearLabel && yearLabel !== "All Years" && (
+              <span style={{ fontSize: 12, padding: "3px 10px", background: "#64748b", color: "#fff", borderRadius: 999, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                {yearLabel}
+                <button onClick={() => setSelectedYear("all")} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 0, fontSize: 14, lineHeight: 1, opacity: .8 }}>×</button>
+              </span>
+            )}
+            {searchQuery.trim() && (
+              <span style={{ fontSize: 12, padding: "3px 10px", background: "#64748b", color: "#fff", borderRadius: 999, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                &ldquo;{searchQuery}&rdquo;
+                <button onClick={() => setSearchQuery("")} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 0, fontSize: 14, lineHeight: 1, opacity: .8 }}>×</button>
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "24px 0" }}>
+        <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }} className="courses-layout">
+
+          {/* ── Sidebar filters ── */}
+          <aside style={{ width: 220, flexShrink: 0, position: "sticky", top: 112 }} className="courses-sidebar">
+
             {/* Faculty */}
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
-                Faculty
-              </h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                {faculties.map((f) => {
-                  const fId = f.id === 0 ? "all" : String(f.id);
-                  const active = selectedFaculty === fId;
-                  return (
-                    <button
-                      key={f.id}
-                      onClick={() => setSelectedFaculty(fId)}
-                      style={{
-                        display: "block", width: "100%", textAlign: "left",
-                        padding: "8px 10px", border: "none", cursor: "pointer",
-                        background: active ? "#e8f6f1" : "transparent",
-                        color: active ? "var(--brand-dark)" : "var(--ink)",
-                        fontWeight: active ? 800 : 400, fontSize: 14, borderRadius: 4,
-                      }}
-                    >
-                      {f.name}
-                    </button>
-                  );
-                })}
+            <div style={{ marginBottom: 20 }}>
+              <FilterSection title="Faculty" />
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <FilterBtn active={selectedFaculty === "all"} onClick={() => handleFacultyChange("all")}>
+                  All Faculties
+                </FilterBtn>
+                {faculties.filter((f) => f.isActive).map((f) => (
+                  <FilterBtn
+                    key={f.id}
+                    active={selectedFaculty === String(f.id)}
+                    onClick={() => handleFacultyChange(String(f.id))}
+                  >
+                    {f.name}
+                  </FilterBtn>
+                ))}
               </div>
             </div>
 
-            {/* Department — only visible when a faculty is selected */}
+            {/* Department — appears when faculty selected */}
             {depts.length > 0 && (
-              <div style={{ marginBottom: 24 }}>
-                <h4 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
-                  Department
-                </h4>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <button
-                    onClick={() => setSelectedDept("all")}
-                    style={{
-                      display: "block", width: "100%", textAlign: "left",
-                      padding: "8px 10px", border: "none", cursor: "pointer",
-                      background: selectedDept === "all" ? "#e8f6f1" : "transparent",
-                      color: selectedDept === "all" ? "var(--brand-dark)" : "var(--ink)",
-                      fontWeight: selectedDept === "all" ? 800 : 400, fontSize: 14, borderRadius: 4,
-                    }}
-                  >
+              <div style={{ marginBottom: 20, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+                <FilterSection title="Department" />
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <FilterBtn active={selectedDept === "all"} onClick={() => setSelectedDept("all")}>
                     All Departments
-                  </button>
+                  </FilterBtn>
                   {depts.map((d) => (
-                    <button
+                    <FilterBtn
                       key={d.id}
+                      active={selectedDept === String(d.id)}
                       onClick={() => setSelectedDept(String(d.id))}
-                      style={{
-                        display: "block", width: "100%", textAlign: "left",
-                        padding: "8px 10px", border: "none", cursor: "pointer",
-                        background: selectedDept === String(d.id) ? "#e8f6f1" : "transparent",
-                        color: selectedDept === String(d.id) ? "var(--brand-dark)" : "var(--ink)",
-                        fontWeight: selectedDept === String(d.id) ? 800 : 400, fontSize: 14, borderRadius: 4,
-                      }}
                     >
                       {d.name}
-                    </button>
+                    </FilterBtn>
                   ))}
                 </div>
               </div>
             )}
 
             {/* Year */}
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
-                Year
-              </h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ marginBottom: 20, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+              <FilterSection title="Year" />
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 {YEARS.map((y) => (
-                  <button
-                    key={y.id}
-                    onClick={() => setSelectedYear(y.id)}
-                    style={{
-                      display: "block", width: "100%", textAlign: "left",
-                      padding: "8px 10px", border: "none", cursor: "pointer",
-                      background: selectedYear === y.id ? "#e8f6f1" : "transparent",
-                      color: selectedYear === y.id ? "var(--brand-dark)" : "var(--ink)",
-                      fontWeight: selectedYear === y.id ? 800 : 400, fontSize: 14, borderRadius: 4,
-                    }}
-                  >
+                  <FilterBtn key={y.id} active={selectedYear === y.id} onClick={() => setSelectedYear(y.id)}>
                     {y.label}
-                  </button>
+                  </FilterBtn>
                 ))}
               </div>
             </div>
 
           </aside>
 
-          {/* Course grid */}
+          {/* ── Course grid ── */}
           <main style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
-                Showing <strong style={{ color: "var(--ink)" }}>{courses.length}</strong> kuppi sessions
+                {loading ? "Loading…" : (
+                  <>Showing <strong style={{ color: "var(--ink)" }}>{courses.length}</strong> kuppi session{courses.length !== 1 ? "s" : ""}</>
+                )}
               </p>
             </div>
 
             {loading ? (
-              <div
-                style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}
-                className="course-result-grid"
-              >
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }} className="course-result-grid">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} style={{ border: "1px solid var(--line)", borderRadius: 6, overflow: "hidden" }}>
+                  <div key={i} style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
                     <div className="skeleton" style={{ width: "100%", aspectRatio: "16/9" }} />
-                    <div style={{ padding: 12 }}>
+                    <div style={{ padding: 14 }}>
                       <div className="skeleton" style={{ height: 16, marginBottom: 8 }} />
-                      <div className="skeleton" style={{ height: 12, width: "60%", marginBottom: 8 }} />
+                      <div className="skeleton" style={{ height: 12, width: "60%", marginBottom: 10 }} />
                       <div className="skeleton" style={{ height: 14, width: "40%" }} />
                     </div>
                   </div>
                 ))}
               </div>
             ) : error ? (
-              <div
-                style={{
-                  padding: 24, border: "1px solid #fca5a5", borderRadius: 6,
-                  background: "#fef2f2", color: "#991b1b", textAlign: "center",
-                }}
-              >
+              <div style={{ padding: 24, border: "1px solid #fca5a5", borderRadius: 8, background: "#fef2f2", color: "#991b1b", textAlign: "center" }}>
                 <p style={{ margin: "0 0 12px" }}>⚠️ {error}</p>
-                <button
-                  onClick={loadCourses}
-                  style={{ padding: "8px 16px", background: "var(--ink)", color: "#fff", border: "none", cursor: "pointer", fontWeight: 800 }}
-                >
+                <button onClick={loadCourses} style={{ padding: "8px 16px", background: "var(--ink)", color: "#fff", border: "none", cursor: "pointer", fontWeight: 800, borderRadius: 5 }}>
                   Try Again
                 </button>
               </div>
             ) : courses.length === 0 ? (
-              <div
-                style={{
-                  padding: 48, border: "1px solid var(--line)", borderRadius: 6,
-                  background: "var(--soft)", textAlign: "center",
-                }}
-              >
-                <div style={{ fontSize: 48, marginBottom: 12 }}>📚</div>
-                <h3 style={{ margin: "0 0 8px" }}>No kuppi sessions found</h3>
-                <p style={{ margin: 0, color: "var(--muted)" }}>Try adjusting your filters to see more results</p>
+              <div style={{ padding: 48, border: "1px dashed var(--line)", borderRadius: 8, background: "var(--soft)", textAlign: "center" }}>
+                <div style={{ fontSize: 44, marginBottom: 12 }}>📚</div>
+                <h3 style={{ margin: "0 0 8px", fontSize: 18 }}>No kuppi sessions found</h3>
+                <p style={{ margin: "0 0 20px", color: "var(--muted)", fontSize: 14 }}>
+                  {hasFilters ? "Try adjusting your filters." : "No sessions available yet."}
+                </p>
+                {hasFilters && (
+                  <button onClick={clearFilters} style={{ padding: "9px 20px", background: "var(--ink)", color: "#fff", border: "none", borderRadius: 5, cursor: "pointer", fontWeight: 800, fontSize: 13 }}>
+                    Clear Filters
+                  </button>
+                )}
               </div>
             ) : (
-              <div
-                style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}
-                className="course-result-grid"
-              >
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }} className="course-result-grid">
                 {courses.map((course) => (
                   <CourseCard key={course.id} course={course} user={user} />
                 ))}
@@ -321,7 +328,7 @@ export default function CoursesPage() {
       <style jsx>{`
         @media (max-width: 980px) {
           .courses-layout { flex-direction: column !important; }
-          .courses-sidebar { width: 100% !important; }
+          .courses-sidebar { width: 100% !important; position: static !important; }
           .course-result-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 640px) {
@@ -332,142 +339,92 @@ export default function CoursesPage() {
   );
 }
 
+// ── Course card ───────────────────────────────────────────────────────────────
 function CourseCard({ course, user }: { course: Course; user: any }) {
-  const tutorName = course.tutor
-    ? `${course.tutor.firstName} ${course.tutor.lastName}`
-    : (course as any).tutorName || "Instructor";
+  const tutorName  = course.tutor ? `${course.tutor.firstName} ${course.tutor.lastName}` : (course as any).tutorName || "Instructor";
+  const thumbnail  = course.thumbnail
+    ? course.thumbnail.startsWith("http") ? course.thumbnail : `${BACKEND_URL}${course.thumbnail}`
+    : "/library-study-group.png";
+  const priceLabel = course.price === 0 || parseFloat(String(course.price)) === 0
+    ? "FREE"
+    : `Rs. ${Number(course.price).toLocaleString()}`;
+  const facultyLabel = course.faculty?.name || course.categoryObj?.name || (course as any).category || "";
+  const isOwner      = user && course.tutorId === user.id;
 
-  const thumbnail =
-    course.thumbnail && course.thumbnail.startsWith("http")
-      ? course.thumbnail
-      : course.thumbnail
-      ? `${BACKEND_URL}${course.thumbnail}`
-      : "/library-study-group.png";
-
-  const priceLabel =
-    course.price === 0 || parseFloat(String(course.price)) === 0
-      ? "FREE"
-      : `Rs. ${Number(course.price).toLocaleString()}`;
-
-  const facultyLabel =
-    course.faculty?.name || course.categoryObj?.name || (course as any).category || "";
-
-  const isOwner = user && course.tutorId === user.id;
-
-  const card = (
+  return (
     <article
       style={{
         background: "var(--white)", border: "1px solid var(--line)",
-        borderRadius: 6, overflow: "hidden",
-        transition: "transform .18s, box-shadow .18s",
-        cursor: "pointer",
+        borderRadius: 8, overflow: "hidden",
+        transition: "transform .18s, box-shadow .18s", cursor: "pointer",
+        display: "flex", flexDirection: "column",
       }}
       className="course-card-hover"
     >
       {/* Thumbnail */}
       <div style={{ position: "relative" }}>
         <img
-          src={thumbnail}
-          alt={course.title}
+          src={thumbnail} alt={course.title}
           style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
           onError={(e) => { (e.target as HTMLImageElement).src = "/library-study-group.png"; }}
         />
         {course.isUpcoming && (
-          <span
-            style={{
-              position: "absolute", top: 8, left: 8,
-              background: "#f97316", color: "#fff",
-              fontSize: 11, fontWeight: 800, padding: "3px 8px",
-            }}
-          >
+          <span style={{ position: "absolute", top: 8, left: 8, background: "#f97316", color: "#fff", fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 3 }}>
             UPCOMING
           </span>
         )}
         {course.rating && Number(course.rating) > 0 && (
-          <span
-            style={{
-              position: "absolute", top: 8, right: 8,
-              background: "#fef3c7", color: "#92400e",
-              fontSize: 11, fontWeight: 800, padding: "3px 6px",
-            }}
-          >
+          <span style={{ position: "absolute", top: 8, right: 8, background: "#fef3c7", color: "#92400e", fontSize: 11, fontWeight: 800, padding: "3px 6px", borderRadius: 3 }}>
             ⭐ {Number(course.rating).toFixed(1)}
           </span>
         )}
       </div>
 
       {/* Body */}
-      <div style={{ padding: "12px 14px" }}>
+      <div style={{ padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column" }}>
         {facultyLabel && (
           <div style={{ marginBottom: 6 }}>
-            <span style={{ background: "#e8f6f1", color: "var(--brand-dark)", fontSize: 12, fontWeight: 800, padding: "3px 8px" }}>
+            <span style={{ background: "#e8f6f1", color: "var(--brand-dark)", fontSize: 11, fontWeight: 800, padding: "2px 8px", borderRadius: 3 }}>
               {facultyLabel}
             </span>
           </div>
         )}
-        <h3 style={{ margin: "0 0 6px", fontSize: 16, lineHeight: 1.25, fontWeight: 800, color: "var(--ink)" }}>
+        <h3 style={{ margin: "0 0 5px", fontSize: 15, lineHeight: 1.3, fontWeight: 800, color: "var(--ink)" }}>
           {course.title}
         </h3>
-        <p style={{ margin: "0 0 8px", color: "var(--muted)", fontSize: 13 }}>By {tutorName}</p>
+        <p style={{ margin: "0 0 8px", color: "var(--muted)", fontSize: 12 }}>By {tutorName}</p>
 
         {course.year && (
-          <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-            <span style={{ background: "var(--soft)", border: "1px solid #ececec", padding: "3px 6px", fontSize: 12, color: "var(--muted)" }}>
+          <div style={{ marginBottom: 8 }}>
+            <span style={{ background: "var(--soft)", border: "1px solid #ececec", padding: "2px 6px", fontSize: 11, color: "var(--muted)", borderRadius: 3 }}>
               Year {course.year}
             </span>
           </div>
         )}
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid var(--line)", marginTop: 8 }}>
-          <span style={{ fontSize: 16, fontWeight: 800, color: "var(--ink)" }}>{priceLabel}</span>
-          <span style={{ fontSize: 12, color: "var(--muted)" }}>
-            {(course.enrollmentCount || 0).toLocaleString()} enrolled
-          </span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid var(--line)", marginTop: "auto" }}>
+          <span style={{ fontSize: 15, fontWeight: 800, color: "var(--ink)" }}>{priceLabel}</span>
+          <span style={{ fontSize: 11, color: "var(--muted)" }}>{(course.enrollmentCount || 0).toLocaleString()} enrolled</span>
         </div>
 
-        {/* Action row */}
         <div style={{ marginTop: 10 }}>
           {course.isUpcoming ? (
             <button
               onClick={() => { if (!user) window.location.href = "/auth/login"; else alert(`${course.title} is coming soon!`); }}
-              style={{
-                width: "100%", height: 38, background: "#f97316", color: "#fff",
-                border: "none", fontWeight: 800, fontSize: 13, cursor: "pointer",
-              }}
+              style={{ width: "100%", height: 36, background: "#f97316", color: "#fff", border: "none", fontWeight: 800, fontSize: 13, cursor: "pointer", borderRadius: 5 }}
             >
               Notify Me
             </button>
           ) : isOwner ? (
-            <Link
-              href={`/tutor/edit-course/${course.id}`}
-              style={{
-                display: "block", textAlign: "center", height: 38, lineHeight: "38px",
-                border: "1px solid var(--ink)", color: "var(--ink)",
-                fontWeight: 800, fontSize: 13,
-              }}
-            >
+            <Link href={`/tutor/edit-course/${course.id}`} style={{ display: "block", textAlign: "center", height: 36, lineHeight: "36px", border: "1px solid var(--ink)", color: "var(--ink)", fontWeight: 800, fontSize: 13, textDecoration: "none", borderRadius: 5 }}>
               Manage
             </Link>
           ) : (course as any).isEnrolled ? (
-            <Link
-              href={`/student/learn/${course.id}`}
-              style={{
-                display: "block", textAlign: "center", height: 38, lineHeight: "38px",
-                background: "var(--brand)", color: "#fff",
-                fontWeight: 800, fontSize: 13,
-              }}
-            >
+            <Link href={`/student/learn/${course.id}`} style={{ display: "block", textAlign: "center", height: 36, lineHeight: "36px", background: "var(--brand)", color: "#fff", fontWeight: 800, fontSize: 13, textDecoration: "none", borderRadius: 5 }}>
               {course.price === 0 ? "View Course" : "Watch Now"}
             </Link>
           ) : (
-            <Link
-              href={`/courses/${course.id}`}
-              style={{
-                display: "block", textAlign: "center", height: 38, lineHeight: "38px",
-                background: "var(--ink)", color: "#fff",
-                fontWeight: 800, fontSize: 13,
-              }}
-            >
+            <Link href={`/courses/${course.id}`} style={{ display: "block", textAlign: "center", height: 36, lineHeight: "36px", background: "var(--ink)", color: "#fff", fontWeight: 800, fontSize: 13, textDecoration: "none", borderRadius: 5 }}>
               Enroll Now
             </Link>
           )}
@@ -475,6 +432,13 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
       </div>
     </article>
   );
+}
 
-  return card;
+// ── Default export wrapped in Suspense for useSearchParams ────────────────────
+export default function CoursesPage() {
+  return (
+    <Suspense>
+      <CoursesInner />
+    </Suspense>
+  );
 }
