@@ -131,11 +131,18 @@ export interface Course {
   categoryObj?: Category;
   level: "beginner" | "intermediate" | "advanced";
   duration: number; // in minutes
+  facultyId?: number;
+  departmentId?: number;
   year?: number;
   faculty?: {
     id: number;
     name: string;
     icon?: string;
+  };
+  department?: {
+    id: number;
+    name: string;
+    slug?: string;
   };
   enrolledCount?: number;
   enrollmentCount?: number;

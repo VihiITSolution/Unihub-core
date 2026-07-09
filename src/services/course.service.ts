@@ -10,6 +10,9 @@ import type {
 export interface CourseFilters {
   category?: string;
   level?: string;
+  facultyId?: number;
+  departmentId?: number;
+  year?: number;
   minPrice?: number;
   maxPrice?: number;
   search?: string;
@@ -25,6 +28,9 @@ export interface CreateCourseData {
   category: string;
   level: "beginner" | "intermediate" | "advanced";
   duration: number;
+  facultyId?: number;
+  departmentId?: number;
+  year?: number;
 }
 
 export const courseService = {

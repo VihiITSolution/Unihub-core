@@ -38,6 +38,10 @@ export default function CreateCoursePage() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryLoading, setCategoryLoading] = useState(false);
 
+  // Faculty / Department
+  const [faculties, setFaculties] = useState<{ id: number; name: string; icon?: string; departments?: { id: number; name: string }[] }[]>([]);
+  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
+
   const [formData, setFormData] = useState({
     title: "",
     shortDescription: "",
@@ -47,6 +51,9 @@ export default function CreateCoursePage() {
     category: "",
     level: "beginner" as "beginner" | "intermediate" | "advanced",
     duration: "",
+    facultyId: "",
+    departmentId: "",
+    year: "",
   });
 
   const [materials, setMaterials] = useState<CourseMaterial[]>([]);
@@ -75,7 +82,20 @@ export default function CreateCoursePage() {
     }
 
     fetchCategories();
+    fetchFaculties();
   }, [isAuthenticated, hasRole, router]);
+
+  const fetchFaculties = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/faculties?include=departments`);
+      const data = await response.json();
+      if (data.success && Array.isArray(data.data)) {
+        setFaculties(data.data);
+      }
+    } catch {
+      // faculties are optional — silently ignore
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -139,7 +159,15 @@ export default function CreateCoursePage() {
     >,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (name === "facultyId") {
+        updated.departmentId = "";
+        const faculty = faculties.find((f) => f.id === parseInt(value));
+        setDepartments(faculty?.departments ?? []);
+      }
+      return updated;
+    });
   };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,6 +282,9 @@ export default function CreateCoursePage() {
       formDataToSend.append("category", formData.category);
       formDataToSend.append("level", formData.level);
       formDataToSend.append("duration", formData.duration);
+      if (formData.facultyId) formDataToSend.append("facultyId", formData.facultyId);
+      if (formData.departmentId) formDataToSend.append("departmentId", formData.departmentId);
+      if (formData.year) formDataToSend.append("year", formData.year);
       formDataToSend.append("thumbnail", thumbnailFile);
 
       // Make API call with FormData
@@ -558,6 +589,62 @@ export default function CreateCoursePage() {
                       <option value="beginner">Beginner</option>
                       <option value="intermediate">Intermediate</option>
                       <option value="advanced">Advanced</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Faculty / Department / Year */}
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Faculty <span className="text-gray-400 font-normal">(optional)</span>
+                    </label>
+                    <select
+                      name="facultyId"
+                      value={formData.facultyId}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">— Any Faculty —</option>
+                      {faculties.map((f) => (
+                        <option key={f.id} value={f.id}>{f.icon ? `${f.icon} ` : ""}{f.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Department <span className="text-gray-400 font-normal">(optional)</span>
+                    </label>
+                    <select
+                      name="departmentId"
+                      value={formData.departmentId}
+                      onChange={handleChange}
+                      disabled={departments.length === 0}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+                    >
+                      <option value="">— Any Department —</option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Academic Year <span className="text-gray-400 font-normal">(optional)</span>
+                    </label>
+                    <select
+                      name="year"
+                      value={formData.year}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">— Any Year —</option>
+                      <option value="1">Year 1</option>
+                      <option value="2">Year 2</option>
+                      <option value="3">Year 3</option>
+                      <option value="4">Year 4</option>
                     </select>
                   </div>
                 </div>

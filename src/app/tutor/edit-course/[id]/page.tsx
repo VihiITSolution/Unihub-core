@@ -41,6 +41,9 @@ export default function EditCoursePage() {
     category: "",
     level: "beginner",
     duration: "",
+    facultyId: "",
+    departmentId: "",
+    year: "",
   });
 
   const [materials, setMaterials] = useState<CourseMaterial[]>([]);
@@ -55,15 +58,9 @@ export default function EditCoursePage() {
     process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 5000,
   );
 
-  const categories = [
-    "Web Development",
-    "Data Science",
-    "Mobile Development",
-    "Design",
-    "Business",
-    "Marketing",
-    "Personal Development",
-  ];
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [faculties, setFaculties] = useState<{ id: number; name: string; icon?: string; departments?: { id: number; name: string }[] }[]>([]);
+  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -79,7 +76,25 @@ export default function EditCoursePage() {
     if (courseId && token) {
       loadCourse();
     }
+    fetchCategories();
+    fetchFaculties();
   }, [courseId, token, isAuthenticated, hasRole, router]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/categories`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) setCategories(data.data);
+    } catch { /* optional */ }
+  };
+
+  const fetchFaculties = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/faculties?include=departments`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) setFaculties(data.data);
+    } catch { /* optional */ }
+  };
 
   const loadCourse = async () => {
     if (!token || !courseId) return;
@@ -105,8 +120,18 @@ export default function EditCoursePage() {
           category: course.category || "",
           level: course.level || "beginner",
           duration: course.duration != null ? course.duration.toString() : "",
+          facultyId: course.facultyId != null ? course.facultyId.toString() : "",
+          departmentId: course.departmentId != null ? course.departmentId.toString() : "",
+          year: course.year != null ? course.year.toString() : "",
         });
         setCurrentThumbnail(course.thumbnail || null);
+        // Pre-load departments for the course's faculty
+        if (course.facultyId) {
+          fetch(`${API_BASE_URL}/faculties/${course.facultyId}/departments`)
+            .then((r) => r.json())
+            .then((d) => { if (d.success && Array.isArray(d.data)) setDepartments(d.data); })
+            .catch(() => {});
+        }
 
         // Load course materials/content
         loadCourseMaterials();
@@ -127,7 +152,15 @@ export default function EditCoursePage() {
     >,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (name === "facultyId") {
+        updated.departmentId = "";
+        const faculty = faculties.find((f) => f.id === parseInt(value));
+        setDepartments(faculty?.departments ?? []);
+      }
+      return updated;
+    });
   };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -344,6 +377,9 @@ export default function EditCoursePage() {
       formDataToSend.append("category", formData.category);
       formDataToSend.append("level", formData.level);
       formDataToSend.append("duration", formData.duration);
+      formDataToSend.append("facultyId", formData.facultyId || "");
+      formDataToSend.append("departmentId", formData.departmentId || "");
+      formDataToSend.append("year", formData.year || "");
 
       // Add thumbnail file if selected
       if (thumbnailFile) {
@@ -527,8 +563,8 @@ export default function EditCoursePage() {
                     >
                       <option value="">Select a category</option>
                       {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
                         </option>
                       ))}
                     </select>
@@ -548,6 +584,62 @@ export default function EditCoursePage() {
                       <option value="beginner">Beginner</option>
                       <option value="intermediate">Intermediate</option>
                       <option value="advanced">Advanced</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Faculty / Department / Year */}
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Faculty <span className="text-gray-400 font-normal">(optional)</span>
+                    </label>
+                    <select
+                      name="facultyId"
+                      value={formData.facultyId}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">— Any Faculty —</option>
+                      {faculties.map((f) => (
+                        <option key={f.id} value={f.id}>{f.icon ? `${f.icon} ` : ""}{f.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Department <span className="text-gray-400 font-normal">(optional)</span>
+                    </label>
+                    <select
+                      name="departmentId"
+                      value={formData.departmentId}
+                      onChange={handleChange}
+                      disabled={departments.length === 0}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+                    >
+                      <option value="">— Any Department —</option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Academic Year <span className="text-gray-400 font-normal">(optional)</span>
+                    </label>
+                    <select
+                      name="year"
+                      value={formData.year}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">— Any Year —</option>
+                      <option value="1">Year 1</option>
+                      <option value="2">Year 2</option>
+                      <option value="3">Year 3</option>
+                      <option value="4">Year 4</option>
                     </select>
                   </div>
                 </div>
