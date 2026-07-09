@@ -7,6 +7,7 @@ import { RoleUpgradeModal, NotificationBell } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
+import FacultyNav from "./FacultyNav";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -145,7 +146,27 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Search bar — desktop */}
+        {/* Desktop nav links */}
+        <nav className="hidden lg:flex items-center flex-shrink-0" style={{ gap: 0 }}>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={(e) => handleNavClick(e, link)}
+              style={{
+                padding: "0 10px", fontSize: 14, fontWeight: 600,
+                color: "var(--ink)", whiteSpace: "nowrap",
+                height: 40, display: "inline-flex", alignItems: "center",
+                borderRadius: 4, transition: "color .15s", textDecoration: "none",
+              }}
+              className="hover:text-brand"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Search bar — desktop, after nav links */}
         <form
           onSubmit={handleSearch}
           className="hidden lg:flex"
@@ -175,26 +196,6 @@ export default function Header() {
             />
           </div>
         </form>
-
-        {/* Desktop nav links */}
-        <nav className="hidden lg:flex items-center flex-shrink-0" style={{ gap: 0 }}>
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={(e) => handleNavClick(e, link)}
-              style={{
-                padding: "0 10px", fontSize: 14, fontWeight: 600,
-                color: "var(--ink)", whiteSpace: "nowrap",
-                height: 40, display: "inline-flex", alignItems: "center",
-                borderRadius: 4, transition: "color .15s", textDecoration: "none",
-              }}
-              className="hover:text-brand"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
 
         {/* Desktop right actions */}
         <div className="hidden lg:flex items-center flex-shrink-0" style={{ gap: 6 }}>
@@ -388,6 +389,9 @@ export default function Header() {
           </Link>
         </div>
       </div>
+
+      {/* ── Row 2: Faculty nav (desktop only) ── */}
+      <FacultyNav />
 
       {/* ── Mobile menu ── */}
       {isMenuOpen && (

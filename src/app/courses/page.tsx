@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/types";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
+import facultyService, { type Faculty as FacultyFull } from "@/services/faculty.service";
 
 interface Faculty {
   id: number;
@@ -20,53 +22,36 @@ const YEARS = [
   { id: "4", label: "4th Year" },
 ];
 
-const PRICE_RANGES = [
-  { id: "all", label: "All Prices" },
-  { id: "free", label: "Free" },
-  { id: "under1000", label: "Under Rs. 1000" },
-  { id: "1000to2000", label: "Rs. 1000 – 2000" },
-  { id: "over2000", label: "Over Rs. 2000" },
-];
-
 export default function CoursesPage() {
   const { user, token } = useAuth();
+  const searchParams = useSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
-  const [selectedFaculty, setSelectedFaculty] = useState("all");
+  const [selectedFaculty, setSelectedFaculty] = useState(searchParams?.get("facultyId") || "all");
+  const [selectedDept, setSelectedDept] = useState(searchParams?.get("departmentId") || "all");
   const [selectedYear, setSelectedYear] = useState("all");
-  const [priceRange, setPriceRange] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParams?.get("search") || "");
+  const [depts, setDepts] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => { loadFaculties(); }, []);
-  useEffect(() => { loadCourses(); }, [selectedFaculty, selectedYear, priceRange, searchQuery, token]);
+  useEffect(() => {
+    if (selectedFaculty !== "all") {
+      facultyService.getDepartments(Number(selectedFaculty)).then((d) => setDepts(d));
+    } else {
+      setDepts([]);
+      setSelectedDept("all");
+    }
+  }, [selectedFaculty]);
+  useEffect(() => { loadCourses(); }, [selectedFaculty, selectedDept, selectedYear, searchQuery, token]);
 
   const loadFaculties = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/faculties?active=true`);
-      const data = await response.json();
-      if (data.success && data.data && Array.isArray(data.data.faculties)) {
-        setFaculties([{ id: 0, name: "All Faculties", icon: "" }, ...data.data.faculties]);
-      } else {
-        setFaculties([
-          { id: 0, name: "All Faculties", icon: "" },
-          { id: 1, name: "Computing", icon: "" },
-          { id: 2, name: "Engineering", icon: "" },
-          { id: 3, name: "Medicine", icon: "" },
-          { id: 4, name: "Business", icon: "" },
-          { id: 5, name: "Arts", icon: "" },
-        ]);
-      }
-    } catch {
-      setFaculties([
-        { id: 0, name: "All Faculties", icon: "" },
-        { id: 1, name: "Computing", icon: "" },
-        { id: 2, name: "Engineering", icon: "" },
-        { id: 3, name: "Medicine", icon: "" },
-        { id: 4, name: "Business", icon: "" },
-      ]);
-    }
+    const data = await facultyService.getAll(false);
+    setFaculties([
+      { id: 0, name: "All Faculties", icon: "" },
+      ...data.map((f: FacultyFull) => ({ id: f.id, name: f.name, icon: f.icon || "" })),
+    ]);
   };
 
   const loadCourses = async () => {
@@ -74,12 +59,9 @@ export default function CoursesPage() {
       setLoading(true);
       const filters: Record<string, string | number> = {};
       if (selectedFaculty !== "all") filters.facultyId = selectedFaculty;
+      if (selectedDept !== "all") filters.departmentId = selectedDept;
       if (selectedYear !== "all") filters.year = selectedYear;
       if (searchQuery) filters.search = searchQuery;
-      if (priceRange === "free") filters.maxPrice = 0;
-      else if (priceRange === "under1000") filters.maxPrice = 1000;
-      else if (priceRange === "1000to2000") { filters.minPrice = 1000; filters.maxPrice = 2000; }
-      else if (priceRange === "over2000") filters.minPrice = 2000;
 
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -109,8 +91,8 @@ export default function CoursesPage() {
 
   const clearFilters = () => {
     setSelectedFaculty("all");
+    setSelectedDept("all");
     setSelectedYear("all");
-    setPriceRange("all");
     setSearchQuery("");
   };
 
@@ -159,7 +141,7 @@ export default function CoursesPage() {
                 style={{ flex: 1, border: 0, outline: 0, background: "transparent", color: "var(--ink)", fontSize: 14 }}
               />
             </div>
-            {(selectedFaculty !== "all" || selectedYear !== "all" || priceRange !== "all" || searchQuery) && (
+            {(selectedFaculty !== "all" || selectedDept !== "all" || selectedYear !== "all" || searchQuery) && (
               <button
                 type="button"
                 onClick={clearFilters}
@@ -208,6 +190,44 @@ export default function CoursesPage() {
               </div>
             </div>
 
+            {/* Department — only visible when a faculty is selected */}
+            {depts.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <h4 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
+                  Department
+                </h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <button
+                    onClick={() => setSelectedDept("all")}
+                    style={{
+                      display: "block", width: "100%", textAlign: "left",
+                      padding: "8px 10px", border: "none", cursor: "pointer",
+                      background: selectedDept === "all" ? "#e8f6f1" : "transparent",
+                      color: selectedDept === "all" ? "var(--brand-dark)" : "var(--ink)",
+                      fontWeight: selectedDept === "all" ? 800 : 400, fontSize: 14, borderRadius: 4,
+                    }}
+                  >
+                    All Departments
+                  </button>
+                  {depts.map((d) => (
+                    <button
+                      key={d.id}
+                      onClick={() => setSelectedDept(String(d.id))}
+                      style={{
+                        display: "block", width: "100%", textAlign: "left",
+                        padding: "8px 10px", border: "none", cursor: "pointer",
+                        background: selectedDept === String(d.id) ? "#e8f6f1" : "transparent",
+                        color: selectedDept === String(d.id) ? "var(--brand-dark)" : "var(--ink)",
+                        fontWeight: selectedDept === String(d.id) ? 800 : 400, fontSize: 14, borderRadius: 4,
+                      }}
+                    >
+                      {d.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Year */}
             <div style={{ marginBottom: 24 }}>
               <h4 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
@@ -232,29 +252,6 @@ export default function CoursesPage() {
               </div>
             </div>
 
-            {/* Price */}
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
-                Price
-              </h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                {PRICE_RANGES.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setPriceRange(p.id)}
-                    style={{
-                      display: "block", width: "100%", textAlign: "left",
-                      padding: "8px 10px", border: "none", cursor: "pointer",
-                      background: priceRange === p.id ? "#e8f6f1" : "transparent",
-                      color: priceRange === p.id ? "var(--brand-dark)" : "var(--ink)",
-                      fontWeight: priceRange === p.id ? 800 : 400, fontSize: 14, borderRadius: 4,
-                    }}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           </aside>
 
           {/* Course grid */}

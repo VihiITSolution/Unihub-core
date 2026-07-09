@@ -157,7 +157,7 @@ export default function StudentDashboard() {
       <aside
         style={{
           width: 220, flexShrink: 0,
-          position: "sticky", top: 80,
+          position: "sticky", top: 120,
           background: "#fff", border: "1px solid var(--line)", borderRadius: 8,
           padding: "20px 0",
         }}
