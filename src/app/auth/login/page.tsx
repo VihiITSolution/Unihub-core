@@ -11,19 +11,15 @@ export default function LoginPage() {
   const dashboardPath = useDashboardPath();
   const hasRedirected = useRef(false);
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Redirect if already authenticated - only once
   useEffect(() => {
     if (isAuthenticated && !authLoading && !hasRedirected.current) {
       hasRedirected.current = true;
-      const redirectPath =
-        sessionStorage.getItem("redirectAfterLogin") || dashboardPath;
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin") || dashboardPath;
       sessionStorage.removeItem("redirectAfterLogin");
       router.replace(redirectPath);
     }
@@ -41,26 +37,17 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const result = await login({
-        email: formData.email,
-        password: formData.password,
-      });
+      const result = await login({ email: formData.email, password: formData.password });
 
       if (result.success) {
-        // Mark that we're redirecting to prevent useEffect from also redirecting
         hasRedirected.current = true;
-        const redirectPath =
-          sessionStorage.getItem("redirectAfterLogin") || dashboardPath;
+        const redirectPath = sessionStorage.getItem("redirectAfterLogin") || dashboardPath;
         sessionStorage.removeItem("redirectAfterLogin");
-        // Use replace instead of push to prevent back button from returning to login
         router.replace(redirectPath);
       } else {
-        setError(
-          result.error || "Login failed. Please check your credentials.",
-        );
+        setError(result.error || "Login failed. Please check your credentials.");
       }
-    } catch (error) {
-      console.error("Login failed:", error);
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -68,130 +55,204 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-950 via-navy-900 to-ocean-950 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <h1 className="text-3xl font-bold text-white">
-              Uni<span className="text-amber-500">Hub</span>
-            </h1>
-            <p className="text-sm text-gray-400 mt-1">LEARN. EARN. GROW.</p>
+    <div style={{
+      minHeight: "100vh",
+      background: "var(--soft)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "40px 16px",
+    }}>
+      <div style={{ width: "100%", maxWidth: 420 }}>
+
+        {/* Brand mark */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <Link href="/" style={{ textDecoration: "none", display: "inline-block" }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12,
+              background: "var(--brand)", color: "#fff",
+              fontSize: 22, fontWeight: 900,
+              display: "grid", placeItems: "center",
+              margin: "0 auto 12px",
+            }}>
+              U
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: "var(--ink)", letterSpacing: "-0.5px" }}>
+              Uni<span style={{ color: "var(--brand)" }}>Hub</span>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.1em", marginTop: 2 }}>
+              LEARN. EARN. GROW.
+            </div>
           </Link>
         </div>
 
         {/* Card */}
-        <div className="bg-navy-900/50 backdrop-blur-lg rounded-2xl p-8 border border-navy-800 shadow-2xl">
-          <h2 className="text-2xl font-bold text-white mb-2">Welcome Back</h2>
-          <p className="text-gray-400 mb-6">Sign in to continue your journey</p>
+        <div style={{
+          background: "#fff",
+          border: "1px solid var(--line)",
+          borderRadius: 12,
+          padding: "32px 36px",
+          boxShadow: "0 4px 24px rgba(0,0,0,.06)",
+        }}>
+          <h1 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 900, color: "var(--ink)" }}>
+            Welcome back
+          </h1>
+          <p style={{ margin: "0 0 24px", fontSize: 14, color: "var(--muted)" }}>
+            Log in to continue your journey
+          </p>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+            <div style={{
+              marginBottom: 20,
+              padding: "12px 14px",
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              borderRadius: 8,
+              fontSize: 13,
+              color: "#b91c1c",
+            }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Email */}
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
-                Email Address
+              <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
+                Email address
               </label>
               <input
-                id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-navy-800 border border-navy-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
                 placeholder="you@example.com"
+                style={{
+                  width: "100%", boxSizing: "border-box",
+                  height: 44, padding: "0 14px",
+                  border: "1px solid var(--line)", borderRadius: 7,
+                  fontSize: 14, color: "var(--ink)",
+                  background: "#fff", outline: "none",
+                  transition: "border-color .15s",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
+                onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
               />
             </div>
 
+            {/* Password */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-navy-800 border border-navy-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-ocean-500 focus:ring-ocean-500 border-navy-600 rounded bg-navy-800"
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-400"
-                >
-                  Remember me
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>
+                  Password
                 </label>
+                <Link href="/auth/forgot-password" style={{ fontSize: 12, color: "var(--brand)", textDecoration: "none", fontWeight: 600 }}>
+                  Forgot password?
+                </Link>
               </div>
-
-              <Link
-                href="/auth/forgot-password"
-                className="text-sm text-ocean-400 hover:underline"
-              >
-                Forgot password?
-              </Link>
+              <div style={{ position: "relative" }}>
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  style={{
+                    width: "100%", boxSizing: "border-box",
+                    height: 44, padding: "0 44px 0 14px",
+                    border: "1px solid var(--line)", borderRadius: 7,
+                    fontSize: 14, color: "var(--ink)",
+                    background: "#fff", outline: "none",
+                    transition: "border-color .15s",
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
+                  onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  tabIndex={-1}
+                  style={{
+                    position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                    background: "none", border: "none", cursor: "pointer", padding: 0,
+                    color: "var(--muted)", display: "flex", lineHeight: 1,
+                  }}
+                >
+                  {showPassword ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-6 py-3 bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                width: "100%", height: 46, marginTop: 4,
+                background: loading ? "#94a3b8" : "var(--ink)",
+                color: "#fff", border: "none", borderRadius: 7,
+                fontSize: 14, fontWeight: 800,
+                cursor: loading ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                transition: "background .15s",
+              }}
             >
               {loading ? (
-                <span className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    style={{ animation: "auth-spin 0.8s linear infinite" }}>
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                   </svg>
-                  Signing in...
-                </span>
+                  Signing in…
+                </>
               ) : (
-                "Sign in"
+                "Log in"
               )}
             </button>
           </form>
+
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", margin: "24px 0 20px" }}>
+            <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
+            <span style={{ margin: "0 12px", fontSize: 12, color: "var(--muted)", fontWeight: 500 }}>or</span>
+            <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
+          </div>
+
+          <p style={{ margin: 0, textAlign: "center", fontSize: 14, color: "var(--muted)" }}>
+            Don&apos;t have an account?{" "}
+            <Link href="/auth/register" style={{ color: "var(--brand)", fontWeight: 700, textDecoration: "none" }}>
+              Sign up free
+            </Link>
+          </p>
         </div>
+
+        {/* Footer note */}
+        <p style={{ textAlign: "center", marginTop: 24, fontSize: 12, color: "var(--muted)" }}>
+          By continuing you agree to our{" "}
+          <Link href="/terms" style={{ color: "var(--brand)", textDecoration: "none" }}>Terms</Link>{" "}
+          &amp;{" "}
+          <Link href="/privacy" style={{ color: "var(--brand)", textDecoration: "none" }}>Privacy Policy</Link>.
+        </p>
       </div>
+
+      <style jsx global>{`
+        @keyframes auth-spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

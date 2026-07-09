@@ -43,17 +43,17 @@ export default function ConditionalLayout({
           <div
             onClick={toggle}
             style={{
-              position: "fixed", inset: 0, top: 104,
+              position: "fixed", inset: 0, top: 64,
               background: "rgba(0,0,0,.5)", zIndex: 39,
             }}
           />
         )}
 
-        {/* Fixed sidebar — starts below full header (64px topbar + 40px faculty nav) */}
+        {/* Fixed sidebar — starts below 64px header */}
         <div
           style={{
             position: "fixed",
-            top: 104,
+            top: 64,
             bottom: 0,
             left: 0,
             width: isMobile ? (sidebarOpen ? 256 : 0) : sidebarWidth,

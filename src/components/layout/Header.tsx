@@ -8,17 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 
-const FACULTY_LINKS = [
-  { href: "/courses?faculty=computing", label: "Faculty of Computing" },
-  { href: "/courses?faculty=management", label: "Management Studies" },
-  { href: "/courses?faculty=engineering", label: "Faculty of Engineering" },
-  { href: "/courses?faculty=medicine", label: "Faculty of Medicine" },
-  { href: "/courses?faculty=humanities", label: "Humanities & Social Sciences" },
-  { href: "/courses?faculty=al-bridge", label: "A/L Bridge & Foundation" },
-  { href: "/courses?faculty=exam-prep", label: "Exam Prep" },
-  { href: "/courses?faculty=internship", label: "Internship Skills" },
-];
-
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -55,12 +44,12 @@ export default function Header() {
   };
 
   const navLinks = [
+    { ...getDashboardLink(), requiresRole: null },
     ...(user?.roles?.includes("tutor")
       ? []
-      : [{ href: "/tutor/dashboard", label: "Teach", requiresRole: "tutor" as RoleType }]),
+      : [{ href: "/tutor/dashboard", label: "Tutor", requiresRole: "tutor" as RoleType }]),
     { href: "/marketplace", label: "Marketplace", requiresRole: null },
     { href: "/boarding", label: "Boarding", requiresRole: null },
-    { ...getDashboardLink(), requiresRole: null },
   ];
 
   const handleNavClick = (e: React.MouseEvent, link: (typeof navLinks)[0]) => {
@@ -154,23 +143,6 @@ export default function Header() {
               LEARN. EARN. GROW.
             </small>
           </span>
-        </Link>
-
-        {/* Faculties link — desktop */}
-        <Link
-          href="/courses"
-          className="hidden lg:inline-flex items-center flex-shrink-0"
-          style={{
-            gap: 4, fontSize: 14, fontWeight: 600,
-            color: "var(--ink)", textDecoration: "none",
-            padding: "0 8px", height: 36, borderRadius: 4,
-            whiteSpace: "nowrap",
-          }}
-        >
-          Faculties
-          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" style={{ opacity: .5 }}>
-            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd" />
-          </svg>
         </Link>
 
         {/* Search bar — desktop */}
@@ -417,43 +389,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* ── Row 2: Faculty nav bar (desktop only) ── */}
-      <div
-        className="hidden lg:block"
-        style={{
-          borderTop: "1px solid var(--line)",
-          overflowX: "auto",
-          scrollbarWidth: "none",
-        }}
-      >
-        <div
-          style={{
-            display: "flex", alignItems: "center",
-            padding: "0 24px", gap: 0,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {FACULTY_LINKS.map((f) => (
-            <Link
-              key={f.href}
-              href={f.href}
-              style={{
-                display: "inline-flex", alignItems: "center",
-                height: 40, padding: "0 14px",
-                fontSize: 13, fontWeight: 500,
-                color: "var(--ink)", textDecoration: "none",
-                borderBottom: "2px solid transparent",
-                transition: "color .15s, border-color .15s",
-                flexShrink: 0,
-              }}
-              className="hover:text-brand hover-faculty-link"
-            >
-              {f.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
       {/* ── Mobile menu ── */}
       {isMenuOpen && (
         <div style={{ background: "var(--white)", borderTop: "1px solid var(--line)" }} className="lg:hidden">
@@ -479,9 +414,6 @@ export default function Header() {
 
           {/* Nav links */}
           <div style={{ padding: "6px 0" }}>
-            <Link href="/courses" style={{ display: "block", padding: "11px 18px", fontSize: 14, fontWeight: 600, color: "var(--ink)", textDecoration: "none" }} className="hover:bg-soft" onClick={() => setIsMenuOpen(false)}>
-              Faculties
-            </Link>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
