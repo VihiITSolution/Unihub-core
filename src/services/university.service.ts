@@ -38,11 +38,12 @@ export const universityService = {
     count: number;
   }> {
     const queryParams = new URLSearchParams();
+    queryParams.append('isActive', 'true');
     if (params?.city) queryParams.append('city', params.city);
     if (params?.type) queryParams.append('type', params.type);
     if (params?.search) queryParams.append('search', params.search);
 
-    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    const query = `?${queryParams.toString()}`;
     const response = await apiClient.get<any>(`/universities${query}`);
     return response.data;
   },
