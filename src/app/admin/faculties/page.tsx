@@ -146,11 +146,6 @@ export default function AdminFacultiesPage() {
   };
 
   // ── Seed ─────────────────────────────────────────────────────────────────
-  // Creates missing Sri Lankan faculties using the standard create endpoint.
-  // NOTE: The backend does not yet expose a department creation endpoint
-  // (POST /faculties/:id/departments returns 404). Departments are shown
-  // from FALLBACK_FACULTIES in the nav and filter until the backend adds
-  // that endpoint.
 
   const [seedProgress, setSeedProgress] = useState("");
 
@@ -158,29 +153,54 @@ export default function AdminFacultiesPage() {
     setSeeding(true);
     setSeedProgress("Loading existing faculties…");
     let created = 0;
-    let skipped = 0;
+    let deptCreated = 0;
     let errors = 0;
 
     try {
-      const existing = await facultyService.getAll(false);
-      const existingNames = new Set(existing.map((f) => f.name.toLowerCase().trim()));
+      const existing = await facultyService.getAll(true);
 
       for (const seed of FALLBACK_FACULTIES) {
         const normalised = seed.name.toLowerCase().trim();
-        if (existingNames.has(normalised)) {
-          skipped++;
-          continue;
+        const match = existing.find((f) => f.name.toLowerCase().trim() === normalised);
+        let facultyId: number | null = null;
+
+        if (match) {
+          facultyId = match.id;
+          // Add missing departments to this faculty
+          const existingDeptNames = new Set(
+            (match.departments ?? []).map((d) => d.name.toLowerCase().trim()),
+          );
+          for (const dept of seed.departments ?? []) {
+            if (!existingDeptNames.has(dept.name.toLowerCase().trim())) {
+              setSeedProgress(`Adding "${dept.name}" → ${seed.name}`);
+              const dr = await facultyService.createDepartment(facultyId, { name: dept.name, order: dept.order });
+              if (dr.success) deptCreated++; else errors++;
+            }
+          }
+        } else {
+          setSeedProgress(`Creating "${seed.name}"…`);
+          const r = await facultyService.createFaculty({ name: seed.name, icon: seed.icon, order: seed.order });
+          if (r.success && r.data) {
+            facultyId = (r.data as any).id ?? (r.data as any).faculty?.id ?? null;
+            created++;
+            if (facultyId) {
+              for (const dept of seed.departments ?? []) {
+                setSeedProgress(`Adding "${dept.name}"…`);
+                const dr = await facultyService.createDepartment(facultyId, { name: dept.name, order: dept.order });
+                if (dr.success) deptCreated++; else errors++;
+              }
+            }
+          } else {
+            errors++;
+          }
         }
-        setSeedProgress(`Creating "${seed.name}"…`);
-        const r = await facultyService.createFaculty({ name: seed.name, icon: seed.icon, order: seed.order });
-        if (r.success) created++; else errors++;
       }
 
       setSeedProgress("");
       if (errors === 0) {
-        showToast(`Done — ${created} faculties created, ${skipped} already existed`, "ok");
+        showToast(`Done — ${created} faculties + ${deptCreated} departments added`, "ok");
       } else {
-        showToast(`Completed with ${errors} error(s) — ${created} created`, "err");
+        showToast(`Completed with ${errors} error(s) — ${created} faculties + ${deptCreated} depts`, "err");
       }
       load();
     } catch (err: any) {
@@ -228,11 +248,6 @@ export default function AdminFacultiesPage() {
             </span>
           )}
         </div>
-      </div>
-
-      {/* Backend capability notice */}
-      <div style={{ marginBottom: 16, padding: "10px 16px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 6, fontSize: 13, color: "#92400e" }}>
-        <strong>Note:</strong> Faculty creation/editing is fully supported. Department management (add/edit/delete) requires a backend endpoint that is not yet available — departments shown in the nav and course filters come from the built-in Sri Lankan defaults until the backend is updated.
       </div>
 
       {/* Add / Edit Faculty form */}
