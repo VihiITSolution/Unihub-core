@@ -77,7 +77,7 @@ export function PostComposer({ onPosted }: PostComposerProps) {
       </div>
 
       {previews.length > 0 && (
-        <div className="grid grid-cols-4 gap-2 mt-3 ml-13">
+        <div className="grid grid-cols-4 gap-2 mt-3 ml-[52px]">
           {previews.map((src, i) => (
             <div key={src} className="relative aspect-square">
               <img src={src} alt="" className="w-full h-full object-cover rounded-md" />
