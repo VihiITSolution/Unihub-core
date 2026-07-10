@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/services/auth.service";
+import { socialProfileService } from "@/services/social.service";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -89,17 +90,20 @@ export default function SettingsPage() {
       setUploading(true);
       setMessage(null);
 
-      const response = await authService.uploadProfilePhoto(
+      // Uploaded to Unihub-social (the file-handling microservice), not the
+      // legacy Cloudinary endpoint on the main backend.
+      const response = await socialProfileService.uploadAvatar(
         token,
         selectedFile,
       );
 
-      if (response.success) {
-        setProfileImage(response.data?.profileImage || "");
+      if (response.success && response.data?.profileImage) {
+        const newProfileImage = response.data.profileImage;
+        setProfileImage(newProfileImage);
         setPreviewUrl("");
         setSelectedFile(null);
-        if (response.data?.user) {
-          updateUser(response.data.user);
+        if (user) {
+          updateUser({ ...user, profileImage: newProfileImage });
         }
         setMessage({
           type: "success",
@@ -108,7 +112,7 @@ export default function SettingsPage() {
       } else {
         setMessage({
           type: "error",
-          text: "Failed to upload photo",
+          text: response.message || "Failed to upload photo",
         });
       }
     } catch (error) {

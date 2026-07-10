@@ -44,6 +44,7 @@ const Icons = {
 // ── Nav link definitions ─────────────────────────────────────────────────────
 const studentLinks = [
   { href: "/student/dashboard",    label: "Dashboard",      icon: Icons.home },
+  { href: "/wall",                 label: "Wall",           icon: Icons.users },
   { href: "/courses",              label: "Browse Courses", icon: Icons.bookOpen },
   { href: "/student/my-courses",   label: "My Courses",     icon: Icons.clipboard },
   { href: "/student/live-sessions",label: "Live Sessions",  icon: Icons.video },
@@ -61,6 +62,7 @@ const vendorLinks = [
 
 const tutorLinks = [
   { href: "/tutor/dashboard",      label: "Dashboard",     icon: Icons.home },
+  { href: "/wall",                 label: "Wall",          icon: Icons.users },
   { href: "/tutor/courses",        label: "My Courses",    icon: Icons.bookOpen },
   { href: "/tutor/create-course",  label: "Create Course", icon: Icons.plusCircle },
   { href: "/tutor/live-sessions",  label: "Live Sessions", icon: Icons.video },

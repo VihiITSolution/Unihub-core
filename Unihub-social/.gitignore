@@ -1,0 +1,17 @@
+node_modules/
+npm-debug.log*
+
+# dotenv environment variable files
+.env
+.env.*
+!.env.example
+
+# Uploaded files (when UPLOADS_DIR falls back to a local folder in this repo)
+uploads/
+
+logs
+*.log
+coverage
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

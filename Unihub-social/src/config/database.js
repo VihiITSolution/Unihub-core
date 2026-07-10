@@ -1,0 +1,78 @@
+require("dotenv").config();
+
+module.exports = {
+  development: {
+    host: process.env.DB_HOST || "localhost",
+    port: process.env.DB_PORT || 3306,
+    database: process.env.DB_NAME || "unihub_db",
+    username: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "",
+    dialect: "mysql",
+    logging: false,
+    pool: {
+      max: 10,
+      min: 2,
+      acquire: 60000,
+      idle: 20000,
+      evict: 30000,
+    },
+    dialectOptions: {
+      connectTimeout: 30000,
+      supportBigNumbers: true,
+      bigNumberStrings: true,
+      dateStrings: false,
+    },
+    retry: {
+      max: 3,
+      match: [
+        /SequelizeConnectionError/,
+        /SequelizeConnectionRefusedError/,
+        /SequelizeHostNotFoundError/,
+        /SequelizeHostNotReachableError/,
+        /SequelizeInvalidConnectionError/,
+        /SequelizeConnectionTimedOutError/,
+        /ECONNRESET/,
+        /ECONNREFUSED/,
+        /ETIMEDOUT/,
+        /ER_NET_READ_INTERRUPTED/,
+      ],
+    },
+  },
+  production: {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    database: process.env.DB_NAME,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    dialect: "mysql",
+    logging: false,
+    pool: {
+      max: 20,
+      min: 5,
+      acquire: 60000,
+      idle: 20000,
+      evict: 30000,
+    },
+    dialectOptions: {
+      connectTimeout: 30000,
+      supportBigNumbers: true,
+      bigNumberStrings: true,
+      dateStrings: false,
+    },
+    retry: {
+      max: 5,
+      match: [
+        /SequelizeConnectionError/,
+        /SequelizeConnectionRefusedError/,
+        /SequelizeHostNotFoundError/,
+        /SequelizeHostNotReachableError/,
+        /SequelizeInvalidConnectionError/,
+        /SequelizeConnectionTimedOutError/,
+        /ECONNRESET/,
+        /ECONNREFUSED/,
+        /ETIMEDOUT/,
+        /ER_NET_READ_INTERRUPTED/,
+      ],
+    },
+  },
+};
