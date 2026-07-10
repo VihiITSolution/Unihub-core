@@ -44,7 +44,6 @@ const follow = async (req, res, next) => {
         { followerId: req.user.id },
       );
     }
-
     res.json({ success: true, data: { isFollowing: true } });
   } catch (error) {
     next(error);

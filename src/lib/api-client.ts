@@ -7,7 +7,7 @@ export interface RequestOptions extends RequestInit {
   token?: string;
 }
 
-class ApiClient {
+export class ApiClient {
   private baseURL: string;
 
   constructor(baseURL: string) {

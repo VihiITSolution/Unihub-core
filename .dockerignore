@@ -2,6 +2,11 @@
 node_modules
 npm-debug.log
 
+# Unihub-social is a separate microservice nested in this repo for
+# convenience - it has its own Dockerfile/deploy workflow and must not be
+# bundled into the frontend's image.
+Unihub-social
+
 # Ignore Next.js build output
 .next
 out
