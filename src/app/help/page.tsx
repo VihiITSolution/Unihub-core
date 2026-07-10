@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ContactSupportButton } from "@/components/chat";
 
 export default function HelpCenterPage() {
   const [formData, setFormData] = useState({
@@ -75,6 +76,13 @@ export default function HelpCenterPage() {
               This feature is currently under construction and will be available
               soon
             </span>
+          </div>
+
+          <div className="mt-6">
+            <p className="text-sm text-gray-500 mb-3">
+              Need help right now? Chat directly with our support team.
+            </p>
+            <ContactSupportButton />
           </div>
         </div>
 
