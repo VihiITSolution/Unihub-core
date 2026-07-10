@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
+import { StartConversationButton } from "@/components/chat";
 import type { Course, CourseContent } from "@/types";
 
 export default function CourseDetailsPage() {
@@ -340,7 +341,7 @@ export default function CourseDetailsPage() {
                   ? course.tutor.firstName.charAt(0)
                   : course.tutorName?.charAt(0) || "T"}
               </div>
-              <div>
+              <div className="flex-1">
                 <h5 className="text-sm font-semibold text-gray-900">
                   {course.tutor
                     ? `${course.tutor.firstName} ${course.tutor.lastName}`
@@ -348,6 +349,14 @@ export default function CourseDetailsPage() {
                 </h5>
                 <p className="text-xs text-gray-500">Instructor</p>
               </div>
+              {(course.tutor?.id || course.tutorId) && (
+                <StartConversationButton
+                  recipientId={Number(course.tutor?.id || course.tutorId)}
+                  contextType="course"
+                  contextId={Number(course.id)}
+                  label="Message Tutor"
+                />
+              )}
             </div>
             {/* About Section */}
             {course.aboutCourse && (

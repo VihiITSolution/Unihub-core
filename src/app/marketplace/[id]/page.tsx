@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { marketplaceService } from "@/services/marketplace.service";
+import { StartConversationButton } from "@/components/chat";
 import type { MarketplaceItem } from "@/types";
 
 // Buy Now imports — re-enable when purchase flow is ready
@@ -268,6 +269,16 @@ export default function ProductDetailsPage() {
                   )}
                 </div>
               </div>
+
+              {product.seller?.id && (
+                <StartConversationButton
+                  recipientId={Number(product.seller.id)}
+                  contextType="marketplace_item"
+                  contextId={Number(product.id)}
+                  label="Message Seller"
+                  className="w-full justify-center"
+                />
+              )}
 
               <hr className="border-gray-100" />
 

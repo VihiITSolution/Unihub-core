@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { RoleUpgradeModal, NotificationBell } from "@/components/ui";
+import { RoleUpgradeModal, NotificationBell, ChatBadge } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
@@ -199,6 +199,7 @@ export default function Header() {
 
         {/* Desktop right actions */}
         <div className="hidden lg:flex items-center flex-shrink-0" style={{ gap: 6 }}>
+          {isAuthenticated && <ChatBadge />}
           {isAuthenticated && <NotificationBell />}
 
           {/* Cart */}
@@ -373,6 +374,7 @@ export default function Header() {
 
         {/* Mobile right actions */}
         <div className="flex lg:hidden items-center ml-auto" style={{ gap: 6 }}>
+          {isAuthenticated && <ChatBadge />}
           {isAuthenticated && <NotificationBell />}
           <Link
             href="/marketplace"

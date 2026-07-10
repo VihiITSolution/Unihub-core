@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { boardingService } from "@/services/boarding.service";
+import { StartConversationButton } from "@/components/chat";
 import type { BoardingPlace } from "@/types";
 
 function roomTypeLabel(r: string) {
@@ -224,6 +225,16 @@ export default function BoardingDetailPage() {
                     )}
                   </div>
                 </div>
+              )}
+
+              {place.vendor?.id && (
+                <StartConversationButton
+                  recipientId={Number(place.vendor.id)}
+                  contextType="boarding_place"
+                  contextId={Number(place.id)}
+                  label="Message Vendor"
+                  className="w-full justify-center"
+                />
               )}
 
               <hr className="border-gray-100" />
