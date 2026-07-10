@@ -170,6 +170,12 @@ export const NotificationBell: React.FC = () => {
         return "border-l-4 border-blue-500 bg-blue-50";
       case "payment":
         return "border-l-4 border-purple-500 bg-purple-50";
+      case "follow":
+        return "border-l-4 border-sky-500 bg-sky-50";
+      case "post_like":
+        return "border-l-4 border-pink-500 bg-pink-50";
+      case "post_comment":
+        return "border-l-4 border-teal-500 bg-teal-50";
       default:
         return "border-l-4 border-gray-300 bg-white";
     }

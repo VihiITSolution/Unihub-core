@@ -8,7 +8,10 @@ export type NotificationType =
   | "course_rejected"
   | "enrollment"
   | "payment"
-  | "general";
+  | "general"
+  | "follow"
+  | "post_like"
+  | "post_comment";
 
 export interface Notification {
   id: number;
