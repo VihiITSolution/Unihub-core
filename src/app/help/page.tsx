@@ -3,21 +3,87 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ContactSupportButton } from "@/components/chat";
+import { useAuth } from "@/contexts/AuthContext";
+import { supportTicketService } from "@/services/supportTicket.service";
+
+const MAX_ATTACHMENTS = 5;
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_ATTACHMENT_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const DESCRIPTION_MIN_LENGTH = 20;
+
+const initialFormData = {
+  subject: "",
+  category: "",
+  priority: "medium",
+  description: "",
+};
 
 export default function HelpCenterPage() {
-  const [formData, setFormData] = useState({
-    subject: "",
-    category: "",
-    priority: "medium",
-    description: "",
-  });
+  const { token, isAuthenticated } = useAuth();
+  const [formData, setFormData] = useState(initialFormData);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<
+    { type: "success" | "error"; text: string } | null
+  >(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Backend integration will be added later
-    alert(
-      "Thank you! This feature is currently under development. Your ticket will be submitted once the feature is complete.",
-    );
+
+    if (!isAuthenticated || !token) {
+      setMessage({
+        type: "error",
+        text: "Please log in to submit a support ticket.",
+      });
+      return;
+    }
+
+    if (!formData.subject.trim()) {
+      setMessage({ type: "error", text: "Subject is required." });
+      return;
+    }
+    if (!formData.category) {
+      setMessage({ type: "error", text: "Please select a category." });
+      return;
+    }
+    if (formData.description.trim().length < DESCRIPTION_MIN_LENGTH) {
+      setMessage({
+        type: "error",
+        text: `Description must be at least ${DESCRIPTION_MIN_LENGTH} characters.`,
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage(null);
+
+    try {
+      const response = await supportTicketService.createTicket(token, {
+        ...formData,
+        attachments,
+      });
+
+      if (response.success) {
+        setMessage({
+          type: "success",
+          text: response.message || "Ticket submitted successfully!",
+        });
+        setFormData(initialFormData);
+        setAttachments([]);
+      } else {
+        setMessage({
+          type: "error",
+          text: response.message || "Failed to submit ticket. Please try again.",
+        });
+      }
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: "Failed to submit ticket. Please try again.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleChange = (
@@ -29,6 +95,44 @@ export default function HelpCenterPage() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+
+    const combined = [...attachments, ...files];
+    if (combined.length > MAX_ATTACHMENTS) {
+      setMessage({
+        type: "error",
+        text: `You can attach at most ${MAX_ATTACHMENTS} files.`,
+      });
+      return;
+    }
+
+    for (const file of files) {
+      if (!ALLOWED_ATTACHMENT_TYPES.includes(file.type)) {
+        setMessage({
+          type: "error",
+          text: `${file.name}: only PNG, JPG, and PDF files are allowed.`,
+        });
+        return;
+      }
+      if (file.size > MAX_ATTACHMENT_SIZE) {
+        setMessage({
+          type: "error",
+          text: `${file.name}: files must be 10MB or smaller.`,
+        });
+        return;
+      }
+    }
+
+    setMessage(null);
+    setAttachments(combined);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
   };
 
   return (
@@ -58,25 +162,6 @@ export default function HelpCenterPage() {
             We&apos;re here to help! Submit a support ticket and our team will
             get back to you.
           </p>
-
-          {/* Under Construction Notice */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <svg
-              className="w-5 h-5 text-yellow-600"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="text-sm font-medium text-yellow-800">
-              This feature is currently under construction and will be available
-              soon
-            </span>
-          </div>
 
           <div className="mt-6">
             <p className="text-sm text-gray-500 mb-3">
@@ -179,6 +264,18 @@ export default function HelpCenterPage() {
               possible
             </p>
           </div>
+
+          {message && (
+            <div
+              className={`mb-6 px-4 py-3 rounded-lg text-sm font-medium ${
+                message.type === "success"
+                  ? "bg-green-50 border border-green-200 text-green-800"
+                  : "bg-red-50 border border-red-200 text-red-800"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Subject */}
@@ -305,6 +402,8 @@ export default function HelpCenterPage() {
                   id="attachments"
                   name="attachments"
                   multiple
+                  accept=".png,.jpg,.jpeg,.pdf"
+                  onChange={handleFileChange}
                   className="hidden"
                 />
                 <label
@@ -317,6 +416,27 @@ export default function HelpCenterPage() {
                   PNG, JPG, PDF up to 10MB (Max 5 files)
                 </p>
               </div>
+              {attachments.length > 0 && (
+                <ul className="mt-3 space-y-1">
+                  {attachments.map((file, index) => (
+                    <li
+                      key={`${file.name}-${index}`}
+                      className="flex items-center justify-between text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+                    >
+                      <span className="text-gray-700 truncate">
+                        {file.name} ({(file.size / 1024 / 1024).toFixed(1)}MB)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(index)}
+                        className="text-red-500 hover:text-red-700 font-medium ml-3"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             {/* Contact Information */}
@@ -356,7 +476,8 @@ export default function HelpCenterPage() {
               </Link>
               <button
                 type="submit"
-                className="px-8 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 focus:ring-4 focus:ring-primary-500/50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                disabled={submitting}
+                className="px-8 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 focus:ring-4 focus:ring-primary-500/50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <svg
                   className="w-5 h-5"
@@ -371,7 +492,7 @@ export default function HelpCenterPage() {
                     d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                   />
                 </svg>
-                Submit Ticket
+                {submitting ? "Submitting…" : "Submit Ticket"}
               </button>
             </div>
           </form>
@@ -403,9 +524,10 @@ export default function HelpCenterPage() {
                 <p className="text-sm text-gray-700 mb-3">
                   Chat with our support team in real-time
                 </p>
-                <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                  Start Chat →
-                </button>
+                <ContactSupportButton
+                  label="Start Chat →"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                />
               </div>
             </div>
           </div>

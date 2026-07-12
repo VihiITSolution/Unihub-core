@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { boardingService } from "@/services/boarding.service";
+import { universityService, type University } from "@/services/university.service";
 import { HoverCard } from "@/components/ui";
 import type { BoardingPlace, BoardingPlaceFilters, RoomType, GenderPreference } from "@/types";
 
@@ -176,6 +177,8 @@ function PlaceCard({ place }: { place: BoardingPlace }) {
 export default function BoardingPage() {
   const [places, setPlaces] = useState<BoardingPlace[]>([]);
   const [loading, setLoading] = useState(true);
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [showCustomUniversity, setShowCustomUniversity] = useState(false);
   const [universityInput, setUniversityInput] = useState("");
   const [university, setUniversity] = useState("");
   const [roomType, setRoomType] = useState<RoomType | "">("");
@@ -211,6 +214,13 @@ export default function BoardingPage() {
 
   useEffect(() => { loadPlaces(); }, [loadPlaces]);
 
+  useEffect(() => {
+    universityService
+      .getUniversities()
+      .then((res) => setUniversities(res.data?.universities ?? []))
+      .catch((err) => console.error("Failed to load universities:", err));
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setUniversity(universityInput);
@@ -218,7 +228,7 @@ export default function BoardingPage() {
   };
 
   const clearFilters = () => {
-    setUniversity(""); setUniversityInput(""); setRoomType("");
+    setUniversity(""); setUniversityInput(""); setShowCustomUniversity(false); setRoomType("");
     setGenderPreference(""); setMinRent(""); setMaxRent(""); setPage(1);
   };
 
@@ -275,15 +285,45 @@ export default function BoardingPage() {
             style={{ display: "grid", gridTemplateColumns: "1.2fr repeat(3, 1fr)", gap: 10, margin: "0 0 20px" }}
             className="boarding-filter-grid"
           >
-            <form onSubmit={handleSearch} style={{ display: "contents" }}>
-              <input
-                type="search"
-                placeholder="Search area or university..."
-                value={universityInput}
-                onChange={(e) => setUniversityInput(e.target.value)}
-                style={{ height: 44, padding: "0 12px", border: "1px solid var(--line)", background: "var(--white)", fontSize: 14, outline: "none" }}
-              />
-            </form>
+            {!showCustomUniversity ? (
+              <select
+                value={university}
+                onChange={(e) => {
+                  if (e.target.value === "__custom__") {
+                    setShowCustomUniversity(true);
+                    setUniversity("");
+                    setUniversityInput("");
+                  } else {
+                    setUniversity(e.target.value);
+                    setPage(1);
+                  }
+                }}
+                style={{ height: 44, padding: "0 12px", border: "1px solid var(--line)", background: "var(--white)", fontSize: 14, cursor: "pointer" }}
+              >
+                <option value="">All universities</option>
+                {universities.map((uni) => (
+                  <option key={uni.id} value={uni.name}>{uni.name}</option>
+                ))}
+                <option value="__custom__">Search manually…</option>
+              </select>
+            ) : (
+              <form onSubmit={handleSearch} style={{ display: "flex", gap: 6 }}>
+                <input
+                  type="search"
+                  placeholder="Search area or university..."
+                  value={universityInput}
+                  onChange={(e) => setUniversityInput(e.target.value)}
+                  style={{ flex: 1, minWidth: 0, height: 44, padding: "0 12px", border: "1px solid var(--line)", background: "var(--white)", fontSize: 14, outline: "none" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => { setShowCustomUniversity(false); setUniversity(""); setUniversityInput(""); setPage(1); }}
+                  style={{ height: 44, padding: "0 10px", border: "1px solid var(--line)", background: "var(--white)", fontSize: 13, cursor: "pointer" }}
+                >
+                  ← Back
+                </button>
+              </form>
+            )}
             <select
               value={roomType}
               onChange={(e) => { setRoomType(e.target.value as RoomType | ""); setPage(1); }}
