@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { RoleUpgradeModal } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 import FeaturedCoursesCarousel from "@/components/FeaturedCoursesCarousel";
 import HeroSection from "@/components/HeroSection";
+import { statsService } from "@/services/stats.service";
 
-const STATS = [
-  { value: "25+", label: "Faculty pathways" },
-  { value: "480+", label: "Semester modules" },
-  { value: "120+", label: "Verified tutors" },
-  { value: "9", label: "Study cities supported" },
+// Fallback shown until the real platform stats load (or if the request fails).
+const FALLBACK_STATS = [
+  { value: "—", label: "Active Students" },
+  { value: "—", label: "Tutors" },
+  { value: "—", label: "Sessions" },
+  { value: "—", label: "Ratings" },
 ];
 
 const PROMISE_CARDS = [
@@ -46,6 +48,24 @@ const TRUST_LABELS = ["Public Universities", "Private Institutes", "External Deg
 export default function Home() {
   const { isAuthenticated } = useAuth();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [stats, setStats] = useState(FALLBACK_STATS);
+
+  useEffect(() => {
+    statsService
+      .getPlatformStats()
+      .then((response) => {
+        if (response.success && response.data) {
+          const d = response.data;
+          setStats([
+            { value: `${d.activeStudents}+`, label: "Active Students" },
+            { value: `${d.tutors}+`, label: "Tutors" },
+            { value: `${d.sessions}+`, label: "Sessions" },
+            { value: d.averageRating ? `${d.averageRating}★` : "New", label: "Ratings" },
+          ]);
+        }
+      })
+      .catch((err) => console.error("Failed to load platform stats:", err));
+  }, []);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--white)" }}>
@@ -66,7 +86,7 @@ export default function Home() {
           }}
           className="stats-grid-responsive"
         >
-          {STATS.map((s) => (
+          {stats.map((s) => (
             <div key={s.label}>
               <strong style={{ display: "block", fontSize: 28, fontWeight: 800, color: "var(--ink)" }}>{s.value}</strong>
               <span style={{ color: "var(--muted)" }}>{s.label}</span>

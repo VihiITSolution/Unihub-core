@@ -16,6 +16,7 @@ export default function Header() {
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [requiredRole, setRequiredRole] = useState<RoleType | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchError, setSearchError] = useState(false);
   const { user, logout, isAuthenticated, switchRole } = useAuth();
   const { toggle: toggleSidebar, isOpen: sidebarOpen } = useSidebar();
   const router = useRouter();
@@ -68,9 +69,12 @@ export default function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setSearchError(false);
       router.push(`/courses?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery("");
       setIsMenuOpen(false);
+    } else {
+      setSearchError(true);
     }
   };
 
@@ -167,35 +171,53 @@ export default function Header() {
         </nav>
 
         {/* Search bar — desktop, after nav links */}
-        <form
-          onSubmit={handleSearch}
-          className="hidden lg:flex"
-          style={{ flex: 1, minWidth: 0 }}
-        >
-          <div
-            style={{
-              display: "flex", alignItems: "center", gap: 10,
-              width: "100%", height: 42,
-              padding: "0 16px",
-              border: "1.5px solid var(--ink)",
-              borderRadius: 999,
-              background: "var(--soft)",
-            }}
-          >
-            <span style={{ color: "var(--muted)", fontSize: 13, flexShrink: 0 }}>Find</span>
-            <input
-              type="search"
-              placeholder="Code, module, lecturer, topic..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+        <div className="hidden lg:flex" style={{ flex: 1, minWidth: 0, flexDirection: "column" }}>
+          <form onSubmit={handleSearch} style={{ display: "flex" }}>
+            <div
               style={{
-                flex: 1, border: 0, outline: 0,
-                background: "transparent", color: "var(--ink)", fontSize: 14,
-                minWidth: 0,
+                display: "flex", alignItems: "center", gap: 10,
+                width: "100%", height: 42,
+                padding: "0 8px 0 16px",
+                border: `1.5px solid ${searchError ? "#dc2626" : "var(--ink)"}`,
+                borderRadius: 999,
+                background: "var(--soft)",
               }}
-            />
-          </div>
-        </form>
+            >
+              <span style={{ color: "var(--muted)", fontSize: 13, flexShrink: 0 }}>Find</span>
+              <input
+                type="search"
+                placeholder="Code, module, lecturer, topic..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (searchError) setSearchError(false);
+                }}
+                style={{
+                  flex: 1, border: 0, outline: 0,
+                  background: "transparent", color: "var(--ink)", fontSize: 14,
+                  minWidth: 0,
+                }}
+              />
+              <button
+                type="submit"
+                aria-label="Search"
+                style={{
+                  flexShrink: 0, height: 30, padding: "0 14px",
+                  border: 0, borderRadius: 999,
+                  background: "var(--ink)", color: "#fff",
+                  fontSize: 13, fontWeight: 700, cursor: "pointer",
+                }}
+              >
+                Search
+              </button>
+            </div>
+          </form>
+          {searchError && (
+            <span style={{ color: "#dc2626", fontSize: 12, marginTop: 4, paddingLeft: 16 }}>
+              Please enter a search term
+            </span>
+          )}
+        </div>
 
         {/* Desktop right actions */}
         <div className="hidden lg:flex items-center flex-shrink-0" style={{ gap: 6 }}>
@@ -403,8 +425,8 @@ export default function Header() {
             <div
               style={{
                 display: "flex", alignItems: "center", gap: 8,
-                height: 42, padding: "0 14px",
-                border: "1.5px solid var(--ink)", borderRadius: 999, background: "var(--soft)",
+                height: 42, padding: "0 6px 0 14px",
+                border: `1.5px solid ${searchError ? "#dc2626" : "var(--ink)"}`, borderRadius: 999, background: "var(--soft)",
               }}
             >
               <span style={{ color: "var(--muted)", fontSize: 13 }}>Find</span>
@@ -412,10 +434,30 @@ export default function Header() {
                 type="search"
                 placeholder="Search kuppi sessions, modules..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (searchError) setSearchError(false);
+                }}
                 style={{ flex: 1, border: 0, outline: 0, background: "transparent", fontSize: 14, color: "var(--ink)" }}
               />
+              <button
+                type="submit"
+                aria-label="Search"
+                style={{
+                  flexShrink: 0, height: 28, padding: "0 12px",
+                  border: 0, borderRadius: 999,
+                  background: "var(--ink)", color: "#fff",
+                  fontSize: 12, fontWeight: 700, cursor: "pointer",
+                }}
+              >
+                Go
+              </button>
             </div>
+            {searchError && (
+              <span style={{ display: "block", color: "#dc2626", fontSize: 12, marginTop: 4, paddingLeft: 14 }}>
+                Please enter a search term
+              </span>
+            )}
           </form>
 
           {/* Nav links */}

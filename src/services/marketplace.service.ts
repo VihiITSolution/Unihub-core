@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api-client';
+import { API_BASE_URL } from '@/lib/constants';
 import type { ApiResponse, PaginatedResponse, MarketplaceItem, Order } from '@/types';
 
 export interface MarketplaceFilters {
@@ -94,6 +95,26 @@ export const marketplaceService = {
    */
   async getItemById(id: number): Promise<ApiResponse<{ item: MarketplaceItem }>> {
     return apiClient.get<ApiResponse<{ item: MarketplaceItem }>>(`/marketplace/${id}`);
+  },
+
+  /**
+   * Upload listing images to Cloudinary; returns their URLs to be included
+   * in a subsequent createListing/updateListing call.
+   */
+  async uploadImages(
+    files: File[],
+    token: string,
+  ): Promise<ApiResponse<{ images: string[] }>> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('images', file));
+
+    const response = await fetch(`${API_BASE_URL}/marketplace/upload-images`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    return response.json();
   },
 
   /**

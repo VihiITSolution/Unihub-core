@@ -106,7 +106,23 @@ export default function StudentDashboard() {
   const [completedCount, setCompletedCount] = useState(0);
   const [activeSection, setActiveSection] = useState("courses");
 
-  useEffect(() => { loadEnrollments(); }, []);
+  useEffect(() => {
+    loadEnrollments();
+
+    // Re-fetch when the user comes back to this tab/page (e.g. after
+    // enrolling in or completing a course elsewhere) - Next.js's router
+    // cache can otherwise leave this component showing stale counts after
+    // client-side back-navigation, since the mount-only effect above never
+    // re-runs on its own.
+    const handleFocus = () => loadEnrollments();
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleFocus);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadEnrollments = async () => {
     try {
@@ -228,7 +244,7 @@ export default function StudentDashboard() {
         {/* Stats row */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }} className="ml-stat-grid">
           {[
-            { value: enrollments.length,  label: "Active courses" },
+            { value: enrollments.length - completedCount, label: "Active courses" },
             { value: 0,                   label: "Wishlist items" },
             { value: 0,                   label: "Saved rooms" },
             { value: completedCount,      label: "Completed" },

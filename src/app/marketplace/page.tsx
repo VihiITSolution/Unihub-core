@@ -44,12 +44,13 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
     .split(/[.\n]/).map((s) => s.trim()).filter((s) => s.length > 10).slice(0, 3);
 
   const cardTrigger = (
-    <Link href={`/marketplace/${item.id}`} style={{ textDecoration: "none", display: "block" }}>
+    <Link href={`/marketplace/${item.id}`} style={{ textDecoration: "none", display: "block", height: "100%" }}>
       <article
         style={{
           border: "1px solid var(--line)", borderRadius: 6,
           overflow: "hidden", background: "var(--white)",
           transition: "transform .18s, box-shadow .18s", cursor: "pointer",
+          height: "100%", display: "flex", flexDirection: "column",
         }}
         className="course-card-hover"
       >
@@ -60,7 +61,7 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5"><path d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/></svg>
           )}
         </div>
-        <div style={{ padding: 14 }}>
+        <div style={{ padding: 14, display: "flex", flexDirection: "column", flex: 1 }}>
           <h3 style={{ minHeight: 44, margin: "0 0 6px", fontSize: 16, lineHeight: 1.25, fontWeight: 800, color: "var(--ink)" }}>
             {item.title}
           </h3>
@@ -73,9 +74,17 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
               {item.stock > 0 ? "Available" : "Sold"}
             </span>
           </div>
-          {item.seller && (
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>by {sellerName}</p>
-          )}
+          <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>by {sellerName}</p>
+          <button
+            type="button"
+            style={{
+              marginTop: "auto", paddingTop: 12, background: "none", border: "none",
+              color: "var(--brand)", fontWeight: 700, fontSize: 13, textAlign: "left",
+              cursor: "pointer",
+            }}
+          >
+            View Details →
+          </button>
         </div>
       </article>
     </Link>

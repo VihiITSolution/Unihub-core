@@ -386,3 +386,12 @@
 .content-with-sidebar-collapsed {
   @apply lg:ml-20;
 }
+
+/* Hover-lift effect used on card grids (marketplace, courses, boarding,
+   featured carousel, my-courses). Previously only declared inside
+   my-courses' scoped styled-jsx block, so it never applied anywhere else
+   that referenced this class. */
+.course-card-hover:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}

@@ -11,13 +11,19 @@ export default function HeroSection() {
   const handleCreateKuppi = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!isAuthenticated) {
+      // Land the new user on the tutor application after they register,
+      // instead of the generic student dashboard - register() doesn't
+      // support a "tutor" account type directly, so becoming a tutor is a
+      // follow-up application step for a normal student account.
+      sessionStorage.setItem("redirectAfterLogin", "/student/become-tutor");
       router.push("/auth/register");
       return;
     }
     if (user?.roles?.includes("tutor")) {
       router.push("/tutor/create-course");
     } else {
-      router.push("/auth/register?role=tutor");
+      // Already has an account - send them to apply, not back to registration.
+      router.push("/student/become-tutor");
     }
   };
 

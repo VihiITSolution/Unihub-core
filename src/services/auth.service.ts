@@ -50,6 +50,39 @@ export const authService = {
     return apiClient.post<ApiResponse<AuthResponse>>("/auth/register", data);
   },
 
+  async forgotPassword(
+    email: string,
+  ): Promise<ApiResponse<{ resetToken?: string; resetUrl?: string }>> {
+    return apiClient.post<ApiResponse<{ resetToken?: string; resetUrl?: string }>>(
+      "/auth/forgot-password",
+      { email },
+    );
+  },
+
+  async resetPassword(
+    email: string,
+    token: string,
+    newPassword: string,
+  ): Promise<ApiResponse<null>> {
+    return apiClient.post<ApiResponse<null>>("/auth/reset-password", {
+      email,
+      token,
+      newPassword,
+    });
+  },
+
+  async changePassword(
+    token: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<ApiResponse<null>> {
+    return apiClient.put<ApiResponse<null>>(
+      "/auth/change-password",
+      { currentPassword, newPassword },
+      { token },
+    );
+  },
+
   async logout(token: string): Promise<ApiResponse<null>> {
     return apiClient.post<ApiResponse<null>>("/auth/logout", {}, { token });
   },

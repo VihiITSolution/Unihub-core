@@ -17,6 +17,8 @@ export default function CreateListingPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -32,6 +34,48 @@ export default function CreateListingPage() {
     condition: "new",
     images: [] as string[],
   });
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (files.length === 0 || !token) return;
+
+    if (formData.images.length + files.length > 5) {
+      setError("You can upload at most 5 images per listing");
+      return;
+    }
+
+    setUploadingImages(true);
+    setError("");
+
+    try {
+      const response = await marketplaceService.uploadImages(files, token);
+      if (response.success && response.data) {
+        setFormData((prev) => ({
+          ...prev,
+          images: [...prev.images, ...response.data!.images],
+        }));
+        setImagePreviews((prev) => [
+          ...prev,
+          ...response.data!.images,
+        ]);
+      } else {
+        setError(response.message || "Failed to upload images");
+      }
+    } catch {
+      setError("Failed to upload images. Please try again.");
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     if (!isChecking && !user?.isVendorProfileComplete) {
@@ -251,18 +295,50 @@ export default function CreateListingPage() {
           </div>
         </div>
 
-        {/* Images Section (Placeholder) */}
+        {/* Images Section */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Images</h2>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary-400 transition-colors">
             <div className="text-gray-500">
               <div className="text-4xl mb-2">📷</div>
-              <p>Image upload coming soon</p>
-              <p className="text-sm mt-1">
-                For now, listings will use default images
-              </p>
+              <input
+                type="file"
+                id="listing-images"
+                accept=".png,.jpg,.jpeg"
+                multiple
+                onChange={handleImageSelect}
+                disabled={uploadingImages || formData.images.length >= 5}
+                className="hidden"
+              />
+              <label
+                htmlFor="listing-images"
+                className="cursor-pointer text-primary-600 hover:text-primary-700 font-medium"
+              >
+                {uploadingImages ? "Uploading…" : "Click to upload images"}
+              </label>
+              <p className="text-sm mt-1">PNG, JPG up to 5MB (max 5 images)</p>
             </div>
           </div>
+          {imagePreviews.length > 0 && (
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
+              {imagePreviews.map((url, index) => (
+                <div key={url} className="relative aspect-square">
+                  <img
+                    src={url}
+                    alt={`Listing image ${index + 1}`}
+                    className="w-full h-full object-cover rounded-lg border border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full text-xs font-bold flex items-center justify-center hover:bg-red-700"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Submit Buttons */}

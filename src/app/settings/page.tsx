@@ -34,6 +34,18 @@ export default function SettingsPage() {
     text: string;
   } | null>(null);
 
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
   useEffect(() => {
     if (isLoading) return;
 
@@ -199,6 +211,69 @@ export default function SettingsPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePasswordFormChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setPasswordForm({
+      ...passwordForm,
+      [e.target.name]: e.target.value,
+    });
+    setPasswordMessage(null);
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordMessage({
+        type: "error",
+        text: "New password must be at least 8 characters",
+      });
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage({ type: "error", text: "Passwords do not match" });
+      return;
+    }
+
+    setChangingPassword(true);
+    setPasswordMessage(null);
+
+    try {
+      const response = await authService.changePassword(
+        token,
+        passwordForm.currentPassword,
+        passwordForm.newPassword,
+      );
+
+      if (response.success) {
+        setPasswordMessage({
+          type: "success",
+          text: "Password changed successfully!",
+        });
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        setPasswordMessage({
+          type: "error",
+          text: response.message || "Failed to change password",
+        });
+      }
+    } catch (error) {
+      console.error("Change password error:", error);
+      setPasswordMessage({
+        type: "error",
+        text: "Failed to change password. Please try again.",
+      });
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -503,9 +578,65 @@ export default function SettingsPage() {
                 <p className="text-sm text-gray-600 mb-3">
                   Change your password and manage security preferences
                 </p>
-                <button className="text-sm text-red-600 hover:text-red-700 font-medium">
-                  Manage Security →
+                <button
+                  onClick={() => setShowPasswordForm((prev) => !prev)}
+                  className="text-sm text-red-600 hover:text-red-700 font-medium"
+                >
+                  {showPasswordForm ? "Cancel" : "Manage Security →"}
                 </button>
+
+                {showPasswordForm && (
+                  <form
+                    onSubmit={handleChangePassword}
+                    className="mt-4 space-y-3"
+                  >
+                    {passwordMessage && (
+                      <div
+                        className={`px-3 py-2 rounded-lg text-sm ${
+                          passwordMessage.type === "success"
+                            ? "bg-green-50 text-green-800 border border-green-200"
+                            : "bg-red-50 text-red-800 border border-red-200"
+                        }`}
+                      >
+                        {passwordMessage.text}
+                      </div>
+                    )}
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      value={passwordForm.currentPassword}
+                      onChange={handlePasswordFormChange}
+                      placeholder="Current password"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                    <input
+                      type="password"
+                      name="newPassword"
+                      value={passwordForm.newPassword}
+                      onChange={handlePasswordFormChange}
+                      placeholder="New password (min. 8 characters)"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={passwordForm.confirmPassword}
+                      onChange={handlePasswordFormChange}
+                      placeholder="Confirm new password"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                    <button
+                      type="submit"
+                      disabled={changingPassword}
+                      className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {changingPassword ? "Changing…" : "Change Password"}
+                    </button>
+                  </form>
+                )}
               </div>
             </div>
           </div>

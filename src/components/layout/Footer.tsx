@@ -47,7 +47,7 @@ export default function Footer() {
             { label: "Browse Kuppi Sessions", href: "/courses" },
             { label: "Marketplace", href: "/marketplace" },
             { label: "Boarding", href: "/boarding" },
-            { label: "Become a Tutor", href: "/tutor/dashboard" },
+            { label: "Become a Tutor", href: "/student/become-tutor" },
           ].map((link) => (
             <Link key={link.href} href={link.href} style={{ display: "block", marginBottom: 9, color: "#d7d7d7", fontSize: 14, lineHeight: 1.45 }} className="hover:text-white transition-colors">
               {link.label}
@@ -60,7 +60,7 @@ export default function Footer() {
           <h4 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 800 }}>Community</h4>
           {[
             { label: "Learner Stories", href: "/stories" },
-            { label: "Teaching Center", href: "/tutor/dashboard" },
+            { label: "Teaching Center", href: "/student/become-tutor" },
             { label: "Blog", href: "/blog" },
           ].map((link) => (
             <Link key={link.href} href={link.href} style={{ display: "block", marginBottom: 9, color: "#d7d7d7", fontSize: 14, lineHeight: 1.45 }} className="hover:text-white transition-colors">
