@@ -180,6 +180,7 @@ export interface CourseContent {
   duration?: number;
   order: number;
   isPreview?: boolean;
+  locked?: boolean;
 }
 
 export interface Enrollment {

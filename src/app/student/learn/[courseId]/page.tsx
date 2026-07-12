@@ -66,33 +66,19 @@ export default function LearnPage() {
       const courseData = await courseResponse.json();
 
       if (courseData.success && courseData.data) {
-        const courseInfo = courseData.data.course;
-        setCourse(courseInfo);
-
-        // Check if user is the course owner (tutor who created it)
-        const isCourseOwner = user?.id === courseInfo.tutorId;
-
-        // For now, allow access if user is course owner
-        // Later you can add enrollment check here
-        const userRoles = user?.roles || [];
-        const isAdmin = userRoles.includes("admin");
-
-        if (!isCourseOwner && !isAdmin) {
-          // TODO: Add enrollment check
-          // const isEnrolled = await checkEnrollment(courseId, user.id);
-          // if (!isEnrolled) {
-          //   setError("You must enroll in this course to access it");
-          //   setLoading(false);
-          //   return;
-          // }
-        }
+        setCourse(courseData.data.course);
       } else {
         setError(courseData.message || "Failed to load course");
       }
 
-      // Fetch course content
+      // Fetch course content. Sending the auth token lets the backend grant
+      // full (playable) access to enrolled students, the owning tutor, or
+      // admins; everyone else only gets locked/preview content.
       const contentResponse = await fetch(
         `${API_BASE_URL}/courses/${courseId}/content`,
+        token
+          ? { headers: { Authorization: `Bearer ${token}` } }
+          : undefined,
       );
 
       if (contentResponse.ok) {
@@ -585,6 +571,19 @@ export default function LearnPage() {
                       </a>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Locked lesson (not enrolled / not a preview) */}
+              {currentContent.locked && (
+                <div className="bg-white rounded-lg border-2 border-gray-200 p-6 md:p-8 mb-6 text-center">
+                  <div className="text-6xl mb-4">🔒</div>
+                  <h3 className="text-lg md:text-xl font-semibold mb-2">
+                    This lesson is locked
+                  </h3>
+                  <p className="text-sm md:text-base text-gray-600">
+                    Enroll in this course to unlock this lesson.
+                  </p>
                 </div>
               )}
 

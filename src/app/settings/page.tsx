@@ -9,7 +9,8 @@ import { socialProfileService } from "@/services/social.service";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, token, isAuthenticated, updateUser, switchRole } = useAuth();
+  const { user, token, isAuthenticated, isLoading, updateUser, switchRole } =
+    useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -31,6 +32,8 @@ export default function SettingsPage() {
   } | null>(null);
 
   useEffect(() => {
+    if (isLoading) return;
+
     if (!isAuthenticated) {
       router.push("/auth/login");
       return;
@@ -46,7 +49,7 @@ export default function SettingsPage() {
       });
       setProfileImage(user.profileImage || "");
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, isLoading, user, router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -166,6 +169,14 @@ export default function SettingsPage() {
       setLoading(false);
     }
   };
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
