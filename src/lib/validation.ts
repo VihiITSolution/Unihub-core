@@ -13,3 +13,10 @@ export function hasLetters(value: string): boolean {
 export function isNameLike(value: string): boolean {
   return /^[a-zA-Z\s'.-]{2,50}$/.test(value.trim());
 }
+
+// Keep in sync with Unihub-backend/src/routes/vendorRoutes.js SHOP_NAME_REGEX
+const SHOP_NAME_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9\s&'.,-]{1,58}[a-zA-Z0-9]$/;
+
+export function isValidShopName(value: string): boolean {
+  return SHOP_NAME_REGEX.test(value.trim());
+}

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { tutorService } from "@/services/tutor.service";
 
+const TUTOR_BIO_MAX_LENGTH = 1000;
+
 const EXPERTISE_OPTIONS = [
   "Mathematics",
   "Physics",
@@ -52,6 +54,11 @@ export default function BecomeTutorPage() {
       return;
     }
 
+    if (!formData.qualifications.trim()) {
+      setError("Please list your qualifications & education");
+      return;
+    }
+
     if (formData.expertiseAreas.length === 0) {
       setError("Please select at least one area of expertise");
       return;
@@ -64,6 +71,16 @@ export default function BecomeTutorPage() {
 
     if (formData.coursesSubjects.length === 0) {
       setError("Please select at least one subject you'll create courses on");
+      return;
+    }
+
+    if (!formData.bio.trim()) {
+      setError("Please write a short bio");
+      return;
+    }
+
+    if (formData.bio.length > TUTOR_BIO_MAX_LENGTH) {
+      setError(`Bio must be ${TUTOR_BIO_MAX_LENGTH} characters or fewer`);
       return;
     }
 
@@ -249,7 +266,8 @@ export default function BecomeTutorPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Qualifications & Education
+                    Qualifications & Education{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     name="qualifications"
@@ -368,7 +386,9 @@ export default function BecomeTutorPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     YouTube Channel / Introduction Video Link{" "}
-                    <span className="text-blue-500">*</span>
+                    <span className="text-gray-400 font-normal">
+                      (optional)
+                    </span>
                   </label>
                   <input
                     type="url"
@@ -530,17 +550,19 @@ export default function BecomeTutorPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Bio / Introduction
+                  Bio / Introduction <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   name="bio"
                   value={formData.bio}
                   onChange={handleChange}
                   rows={6}
+                  maxLength={TUTOR_BIO_MAX_LENGTH}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
                   placeholder="Tell students about yourself, your teaching style, and what makes you a great tutor..."
                 />
                 <p className="text-xs text-gray-500 mt-2">
+                  {formData.bio.length}/{TUTOR_BIO_MAX_LENGTH} characters ·
                   This will be displayed on your tutor profile
                 </p>
               </div>

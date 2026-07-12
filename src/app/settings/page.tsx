@@ -6,6 +6,9 @@ import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/services/auth.service";
 import { socialProfileService } from "@/services/social.service";
+import { isValidPhone, isNameLike } from "@/lib/validation";
+
+const BIO_MAX_LENGTH = 500;
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -133,6 +136,35 @@ export default function SettingsPage() {
     e.preventDefault();
 
     if (!token) return;
+
+    if (!isNameLike(formData.firstName)) {
+      setMessage({
+        type: "error",
+        text: "First name must be 2-50 letters",
+      });
+      return;
+    }
+    if (!isNameLike(formData.lastName)) {
+      setMessage({
+        type: "error",
+        text: "Last name must be 2-50 letters",
+      });
+      return;
+    }
+    if (formData.phoneNumber.trim() && !isValidPhone(formData.phoneNumber)) {
+      setMessage({
+        type: "error",
+        text: "Please enter a valid phone number",
+      });
+      return;
+    }
+    if (formData.bio.length > BIO_MAX_LENGTH) {
+      setMessage({
+        type: "error",
+        text: `Bio must be ${BIO_MAX_LENGTH} characters or fewer`,
+      });
+      return;
+    }
 
     try {
       setLoading(true);
@@ -412,11 +444,13 @@ export default function SettingsPage() {
                     value={formData.bio}
                     onChange={handleChange}
                     rows={4}
+                    maxLength={BIO_MAX_LENGTH}
                     placeholder="Tell us about yourself..."
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Brief description for your profile
+                    {formData.bio.length}/{BIO_MAX_LENGTH} characters · Brief
+                    description for your profile
                   </p>
                 </div>
 

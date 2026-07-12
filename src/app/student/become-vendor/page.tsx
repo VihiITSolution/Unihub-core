@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { vendorService } from "@/services/vendor.service";
+import { isValidPhone, isValidShopName } from "@/lib/validation";
 
 export default function BecomeVendorPage() {
   const router = useRouter();
@@ -28,6 +29,17 @@ export default function BecomeVendorPage() {
     e.preventDefault();
     if (!token) {
       setError("Please login to continue");
+      return;
+    }
+
+    if (!isValidShopName(formData.shopName)) {
+      setError(
+        "Shop name must be 3-60 characters and start/end with a letter or number",
+      );
+      return;
+    }
+    if (formData.contactPhone.trim() && !isValidPhone(formData.contactPhone)) {
+      setError("Please enter a valid phone number");
       return;
     }
 

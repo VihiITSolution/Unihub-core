@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useDashboardPath } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
+import { isValidPhone, hasLetters } from "@/lib/validation";
 
 const UNIVERSITIES = [
   "University of Colombo",
@@ -117,6 +118,9 @@ export default function RegisterPage() {
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match"); return false;
     }
+    if (formData.phoneNumber.trim() && !isValidPhone(formData.phoneNumber)) {
+      setError("Please enter a valid phone number"); return false;
+    }
     return true;
   };
 
@@ -124,7 +128,12 @@ export default function RegisterPage() {
     if (formData.accountType === "student") {
       if (!formData.universityName) { setError("Please select your university"); return false; }
       if (!formData.department.trim()) { setError("Please enter your department"); return false; }
+      if (!hasLetters(formData.department)) { setError("Department must contain letters, not just numbers"); return false; }
       if (!formData.degreeOrCourse.trim()) { setError("Please enter your degree/course"); return false; }
+      if (!hasLetters(formData.degreeOrCourse)) { setError("Degree/Course must contain letters, not just numbers"); return false; }
+      if (formData.studyingArea.trim() && !hasLetters(formData.studyingArea)) {
+        setError("Studying Area must contain letters, not just numbers"); return false;
+      }
     }
     if (!agreedToTerms) { setError("Please agree to the terms and conditions"); return false; }
     return true;
