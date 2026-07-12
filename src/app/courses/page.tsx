@@ -58,6 +58,9 @@ function CoursesInner() {
   const [selectedDept,    setSelectedDept]    = useState(searchParams?.get("departmentId") || "all");
   const [selectedYear,    setSelectedYear]    = useState(searchParams?.get("year") || "all");
   const [searchQuery,     setSearchQuery]     = useState(searchParams?.get("search") || "");
+  const [sortBy,          setSortBy]          = useState(searchParams?.get("sortBy") || "");
+  const [minPrice,        setMinPrice]        = useState(searchParams?.get("minPrice") || "");
+  const [maxPrice,        setMaxPrice]        = useState(searchParams?.get("maxPrice") || "");
 
   // Courses + UI state
   const [courses, setCourses] = useState<Course[]>([]);
@@ -92,6 +95,9 @@ function CoursesInner() {
       if (selectedDept    !== "all") params.set("departmentId", selectedDept);
       if (selectedYear    !== "all") params.set("year",         selectedYear);
       if (searchQuery.trim())        params.set("search",       searchQuery.trim());
+      if (sortBy)                    params.set("sortBy",       sortBy);
+      if (minPrice.trim())           params.set("minPrice",     minPrice.trim());
+      if (maxPrice.trim())           params.set("maxPrice",     maxPrice.trim());
 
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -114,7 +120,7 @@ function CoursesInner() {
     } finally {
       setLoading(false);
     }
-  }, [selectedFaculty, selectedDept, selectedYear, searchQuery, token]);
+  }, [selectedFaculty, selectedDept, selectedYear, searchQuery, sortBy, minPrice, maxPrice, token]);
 
   useEffect(() => { loadCourses(); }, [loadCourses]);
 
@@ -123,9 +129,11 @@ function CoursesInner() {
     setSelectedDept("all");
     setSelectedYear("all");
     setSearchQuery("");
+    setMinPrice("");
+    setMaxPrice("");
   };
 
-  const hasFilters = selectedFaculty !== "all" || selectedDept !== "all" || selectedYear !== "all" || searchQuery.trim();
+  const hasFilters = selectedFaculty !== "all" || selectedDept !== "all" || selectedYear !== "all" || searchQuery.trim() || minPrice.trim() || maxPrice.trim();
 
   // Active filter labels for breadcrumb
   const facultyName = activeFaculty?.name;
@@ -270,16 +278,60 @@ function CoursesInner() {
               </div>
             </div>
 
+            {/* Price range */}
+            <div style={{ marginBottom: 20, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+              <FilterSection title="Price (Rs.)" />
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Min"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  style={{
+                    width: 0, flex: 1, height: 36, padding: "0 10px",
+                    border: "1px solid var(--line)", borderRadius: 6, fontSize: 13,
+                  }}
+                />
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Max"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  style={{
+                    width: 0, flex: 1, height: 36, padding: "0 10px",
+                    border: "1px solid var(--line)", borderRadius: 6, fontSize: 13,
+                  }}
+                />
+              </div>
+            </div>
+
           </aside>
 
           {/* ── Course grid ── */}
           <main style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, gap: 12, flexWrap: "wrap" }}>
               <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
                 {loading ? "Loading…" : (
                   <>Showing <strong style={{ color: "var(--ink)" }}>{courses.length}</strong> kuppi session{courses.length !== 1 ? "s" : ""}</>
                 )}
               </p>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                style={{
+                  height: 36, padding: "0 10px",
+                  border: "1px solid var(--line)", borderRadius: 6,
+                  fontSize: 13, color: "var(--ink)", background: "var(--white)", cursor: "pointer",
+                }}
+              >
+                <option value="">Newest first</option>
+                <option value="popular">Most Popular</option>
+                <option value="latest">Latest</option>
+                <option value="price_low">Price: Low to High</option>
+                <option value="price_high">Price: High to Low</option>
+              </select>
             </div>
 
             {loading ? (

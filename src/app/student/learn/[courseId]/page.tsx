@@ -23,6 +23,7 @@ export default function LearnPage() {
     Set<string | number>
   >(new Set());
   const [enrollment, setEnrollment] = useState<any>(null);
+  const [enrollmentCheckFailed, setEnrollmentCheckFailed] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
   const [userReview, setUserReview] = useState<any>(null);
   const [reviewRating, setReviewRating] = useState(5);
@@ -121,11 +122,19 @@ export default function LearnPage() {
                 setCompletedContents(
                   new Set(completed.map((id: any) => String(id))),
                 );
+              } else {
+                // No matching enrollment found - surface this instead of
+                // silently leaving "Mark as Complete" non-functional with
+                // no explanation.
+                setEnrollmentCheckFailed(true);
               }
             }
+          } else {
+            setEnrollmentCheckFailed(true);
           }
         } catch (err) {
           console.error("Failed to fetch enrollment:", err);
+          setEnrollmentCheckFailed(true);
         }
       }
     } catch (error) {
@@ -519,6 +528,11 @@ export default function LearnPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              {enrollmentCheckFailed && (
+                <div className="mb-6 px-4 py-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm">
+                  We couldn&apos;t confirm your enrollment for this course, so progress can&apos;t be saved right now. Please refresh the page, or contact support if this keeps happening.
+                </div>
+              )}
               {/* Video Player */}
               {currentContent.type === "video" && currentContent.url && (
                 <div className="bg-black rounded-lg overflow-hidden mb-6">

@@ -130,7 +130,7 @@ export interface Course {
   category: string;
   categoryObj?: Category;
   level: "beginner" | "intermediate" | "advanced";
-  duration: number; // in minutes
+  duration: number; // in hours (total course length, distinct from CourseContent.duration which is per-lesson minutes)
   facultyId?: number;
   departmentId?: number;
   year?: number;

@@ -6,7 +6,28 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { StartConversationButton } from "@/components/chat";
+import YouTubePlayer from "@/components/ui/YouTubePlayer";
 import type { Course, CourseContent } from "@/types";
+
+function getEmbedUrl(url?: string, youtubeVideoId?: string) {
+  let videoId = youtubeVideoId || "";
+
+  if (!videoId && url) {
+    if (url.includes("youtube.com/watch?v=")) {
+      videoId = url.split("v=")[1]?.split("&")[0] || "";
+    } else if (url.includes("youtu.be/")) {
+      videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
+    } else if (
+      url.includes("youtube.com/embed/") ||
+      url.includes("youtube-nocookie.com/embed/")
+    ) {
+      videoId = url.split("/embed/")[1]?.split("?")[0] || "";
+    }
+  }
+
+  if (!videoId) return url || "";
+  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&cc_load_policy=0`;
+}
 
 export default function CourseDetailsPage() {
   const params = useParams();
@@ -20,6 +41,7 @@ export default function CourseDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [expandedPreviewId, setExpandedPreviewId] = useState<string | number | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -53,9 +75,12 @@ export default function CourseDetailsPage() {
         setError(courseData.message || "Failed to load course");
       }
 
-      // Fetch course content
+      // Fetch course content. Sending the auth token lets the backend
+      // report accurate lock status for enrolled users (see
+      // courseContentController.getCourseContent).
       const contentResponse = await fetch(
         `${API_BASE_URL}/courses/${courseId}/content`,
+        token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
       );
 
       if (contentResponse.ok) {
@@ -212,12 +237,6 @@ export default function CourseDetailsPage() {
     );
   }
 
-  // Separate preview and enrolled materials
-  const previewMaterials = contents.filter((content) => content.isPreview);
-  const enrolledOnlyMaterials = contents.filter(
-    (content) => !content.isPreview,
-  );
-
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Success Modal */}
@@ -290,7 +309,7 @@ export default function CourseDetailsPage() {
       </div>
 
       <div className="container-custom py-8 pb-8">
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Main Content */}
           <div className="md:col-span-2">
             {course.isUpcoming && (
@@ -320,22 +339,24 @@ export default function CourseDetailsPage() {
             <div className="flex flex-wrap gap-6 items-center mb-6">
               <div className="flex items-center gap-2">
                 <span className="text-gray-700 text-sm">Average Rating:</span>
-                <span className="font-semibold text-gray-900">-</span>
+                <span className="font-semibold text-gray-900">
+                  {course.rating ? `${Number(course.rating).toFixed(1)} ★` : "New"}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-gray-700">
                 <span className="text-sm">Active Students:</span>
-                <span className="font-medium">10+</span>
+                <span className="font-medium">{course.enrollmentCount ?? 0}</span>
               </div>
               <div className="flex items-center gap-2 text-gray-700">
                 <span className="text-sm">Duration:</span>
                 <span className="font-medium">
-                  {Math.floor((course.duration || 0) / 60)} hours
+                  {course.duration || 0} hours
                 </span>
               </div>
             </div>
 
             {/* Instructor */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center flex-wrap gap-3 mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
                 {course.tutor?.firstName
                   ? course.tutor.firstName.charAt(0)
@@ -371,6 +392,83 @@ export default function CourseDetailsPage() {
                 </div>
               </div>
             )}
+
+            {/* Course Content */}
+            {contents.length > 0 && (
+              <div className="mt-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Course Content
+                </h2>
+                <div className="border border-gray-200 rounded-lg divide-y divide-gray-200 overflow-hidden">
+                  {[...contents]
+                    .sort((a, b) => a.order - b.order)
+                    .map((content, index) => {
+                      const isLocked = content.locked || (!content.isPreview && !isEnrolled);
+                      const isExpanded = expandedPreviewId === content.id;
+                      const canPreviewInline =
+                        content.type === "video" && !isLocked && content.url;
+
+                      return (
+                        <div key={content.id}>
+                          <div className="flex items-center gap-3 p-4 bg-white">
+                            <span className="w-7 h-7 flex-shrink-0 rounded-full bg-gray-100 text-gray-700 text-xs font-bold flex items-center justify-center">
+                              {index + 1}
+                            </span>
+                            <span className="text-lg flex-shrink-0">
+                              {content.type === "video" ? "🎥" : content.type === "pdf" ? "📄" : "📝"}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {content.title}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {content.type === "video" ? "Video" : content.type === "pdf" ? "PDF" : "Quiz"}
+                                {content.duration ? ` · ${content.duration} min` : ""}
+                                {content.isPreview ? " · Preview" : ""}
+                              </p>
+                            </div>
+                            {isLocked ? (
+                              <span
+                                className="text-gray-400 flex-shrink-0"
+                                title="Enroll to unlock this lesson"
+                              >
+                                🔒
+                              </span>
+                            ) : canPreviewInline ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setExpandedPreviewId(isExpanded ? null : content.id)
+                                }
+                                className="text-sm text-primary-600 hover:text-primary-700 font-medium flex-shrink-0"
+                              >
+                                {isExpanded ? "Close" : "▶ Preview"}
+                              </button>
+                            ) : content.type === "pdf" && content.url ? (
+                              <a
+                                href={content.url.startsWith("http") ? content.url : `${BACKEND_URL}${content.url}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary-600 hover:text-primary-700 font-medium flex-shrink-0"
+                              >
+                                View
+                              </a>
+                            ) : null}
+                          </div>
+                          {isExpanded && canPreviewInline && (
+                            <div className="bg-black aspect-video">
+                              <YouTubePlayer
+                                embedUrl={getEmbedUrl(content.url, content.youtubeVideoId)}
+                                title={content.title}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar - Course Card */}
@@ -398,7 +496,7 @@ export default function CourseDetailsPage() {
                     {course.price === 0 ||
                     parseFloat(String(course.price)) === 0
                       ? "FREE"
-                      : `Rs. ${course.price}`}
+                      : `Rs. ${Number(course.price).toLocaleString()}`}
                   </div>
                 </div>
 

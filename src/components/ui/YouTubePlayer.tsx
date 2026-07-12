@@ -17,6 +17,29 @@ export default function YouTubePlayer({
   modestBranding = true,
   relatedVideos = false,
 }: YouTubePlayerProps) {
+  // A valid embed URL must actually be a YouTube embed - anything else
+  // (a raw watch/share link that failed extraction upstream, an empty
+  // string, or some other host) would silently fail in an iframe with no
+  // feedback to the user, so surface a clear error instead of embedding it.
+  const isEmbeddable =
+    !!embedUrl &&
+    (embedUrl.includes('youtube.com/embed/') ||
+      embedUrl.includes('youtube-nocookie.com/embed/'));
+
+  if (!isEmbeddable) {
+    return (
+      <div className="relative w-full h-full bg-black flex items-center justify-center text-center p-6">
+        <div>
+          <div className="text-4xl mb-3">⚠️</div>
+          <p className="text-white font-semibold mb-1">Video unavailable</p>
+          <p className="text-gray-400 text-sm">
+            This lesson&apos;s video link couldn&apos;t be loaded. Please contact the tutor or support.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Build URL parameters
   const params = new URLSearchParams();
   if (autoplay) params.append('autoplay', '1');
