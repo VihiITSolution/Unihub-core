@@ -79,6 +79,14 @@ function CoursesInner() {
     });
   }, []);
 
+  // Sync filter state when URL search params change (e.g. clicking a faculty in the header nav)
+  useEffect(() => {
+    setSelectedFaculty(searchParams?.get("facultyId") || "all");
+    setSelectedDept(searchParams?.get("departmentId") || "all");
+    setSelectedYear(searchParams?.get("year") || "all");
+    setSearchQuery(searchParams?.get("search") || "");
+  }, [searchParams]);
+
   // When faculty changes, reset department
   const handleFacultyChange = (fId: string) => {
     setSelectedFaculty(fId);

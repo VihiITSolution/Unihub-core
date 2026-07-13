@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth, useDashboardPath } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
 import { isValidPhone, hasLetters } from "@/lib/validation";
+import { FALLBACK_FACULTIES } from "@/services/faculty.service";
 
 const UNIVERSITIES = [
   "University of Colombo",
@@ -95,6 +96,17 @@ export default function RegisterPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Faculty / department dropdown state
+  const [selectedFacultyId, setSelectedFacultyId] = useState<string>("");
+  const [selectedDeptName, setSelectedDeptName] = useState<string>("");
+  const [customUniversity, setCustomUniversity] = useState("");
+  const [customFaculty, setCustomFaculty] = useState("");
+  const [customDepartment, setCustomDepartment] = useState("");
+
+  // Departments for the selected faculty
+  const activeFaculty = FALLBACK_FACULTIES.find((f) => String(f.id) === selectedFacultyId);
+  const deptOptions = activeFaculty?.departments?.filter((d) => d.isActive) ?? [];
+
   const totalSteps = 3;
 
   const handleChange = (
@@ -126,9 +138,11 @@ export default function RegisterPage() {
 
   const validateStep3 = () => {
     if (formData.accountType === "student") {
-      if (!formData.universityName) { setError("Please select your university"); return false; }
-      if (!formData.department.trim()) { setError("Please enter your department"); return false; }
-      if (!hasLetters(formData.department)) { setError("Department must contain letters, not just numbers"); return false; }
+      const uniVal = formData.universityName === "Other" ? customUniversity.trim() : formData.universityName;
+      if (!uniVal) { setError("Please select or enter your university"); return false; }
+      const deptVal = selectedDeptName === "Other" ? customDepartment.trim() : selectedDeptName;
+      if (!deptVal) { setError("Please select or enter your department"); return false; }
+      if (!hasLetters(deptVal)) { setError("Department must contain letters"); return false; }
       if (!formData.degreeOrCourse.trim()) { setError("Please enter your degree/course"); return false; }
       if (!hasLetters(formData.degreeOrCourse)) { setError("Degree/Course must contain letters, not just numbers"); return false; }
       if (formData.studyingArea.trim() && !hasLetters(formData.studyingArea)) {
@@ -168,8 +182,23 @@ export default function RegisterPage() {
         studentProfile:
           formData.accountType === "student"
             ? {
-                universityName: formData.universityName,
-                department: formData.department,
+                universityName:
+                  formData.universityName === "Other"
+                    ? customUniversity.trim()
+                    : formData.universityName,
+                facultyId: selectedFacultyId && selectedFacultyId !== "Other"
+                  ? Number(selectedFacultyId)
+                  : undefined,
+                department:
+                  selectedDeptName === "Other"
+                    ? customDepartment.trim()
+                    : selectedDeptName,
+                customUniversity:
+                  formData.universityName === "Other" ? customUniversity.trim() : undefined,
+                customFaculty:
+                  selectedFacultyId === "Other" ? customFaculty.trim() : undefined,
+                customDepartment:
+                  selectedDeptName === "Other" ? customDepartment.trim() : undefined,
                 degreeOrCourse: formData.degreeOrCourse,
                 studyingArea: formData.studyingArea || undefined,
                 currentYear: formData.currentYear,
@@ -501,6 +530,7 @@ export default function RegisterPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {formData.accountType === "student" ? (
                   <>
+                    {/* University */}
                     <Field label="University">
                       <select
                         name="universityName" required
@@ -513,16 +543,84 @@ export default function RegisterPage() {
                         {UNIVERSITIES.map((u) => <option key={u} value={u}>{u}</option>)}
                       </select>
                     </Field>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                      <Field label="Department">
+                    {formData.universityName === "Other" && (
+                      <Field label="Your university name">
                         <input
-                          name="department" type="text" required
-                          value={formData.department} onChange={handleChange}
-                          placeholder="Computer Science" style={inputStyle}
+                          type="text" required
+                          value={customUniversity} onChange={(e) => setCustomUniversity(e.target.value)}
+                          placeholder="Enter your university name" style={inputStyle}
                           onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
                           onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
                         />
+                        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--muted)" }}>
+                          We&apos;ll add it to our list — thanks for letting us know!
+                        </p>
+                      </Field>
+                    )}
+
+                    {/* Faculty */}
+                    <Field label="Faculty">
+                      <select
+                        value={selectedFacultyId}
+                        onChange={(e) => {
+                          setSelectedFacultyId(e.target.value);
+                          setSelectedDeptName("");
+                          setCustomFaculty("");
+                          setCustomDepartment("");
+                        }}
+                        style={{ ...inputStyle, cursor: "pointer" }}
+                        onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
+                        onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
+                      >
+                        <option value="">Select your faculty</option>
+                        {FALLBACK_FACULTIES.map((f) => (
+                          <option key={f.id} value={String(f.id)}>{f.name}</option>
+                        ))}
+                        <option value="Other">Other</option>
+                      </select>
+                    </Field>
+                    {selectedFacultyId === "Other" && (
+                      <Field label="Your faculty name">
+                        <input
+                          type="text"
+                          value={customFaculty} onChange={(e) => setCustomFaculty(e.target.value)}
+                          placeholder="e.g. Faculty of Veterinary Science" style={inputStyle}
+                          onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
+                          onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
+                        />
+                        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--muted)" }}>
+                          We&apos;ll review and add it — thanks!
+                        </p>
+                      </Field>
+                    )}
+
+                    {/* Department + Degree */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <Field label="Department">
+                        {selectedFacultyId && selectedFacultyId !== "Other" && deptOptions.length > 0 ? (
+                          <select
+                            value={selectedDeptName}
+                            onChange={(e) => { setSelectedDeptName(e.target.value); setCustomDepartment(""); }}
+                            style={{ ...inputStyle, cursor: "pointer" }}
+                            onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
+                            onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
+                          >
+                            <option value="">Select department</option>
+                            {deptOptions.map((d) => (
+                              <option key={d.id} value={d.name}>{d.name}</option>
+                            ))}
+                            <option value="Other">Other</option>
+                          </select>
+                        ) : (
+                          <input
+                            type="text" required
+                            value={selectedDeptName}
+                            onChange={(e) => setSelectedDeptName(e.target.value)}
+                            placeholder="e.g. Computer Science" style={inputStyle}
+                            onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
+                            onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
+                          />
+                        )}
                       </Field>
                       <Field label="Degree / Course">
                         <input
@@ -534,6 +632,20 @@ export default function RegisterPage() {
                         />
                       </Field>
                     </div>
+                    {selectedDeptName === "Other" && (
+                      <Field label="Your department name">
+                        <input
+                          type="text"
+                          value={customDepartment} onChange={(e) => setCustomDepartment(e.target.value)}
+                          placeholder="e.g. Biomedical Engineering" style={inputStyle}
+                          onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
+                          onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
+                        />
+                        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--muted)" }}>
+                          We&apos;ll review and add it — thanks!
+                        </p>
+                      </Field>
+                    )}
 
                     <Field label="Studying area" optional>
                       <input

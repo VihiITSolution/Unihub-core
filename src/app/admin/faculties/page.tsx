@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import facultyService, { FALLBACK_FACULTIES, type Faculty, type Department } from "@/services/faculty.service";
+import { apiClient } from "@/lib/api-client";
 
 // ── Inline components ────────────────────────────────────────────────────────
 
@@ -47,6 +48,8 @@ export default function AdminFacultiesPage() {
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
   const [confirm, setConfirm] = useState<{ msg: string; cb: () => void } | null>(null);
   const [seeding, setSeeding] = useState(false);
+  const [suggestions, setSuggestions] = useState<{ universities: string[]; faculties: string[]; departments: string[] } | null>(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
   // Faculty form state
   const [fForm, setFForm] = useState({ name: "", icon: "" });
@@ -466,6 +469,55 @@ export default function AdminFacultiesPage() {
               </div>
             </div>
           ))}
+        </div>
+      </details>
+
+      {/* ── Student "Other" Suggestions ─────────────────────────────────────── */}
+      <details style={{ marginTop: 24 }}>
+        <summary
+          onClick={async (e) => {
+            const open = (e.currentTarget.parentElement as HTMLDetailsElement).open;
+            if (!open && !suggestions) {
+              setSuggestionsLoading(true);
+              try {
+                const res = await apiClient.get<{ success: boolean; data: { universities: string[]; faculties: string[]; departments: string[] } }>("/admin/suggestions");
+                if (res.success) setSuggestions(res.data);
+              } catch { /* ignore */ }
+              finally { setSuggestionsLoading(false); }
+            }
+          }}
+          style={{ cursor: "pointer", fontWeight: 800, fontSize: 14, color: "var(--ink)", padding: "10px 0", userSelect: "none" }}
+        >
+          Student "Other" suggestions
+        </summary>
+        <div style={{ marginTop: 10 }}>
+          {suggestionsLoading && <p style={{ fontSize: 13, color: "var(--muted)" }}>Loading…</p>}
+          {suggestions && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {(
+                [
+                  { label: "Universities", items: suggestions.universities },
+                  { label: "Faculties", items: suggestions.faculties },
+                  { label: "Departments", items: suggestions.departments },
+                ] as const
+              ).map(({ label, items }) => (
+                <div key={label} style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 6, padding: "12px 16px" }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", marginBottom: 8 }}>{label}</div>
+                  {items.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>None yet</p>
+                  ) : (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {items.map((item) => (
+                        <span key={item} style={{ fontSize: 13, padding: "4px 12px", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 999, color: "#c2410c" }}>
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </details>
 
