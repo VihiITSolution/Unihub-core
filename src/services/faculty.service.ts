@@ -148,8 +148,16 @@ export const facultyService = {
       const res = await fetch(`${API_BASE_URL}/faculties${query}`);
       const json: ApiRes<{ faculties: Faculty[] } | Faculty[]> = await res.json();
       if (json.success && json.data) {
-        const raw = Array.isArray(json.data) ? json.data : (json.data as any).faculties || [];
-        return raw;
+        const raw: Faculty[] = Array.isArray(json.data) ? json.data : (json.data as any).faculties || [];
+        // Deduplicate: "Faculty of Engineering" and "Engineering" are the same.
+        // Normalise by stripping the "Faculty of " prefix, then keep the first occurrence.
+        const seen = new Set<string>();
+        return raw.filter((f) => {
+          const key = f.name.toLowerCase().replace(/^faculty\s+of\s+/i, "").trim();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
       }
       return [];
     } catch {
