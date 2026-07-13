@@ -18,6 +18,10 @@ export interface StudentProfileData {
   currentAddress?: string;
   phoneNumber?: string;
   dateOfBirth?: string;
+  facultyId?: number;
+  customUniversity?: string;
+  customFaculty?: string;
+  customDepartment?: string;
 }
 
 export interface RegisterData {
