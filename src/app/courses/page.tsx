@@ -66,6 +66,7 @@ function CoursesInner() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Departments derived from selected faculty (no extra fetch)
   const activeFaculty = faculties.find((f) => String(f.id) === selectedFaculty);
@@ -229,10 +230,27 @@ function CoursesInner() {
       )}
 
       <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "24px 0" }}>
+
+        {/* Mobile filter toggle */}
+        <button
+          className="courses-filter-toggle"
+          onClick={() => setShowFilters((v) => !v)}
+          style={{
+            display: "none", width: "100%", margin: "0 0 12px",
+            padding: "10px 16px", background: "var(--soft)",
+            border: "1px solid var(--line)", borderRadius: 6,
+            fontSize: 14, fontWeight: 700, color: "var(--ink)", cursor: "pointer",
+            textAlign: "left",
+          }}
+        >
+          {showFilters ? "▲ Hide Filters" : "▼ Show Filters"}
+          {hasFilters && <span style={{ marginLeft: 8, background: "var(--brand)", color: "#fff", fontSize: 11, fontWeight: 800, padding: "2px 7px", borderRadius: 999 }}>active</span>}
+        </button>
+
         <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }} className="courses-layout">
 
           {/* ── Sidebar filters ── */}
-          <aside style={{ width: 220, flexShrink: 0, position: "sticky", top: 112 }} className="courses-sidebar">
+          <aside style={{ width: 220, flexShrink: 0, position: "sticky", top: 112 }} className={`courses-sidebar${showFilters ? " courses-sidebar-open" : ""}`}>
 
             {/* Faculty */}
             <div style={{ marginBottom: 20 }}>
@@ -388,8 +406,10 @@ function CoursesInner() {
 
       <style jsx>{`
         @media (max-width: 980px) {
+          .courses-filter-toggle { display: block !important; }
           .courses-layout { flex-direction: column !important; }
-          .courses-sidebar { width: 100% !important; position: static !important; }
+          .courses-sidebar { display: none !important; width: 100% !important; position: static !important; }
+          .courses-sidebar-open { display: block !important; }
           .course-result-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 640px) {

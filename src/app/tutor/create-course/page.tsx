@@ -381,7 +381,7 @@ export default function CreateCoursePage() {
 
         {step === 1 && (
           <form onSubmit={handleBasicInfoSubmit} className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-8">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Course Details
               </h2>
@@ -553,7 +553,7 @@ export default function CreateCoursePage() {
               </div>
             </div>
 
-            <div className="flex justify-between">
+            <div className="flex flex-wrap gap-3 justify-between">
               <button
                 type="button"
                 onClick={() => router.push("/tutor/dashboard")}
@@ -574,7 +574,7 @@ export default function CreateCoursePage() {
 
         {step === 2 && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-8">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Add Course Materials
               </h2>
@@ -696,7 +696,7 @@ export default function CreateCoursePage() {
             </div>
 
             {materials.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm p-8">
+              <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
                   Added Materials ({materials.length})
                 </h3>
@@ -758,7 +758,7 @@ export default function CreateCoursePage() {
               </div>
             )}
 
-            <div className="flex justify-between">
+            <div className="flex flex-wrap gap-3 justify-between">
               <button
                 type="button"
                 onClick={() => setStep(1)}

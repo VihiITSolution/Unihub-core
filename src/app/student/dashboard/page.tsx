@@ -170,10 +170,11 @@ export default function StudentDashboard() {
   };
 
   return (
-    <div style={{ display: "flex", gap: 24, alignItems: "flex-start", maxWidth: 1100, margin: "0 auto" }}>
+    <div style={{ display: "flex", gap: 24, alignItems: "flex-start", maxWidth: 1100, margin: "0 auto", padding: "0 8px" }} className="ml-outer">
 
       {/* ── Left sidebar ── */}
       <aside
+        className="ml-dashboard-aside"
         style={{
           width: 220, flexShrink: 0,
           position: "sticky", top: 120,
@@ -230,6 +231,7 @@ export default function StudentDashboard() {
 
         {/* Hero banner */}
         <div
+          className="ml-hero"
           style={{
             background: "var(--brand-dark)",
             borderRadius: 8, padding: "28px 32px",
@@ -375,7 +377,6 @@ export default function StudentDashboard() {
             )}
           </Section>
         </div>
-      </div>
 
         {/* Settings */}
         <div ref={settingsRef} style={{ scrollMarginTop: 120 }}>
@@ -416,8 +417,13 @@ export default function StudentDashboard() {
           </Section>
         </div>
 
+      </div>{/* end main content */}
+
       <style jsx>{`
         @media (max-width: 768px) {
+          .ml-outer { padding: 0 4px !important; }
+          .ml-dashboard-aside { display: none !important; }
+          .ml-hero { padding: 18px 16px !important; }
           .ml-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .ml-two-col   { grid-template-columns: 1fr !important; }
         }

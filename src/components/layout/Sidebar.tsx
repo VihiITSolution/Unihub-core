@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
@@ -85,7 +85,8 @@ const bottomLinks = [
 // ── Component ────────────────────────────────────────────────────────────────
 export default function Sidebar({ isOpen, onToggle, userType = "student" }: SidebarProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
 
   const links =
     userType === "tutor" ? tutorLinks
@@ -198,34 +199,48 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
         ))}
       </nav>
 
-      {/* User profile */}
+      {/* User profile + logout */}
       <div
         style={{
           padding: isOpen ? "12px 14px" : "12px 0",
           borderTop: "1px solid rgba(255,255,255,.07)",
-          flexShrink: 0, display: "flex", alignItems: "center", gap: 10,
-          justifyContent: isOpen ? "flex-start" : "center",
+          flexShrink: 0,
         }}
       >
-        <div
-          style={{
-            width: 32, height: 32, borderRadius: "50%",
-            background: "var(--brand)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontWeight: 800, fontSize: 12, flexShrink: 0,
-          }}
-        >
-          {user?.firstName?.[0] || "U"}{user?.lastName?.[0] || ""}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: isOpen ? "flex-start" : "center" }}>
+          <div
+            style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: "var(--brand)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#fff", fontWeight: 800, fontSize: 12, flexShrink: 0,
+            }}
+          >
+            {user?.firstName?.[0] || "U"}{user?.lastName?.[0] || ""}
+          </div>
+          {isOpen && (
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#f9fafb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {user?.firstName} {user?.lastName}
+              </div>
+              <div style={{ fontSize: 11, color: "#6b7280", textTransform: "capitalize" }}>
+                {user?.primaryRole || userType}
+              </div>
+            </div>
+          )}
         </div>
         {isOpen && (
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#f9fafb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {user?.firstName} {user?.lastName}
-            </div>
-            <div style={{ fontSize: 11, color: "#6b7280", textTransform: "capitalize" }}>
-              {user?.primaryRole || userType}
-            </div>
-          </div>
+          <button
+            onClick={() => { logout(); router.push("/"); }}
+            style={{
+              marginTop: 10, width: "100%", padding: "7px 10px",
+              background: "rgba(220,38,38,.15)", border: "1px solid rgba(220,38,38,.25)",
+              borderRadius: 5, color: "#f87171", fontSize: 12, fontWeight: 700,
+              cursor: "pointer", textAlign: "center",
+            }}
+          >
+            Log Out
+          </button>
         )}
       </div>
     </div>
