@@ -55,6 +55,12 @@ export default function CreateCoursePage() {
     duration: "",
     isPreview: false,
   });
+  const [uploadProgress, setUploadProgress] = useState<{
+    current: number;
+    total: number;
+    percent: number;
+    fileName: string;
+  } | null>(null);
 
   const MAX_VIDEO_UPLOAD_MB = Number(
     process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 5000,
@@ -239,77 +245,88 @@ export default function CreateCoursePage() {
     }
   };
 
+  const uploadMaterialWithProgress = (
+    url: string,
+    formData: FormData,
+    authToken: string,
+    onProgress: (percent: number) => void,
+  ): Promise<void> =>
+    new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", url);
+      xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          let msg = `Upload failed (${xhr.status})`;
+          try {
+            const body = JSON.parse(xhr.responseText);
+            if (body?.message) msg = body.message;
+          } catch {
+            if (xhr.status === 413) msg = `File too large for the server. Ask your admin to raise nginx client_max_body_size.`;
+          }
+          reject(new Error(msg));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during upload. Check your connection."));
+      xhr.send(formData);
+    });
+
   const handleFinish = async () => {
     if (materials.length === 0) {
       const confirm = window.confirm(
         "You haven't added any materials. Do you want to add them later?",
       );
-      if (confirm) {
-        router.push("/tutor/dashboard");
-      }
+      if (confirm) router.push("/tutor/dashboard");
       return;
     }
 
     setLoading(true);
+    setUploadProgress(null);
+
     try {
-      // Upload materials one by one with file upload
-      for (const material of materials) {
+      for (let i = 0; i < materials.length; i++) {
+        const material = materials[i];
         const materialFormData = new FormData();
         materialFormData.append("title", material.title);
         materialFormData.append("type", material.type);
-        materialFormData.append(
-          "order",
-          materials.indexOf(material).toString(),
-        );
+        materialFormData.append("order", i.toString());
+        if (material.duration) materialFormData.append("duration", material.duration.toString());
+        if (material.isPreview) materialFormData.append("isPreview", "true");
+        if (material.file) materialFormData.append("video", material.file);
 
-        if (material.duration) {
-          materialFormData.append("duration", material.duration.toString());
-        }
+        setUploadProgress({
+          current: i + 1,
+          total: materials.length,
+          percent: 0,
+          fileName: material.file?.name ?? material.title,
+        });
 
-        if (material.isPreview) {
-          materialFormData.append("isPreview", "true");
-        }
-
-        if (material.file) {
-          materialFormData.append("video", material.file);
-        }
-
-        const uploadResponse = await fetch(
+        await uploadMaterialWithProgress(
           `${API_BASE_URL}/courses/${createdCourseId}/content?type=${encodeURIComponent(material.type)}`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: materialFormData,
-          },
+          materialFormData,
+          token!,
+          (percent) =>
+            setUploadProgress((prev) => prev ? { ...prev, percent } : null),
         );
-
-        if (!uploadResponse.ok) {
-          let errorMessage = `Failed to upload material "${material.title}"`;
-          try {
-            const errorData = await uploadResponse.json();
-            if (errorData?.message) {
-              errorMessage = errorData.message;
-            }
-          } catch {
-            if (uploadResponse.status === 413) {
-              errorMessage = `Upload too large. Keep video files under ${MAX_VIDEO_UPLOAD_MB}MB.`;
-            }
-          }
-          throw new Error(errorMessage);
-        }
       }
 
+      setUploadProgress(null);
       alert("Course and materials created successfully!");
       router.push("/tutor/dashboard");
     } catch (error) {
+      setUploadProgress(null);
       console.error("Failed to save materials:", error);
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Course created but failed to save some materials";
-      alert(message);
+      alert(error instanceof Error ? error.message : "Course created but failed to save some materials");
     } finally {
       setLoading(false);
     }
@@ -758,11 +775,37 @@ export default function CreateCoursePage() {
               </div>
             )}
 
+            {uploadProgress && (
+              <div className="bg-white rounded-xl shadow-sm p-6 border-2 border-blue-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-gray-700">
+                    Uploading {uploadProgress.current} of {uploadProgress.total}
+                  </span>
+                  <span className="text-sm font-bold text-blue-600">
+                    {uploadProgress.percent}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 mb-2 overflow-hidden">
+                  <div
+                    className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress.percent}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 truncate">
+                  {uploadProgress.fileName}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Please keep this page open until all uploads finish.
+                </p>
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-3 justify-between">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition"
+                disabled={loading}
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Back to Basic Info
               </button>
@@ -772,7 +815,9 @@ export default function CreateCoursePage() {
                 className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading
-                  ? "Saving..."
+                  ? uploadProgress
+                    ? `Uploading ${uploadProgress.current}/${uploadProgress.total}…`
+                    : "Saving…"
                   : materials.length > 0
                     ? "Finish & Save All"
                     : "Skip Materials"}
