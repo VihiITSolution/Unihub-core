@@ -79,8 +79,7 @@ const adminLinks = [
 ];
 
 const bottomLinks = [
-  { href: "/settings", label: "Settings",    icon: Icons.cog },
-  { href: "/help",     label: "Help Center", icon: Icons.questionCircle },
+  { href: "/help", label: "Help Center", icon: Icons.questionCircle },
 ];
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -189,29 +188,6 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
             {vendorLinks.map((link) => (
               <NavItem key={link.href} {...link} accent />
             ))}
-          </>
-        )}
-
-        {/* Become Vendor CTA */}
-        {showBecomeVendor && isOpen && (
-          <>
-            <div style={{ margin: "10px 14px", height: 1, background: "rgba(255,255,255,.07)" }} />
-            <Link
-              href="/student/become-vendor"
-              style={{
-                display: "flex", alignItems: "center", gap: 10,
-                margin: "4px 8px", padding: "10px 12px",
-                background: "linear-gradient(135deg,#f59e0b,#d97706)",
-                borderRadius: 6, textDecoration: "none", color: "#fff",
-                fontSize: 13, fontWeight: 700,
-              }}
-            >
-              {Icons.tag}
-              <div>
-                <div>Become a Vendor</div>
-                <div style={{ fontSize: 11, fontWeight: 400, opacity: .85 }}>Start selling</div>
-              </div>
-            </Link>
           </>
         )}
 

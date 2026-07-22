@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import { marketplaceService } from "@/services/marketplace.service";
 import { HoverCard } from "@/components/ui";
 import type { MarketplaceItem } from "@/types";
@@ -147,6 +148,9 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
 }
 
 export default function MarketplacePage() {
+  const { user } = useAuth();
+  const showVendorCTA = !user?.isVendorProfileComplete;
+
   const [items, setItems] = useState<MarketplaceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -238,6 +242,49 @@ export default function MarketplacePage() {
           </div>
         </div>
       </section>
+
+      {/* Become a Vendor banner — shown to non-vendors only */}
+      {showVendorCTA && (
+        <section style={{ background: "linear-gradient(90deg,#1c1c1c,#2d2400)", borderBottom: "1px solid rgba(245,158,11,.25)" }}>
+          <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "22px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+                background: "linear-gradient(135deg,#f59e0b,#d97706)",
+                display: "grid", placeItems: "center",
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L9.568 3z"/>
+                  <path d="M6 6h.008v.008H6V6z"/>
+                </svg>
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#fff" }}>
+                  Start selling on UniHub Marketplace
+                </p>
+                <p style={{ margin: "2px 0 0", fontSize: 13, color: "#d1d5db" }}>
+                  List your books, electronics, lab gear, and more — free for 3 months.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/student/become-vendor"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                height: 42, padding: "0 20px",
+                background: "linear-gradient(135deg,#f59e0b,#d97706)",
+                color: "#fff", fontWeight: 800, fontSize: 14,
+                borderRadius: 6, textDecoration: "none", flexShrink: 0,
+              }}
+            >
+              Become a Vendor
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Listings */}
       <section id="listings" style={{ padding: "34px 0" }}>

@@ -147,18 +147,21 @@ export default function StudentDashboard() {
     { id: "wishlist",    label: "Wishlist" },
     { id: "saved",       label: "Saved marketplace & boarding" },
     { id: "profile",     label: "Profile and certificates" },
+    { id: "settings",    label: "Settings" },
   ];
 
   const coursesRef  = useRef<HTMLDivElement>(null);
   const wishlistRef = useRef<HTMLDivElement>(null);
   const savedRef    = useRef<HTMLDivElement>(null);
   const profileRef  = useRef<HTMLDivElement>(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
 
   const sectionRefs: Record<string, RefObject<HTMLDivElement | null>> = {
     courses:  coursesRef,
     wishlist: wishlistRef,
     saved:    savedRef,
     profile:  profileRef,
+    settings: settingsRef,
   };
 
   const scrollTo = (id: string) => {
@@ -334,7 +337,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Profile & Certificates */}
-        <div ref={profileRef}>
+        <div ref={profileRef} style={{ scrollMarginTop: 120 }}>
           <Section
             title="Profile, certificates, and account"
             subtitle="Your account can hold student details, faculty, year, certificates, payment history, tutor bookings, and privacy settings."
@@ -373,6 +376,45 @@ export default function StudentDashboard() {
           </Section>
         </div>
       </div>
+
+        {/* Settings */}
+        <div ref={settingsRef} style={{ scrollMarginTop: 120 }}>
+          <Section
+            title="Settings"
+            subtitle="Manage your account preferences, security, and notifications."
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {[
+                { label: "Edit profile",           desc: "Update your name, photo, bio, and contact details",  href: "/settings/profile" },
+                { label: "Change password",         desc: "Update your password and security settings",         href: "/settings/security" },
+                { label: "Notification preferences",desc: "Choose what you get notified about",                 href: "/settings/notifications" },
+                { label: "Privacy settings",        desc: "Control who can see your profile and activity",      href: "/settings/privacy" },
+                { label: "Linked accounts",         desc: "Connect Google, Facebook, or other services",        href: "/settings/accounts" },
+                { label: "Delete account",          desc: "Permanently remove your UniHub account",             href: "/settings/danger" },
+              ].map(({ label, desc, href }) => (
+                <a
+                  key={href}
+                  href={href}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "13px 0", borderBottom: "1px solid var(--line)",
+                    textDecoration: "none", gap: 12,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: label === "Delete account" ? "#dc2626" : "var(--ink)", marginBottom: 2 }}>
+                      {label}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}>{desc}</div>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--muted)", flexShrink: 0 }}>
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </a>
+              ))}
+            </div>
+          </Section>
+        </div>
 
       <style jsx>{`
         @media (max-width: 768px) {

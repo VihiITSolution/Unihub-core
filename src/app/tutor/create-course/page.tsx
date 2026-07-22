@@ -3,11 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { courseService } from "@/services/course.service";
-import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
+import { API_BASE_URL } from "@/lib/constants";
 import { useRoleCheck } from "@/hooks/useRoleCheck";
 import { Loading } from "@/components/ui";
-import type { Category } from "@/types";
+import { FALLBACK_FACULTIES, type Faculty, type Department } from "@/services/faculty.service";
 
 interface CourseMaterial {
   id: string;
@@ -21,7 +20,7 @@ interface CourseMaterial {
 export default function CreateCoursePage() {
   const router = useRouter();
   const { token, isAuthenticated, hasRole } = useAuth();
-  const { isChecking, roleError } = useRoleCheck({
+  const { isChecking } = useRoleCheck({
     requiredRole: "tutor",
     requireApproval: false,
   });
@@ -32,23 +31,15 @@ export default function CreateCoursePage() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
-  // Categories management
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [showAddCategory, setShowAddCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [categoryLoading, setCategoryLoading] = useState(false);
-
   // Faculty / Department
-  const [faculties, setFaculties] = useState<{ id: number; name: string; icon?: string; departments?: { id: number; name: string }[] }[]>([]);
-  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
+  const [faculties, setFaculties] = useState<Faculty[]>(FALLBACK_FACULTIES);
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   const [formData, setFormData] = useState({
     title: "",
     shortDescription: "",
     description: "",
     aboutCourse: "",
-    price: "",
-    category: "",
     level: "beginner" as "beginner" | "intermediate" | "advanced",
     duration: "",
     facultyId: "",
@@ -81,7 +72,6 @@ export default function CreateCoursePage() {
       return;
     }
 
-    fetchCategories();
     fetchFaculties();
   }, [isAuthenticated, hasRole, router]);
 
@@ -89,67 +79,10 @@ export default function CreateCoursePage() {
     try {
       const response = await fetch(`${API_BASE_URL}/faculties?include=departments`);
       const data = await response.json();
-      if (data.success && Array.isArray(data.data)) {
-        setFaculties(data.data);
-      }
+      const list: Faculty[] = Array.isArray(data.data) ? data.data : (data.data?.faculties ?? []);
+      if (data.success && list.length > 0) setFaculties(list);
     } catch {
-      // faculties are optional — silently ignore
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/categories`);
-      const data = await response.json();
-      console.log("Fetched categories response:", data); // DEBUG
-      if (data.success && Array.isArray(data.data)) {
-        setCategories(data.data);
-      } else {
-        setCategories([]);
-        console.error("Categories fetch failed or returned wrong format", data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch categories:", error);
-      setCategories([]);
-    }
-  };
-
-  const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) {
-      alert("Please enter a category name");
-      return;
-    }
-
-    setCategoryLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/categories`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: newCategoryName }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setCategories([...categories, data.data]);
-        setFormData((prev) => ({
-          ...prev,
-          category: data.data.id.toString(),
-        }));
-        setShowAddCategory(false);
-        setNewCategoryName("");
-        alert("Category created successfully!");
-      } else {
-        alert(data.message || "Failed to create category");
-      }
-    } catch (error) {
-      console.error("Failed to create category:", error);
-      alert("Failed to create category");
-    } finally {
-      setCategoryLoading(false);
+      // initialized with FALLBACK_FACULTIES
     }
   };
 
@@ -263,11 +196,6 @@ export default function CreateCoursePage() {
       return;
     }
 
-    if (!formData.category) {
-      setError("Please select or create a category");
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -278,8 +206,7 @@ export default function CreateCoursePage() {
       formDataToSend.append("description", formData.shortDescription);
       formDataToSend.append("shortDescription", formData.shortDescription);
       formDataToSend.append("aboutCourse", formData.aboutCourse || "");
-      formDataToSend.append("price", formData.price);
-      formDataToSend.append("category", formData.category);
+      formDataToSend.append("price", "0");
       formDataToSend.append("level", formData.level);
       formDataToSend.append("duration", formData.duration);
       if (formData.facultyId) formDataToSend.append("facultyId", formData.facultyId);
@@ -509,88 +436,21 @@ export default function CreateCoursePage() {
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <select
-                        name="category"
-                        required
-                        value={formData.category}
-                        onChange={handleChange}
-                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="">Select a category</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        onClick={() => setShowAddCategory(!showAddCategory)}
-                        className="px-4 py-3 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 font-medium"
-                      >
-                        + Add New
-                      </button>
-                    </div>
-                    {showAddCategory && (
-                      <div className="mt-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <input
-                          type="text"
-                          value={newCategoryName}
-                          onChange={(e) => setNewCategoryName(e.target.value)}
-                          placeholder="Enter category name..."
-                          className="w-full px-3 py-2 border border-blue-300 rounded mb-3"
-                          onKeyPress={(e) => {
-                            if (e.key === "Enter") {
-                              handleAddCategory();
-                            }
-                          }}
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={handleAddCategory}
-                            disabled={categoryLoading}
-                            className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                          >
-                            {categoryLoading ? "Creating..." : "Create"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowAddCategory(false);
-                              setNewCategoryName("");
-                            }}
-                            className="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Difficulty Level <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="level"
-                      required
-                      value={formData.level}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="beginner">Beginner</option>
-                      <option value="intermediate">Intermediate</option>
-                      <option value="advanced">Advanced</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Difficulty Level <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="level"
+                    required
+                    value={formData.level}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
                 </div>
 
                 {/* Faculty / Department / Year */}
@@ -649,45 +509,20 @@ export default function CreateCoursePage() {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Price (LKR) <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-3.5 text-gray-500">
-                        ₨
-                      </span>
-                      <input
-                        type="number"
-                        name="price"
-                        required
-                        min="0"
-                        step="0.01"
-                        value={formData.price}
-                        onChange={handleChange}
-                        className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="99.99"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Total Duration (hours){" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="duration"
-                      required
-                      min="1"
-                      value={formData.duration}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="20"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Total Duration (hours) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="duration"
+                    required
+                    min="1"
+                    value={formData.duration}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="20"
+                  />
                 </div>
 
                 <div>

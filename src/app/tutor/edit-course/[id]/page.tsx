@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
+import { FALLBACK_FACULTIES, type Faculty, type Department } from "@/services/faculty.service";
 
 interface CourseMaterial {
   id: string;
@@ -37,8 +38,6 @@ export default function EditCoursePage() {
     shortDescription: "",
     description: "",
     aboutCourse: "",
-    price: "",
-    category: "",
     level: "beginner",
     duration: "",
     facultyId: "",
@@ -58,9 +57,8 @@ export default function EditCoursePage() {
     process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 5000,
   );
 
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
-  const [faculties, setFaculties] = useState<{ id: number; name: string; icon?: string; departments?: { id: number; name: string }[] }[]>([]);
-  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
+  const [faculties, setFaculties] = useState<Faculty[]>(FALLBACK_FACULTIES);
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -76,24 +74,16 @@ export default function EditCoursePage() {
     if (courseId && token) {
       loadCourse();
     }
-    fetchCategories();
     fetchFaculties();
   }, [courseId, token, isAuthenticated, hasRole, router]);
-
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/categories`);
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) setCategories(data.data);
-    } catch { /* optional */ }
-  };
 
   const fetchFaculties = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/faculties?include=departments`);
       const data = await res.json();
-      if (data.success && Array.isArray(data.data)) setFaculties(data.data);
-    } catch { /* optional */ }
+      const list: Faculty[] = Array.isArray(data.data) ? data.data : (data.data?.faculties ?? []);
+      if (data.success && list.length > 0) setFaculties(list);
+    } catch { /* initialized with FALLBACK_FACULTIES */ }
   };
 
   const loadCourse = async () => {
@@ -116,8 +106,6 @@ export default function EditCoursePage() {
           shortDescription: course.shortDescription || "",
           description: course.description || "",
           aboutCourse: course.aboutCourse || "",
-          price: course.price != null ? course.price.toString() : "",
-          category: course.category || "",
           level: course.level || "beginner",
           duration: course.duration != null ? course.duration.toString() : "",
           facultyId: course.facultyId != null ? course.facultyId.toString() : "",
@@ -125,12 +113,9 @@ export default function EditCoursePage() {
           year: course.year != null ? course.year.toString() : "",
         });
         setCurrentThumbnail(course.thumbnail || null);
-        // Pre-load departments for the course's faculty
         if (course.facultyId) {
-          fetch(`${API_BASE_URL}/faculties/${course.facultyId}/departments`)
-            .then((r) => r.json())
-            .then((d) => { if (d.success && Array.isArray(d.data)) setDepartments(d.data); })
-            .catch(() => {});
+          const faculty = FALLBACK_FACULTIES.find(f => f.id === course.facultyId);
+          setDepartments(faculty?.departments ?? []);
         }
 
         // Load course materials/content
@@ -373,8 +358,7 @@ export default function EditCoursePage() {
       formDataToSend.append("shortDescription", formData.shortDescription);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("aboutCourse", formData.aboutCourse);
-      formDataToSend.append("price", formData.price);
-      formDataToSend.append("category", formData.category);
+      formDataToSend.append("price", "0");
       formDataToSend.append("level", formData.level);
       formDataToSend.append("duration", formData.duration);
       formDataToSend.append("facultyId", formData.facultyId || "");
@@ -549,43 +533,21 @@ export default function EditCoursePage() {
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="category"
-                      required
-                      value={formData.category}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">Select a category</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Difficulty Level <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="level"
-                      required
-                      value={formData.level}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="beginner">Beginner</option>
-                      <option value="intermediate">Intermediate</option>
-                      <option value="advanced">Advanced</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Difficulty Level <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="level"
+                    required
+                    value={formData.level}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
                 </div>
 
                 {/* Faculty / Department / Year */}
@@ -646,51 +608,25 @@ export default function EditCoursePage() {
               </div>
             </div>
 
-            {/* Pricing & Duration */}
+            {/* Duration */}
             <div className="bg-white rounded-xl shadow-sm p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Pricing & Duration
+                Duration
               </h2>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Price (USD) <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-3.5 text-gray-500">
-                      $
-                    </span>
-                    <input
-                      type="number"
-                      name="price"
-                      required
-                      min="0"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={handleChange}
-                      className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="99.99"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Total Duration (hours){" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="duration"
-                    required
-                    min="1"
-                    value={formData.duration}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="20"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Total Duration (hours) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="duration"
+                  required
+                  min="1"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="20"
+                />
               </div>
             </div>
 
