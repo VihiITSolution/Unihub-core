@@ -245,7 +245,9 @@ export default function CreateCoursePage() {
     }
   };
 
-  const uploadMaterialWithProgress = (
+  const CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB per chunk — safely under any nginx limit
+
+  const uploadPdfWithProgress = (
     url: string,
     formData: FormData,
     authToken: string,
@@ -255,31 +257,81 @@ export default function CreateCoursePage() {
       const xhr = new XMLHttpRequest();
       xhr.open("POST", url);
       xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
-
       xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          onProgress(Math.round((e.loaded / e.total) * 100));
-        }
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
       };
-
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve();
         } else {
           let msg = `Upload failed (${xhr.status})`;
-          try {
-            const body = JSON.parse(xhr.responseText);
-            if (body?.message) msg = body.message;
-          } catch {
-            if (xhr.status === 413) msg = `File too large for the server. Ask your admin to raise nginx client_max_body_size.`;
-          }
+          try { const b = JSON.parse(xhr.responseText); if (b?.message) msg = b.message; } catch {}
           reject(new Error(msg));
         }
       };
-
-      xhr.onerror = () => reject(new Error("Network error during upload. Check your connection."));
+      xhr.onerror = () => reject(new Error("Network error during upload."));
       xhr.send(formData);
     });
+
+  const uploadVideoInChunks = async (
+    courseId: string,
+    material: CourseMaterial,
+    materialIndex: number,
+    authToken: string,
+    onProgress: (percent: number) => void,
+  ): Promise<void> => {
+    const file = material.file!;
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const chunk = file.slice(start, end);
+
+      const fd = new FormData();
+      fd.append("uploadId", uploadId);
+      fd.append("chunkIndex", String(i));
+      fd.append("chunk", chunk, file.name);
+
+      const res = await fetch(`${API_BASE_URL}/courses/${courseId}/content/chunks`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${authToken}` },
+        body: fd,
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.message || `Chunk ${i + 1}/${totalChunks} failed (${res.status})`);
+      }
+
+      onProgress(Math.round(((i + 1) / totalChunks) * 95)); // reserve last 5% for assembly
+    }
+
+    // Finalize: assemble chunks and upload to YouTube
+    const completeBody = new FormData();
+    completeBody.append("uploadId", uploadId);
+    completeBody.append("totalChunks", String(totalChunks));
+    completeBody.append("fileName", file.name);
+    completeBody.append("title", material.title);
+    completeBody.append("type", material.type);
+    completeBody.append("order", String(materialIndex));
+    if (material.duration) completeBody.append("duration", String(material.duration));
+    if (material.isPreview) completeBody.append("isPreview", "true");
+
+    const completeRes = await fetch(`${API_BASE_URL}/courses/${courseId}/content/chunks/complete`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${authToken}` },
+      body: completeBody,
+    });
+
+    if (!completeRes.ok) {
+      const body = await completeRes.json().catch(() => ({}));
+      throw new Error(body?.message || "Failed to finalize video upload.");
+    }
+
+    onProgress(100);
+  };
 
   const handleFinish = async () => {
     if (materials.length === 0) {
@@ -296,13 +348,6 @@ export default function CreateCoursePage() {
     try {
       for (let i = 0; i < materials.length; i++) {
         const material = materials[i];
-        const materialFormData = new FormData();
-        materialFormData.append("title", material.title);
-        materialFormData.append("type", material.type);
-        materialFormData.append("order", i.toString());
-        if (material.duration) materialFormData.append("duration", material.duration.toString());
-        if (material.isPreview) materialFormData.append("isPreview", "true");
-        if (material.file) materialFormData.append("video", material.file);
 
         setUploadProgress({
           current: i + 1,
@@ -311,13 +356,27 @@ export default function CreateCoursePage() {
           fileName: material.file?.name ?? material.title,
         });
 
-        await uploadMaterialWithProgress(
-          `${API_BASE_URL}/courses/${createdCourseId}/content?type=${encodeURIComponent(material.type)}`,
-          materialFormData,
-          token!,
-          (percent) =>
-            setUploadProgress((prev) => prev ? { ...prev, percent } : null),
-        );
+        const onProgress = (percent: number) =>
+          setUploadProgress((prev) => prev ? { ...prev, percent } : null);
+
+        if (material.type === "video" && material.file) {
+          await uploadVideoInChunks(createdCourseId!, material, i, token!, onProgress);
+        } else {
+          const materialFormData = new FormData();
+          materialFormData.append("title", material.title);
+          materialFormData.append("type", material.type);
+          materialFormData.append("order", i.toString());
+          if (material.duration) materialFormData.append("duration", material.duration.toString());
+          if (material.isPreview) materialFormData.append("isPreview", "true");
+          if (material.file) materialFormData.append("video", material.file);
+
+          await uploadPdfWithProgress(
+            `${API_BASE_URL}/courses/${createdCourseId}/content?type=pdf`,
+            materialFormData,
+            token!,
+            onProgress,
+          );
+        }
       }
 
       setUploadProgress(null);
@@ -646,8 +705,7 @@ export default function CreateCoursePage() {
                   />
                   {currentMaterial.type === "video" && (
                     <p className="text-sm text-gray-500 mt-2">
-                      🎥 Video will be automatically uploaded to YouTube as
-                      unlisted. Max size: {MAX_VIDEO_UPLOAD_MB}MB
+                      🎥 Video is uploaded in small chunks then sent to YouTube as unlisted — no file size limit.
                     </p>
                   )}
                   {currentMaterial.type === "pdf" && (
@@ -795,7 +853,9 @@ export default function CreateCoursePage() {
                   {uploadProgress.fileName}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Please keep this page open until all uploads finish.
+                  {uploadProgress.percent >= 95 && uploadProgress.percent < 100
+                    ? "Sending to YouTube… this may take a moment."
+                    : "Please keep this page open until all uploads finish."}
                 </p>
               </div>
             )}
