@@ -151,6 +151,7 @@ export default function Home() {
             </p>
             <div
               style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}
+              className="campus-areas-grid"
             >
               {CAMPUS_AREAS.map((area) => (
                 <div
@@ -307,6 +308,7 @@ export default function Home() {
           .stats-grid-responsive { grid-template-columns: 1fr !important; }
           .promise-grid-responsive { grid-template-columns: 1fr !important; }
           .trust-grid-responsive { grid-template-columns: repeat(2, 1fr) !important; }
+          .campus-areas-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>

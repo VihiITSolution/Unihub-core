@@ -87,7 +87,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div style={{
+        <div className="auth-card" style={{
           background: "#fff",
           border: "1px solid var(--line)",
           borderRadius: 12,
@@ -252,6 +252,9 @@ export default function LoginPage() {
 
       <style jsx global>{`
         @keyframes auth-spin { to { transform: rotate(360deg); } }
+        @media (max-width: 480px) {
+          .auth-card { padding: 20px 16px !important; }
+        }
       `}</style>
     </div>
   );

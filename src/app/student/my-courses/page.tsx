@@ -88,7 +88,7 @@ export default function MyCoursesPage() {
       </div>
 
       {/* Filter tabs */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 24, borderBottom: "1px solid var(--line)", paddingBottom: 0 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, borderBottom: "1px solid var(--line)", paddingBottom: 0, overflowX: "auto" }}>
         {tabs.map((tab) => (
           <button
             key={tab.id}

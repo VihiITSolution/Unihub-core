@@ -125,7 +125,7 @@ export default function TutorLiveSessionsPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold">My Live Sessions</h1>
         <Link
           href="/tutor/live-sessions/create"
@@ -142,7 +142,7 @@ export default function TutorLiveSessionsPage() {
       )}
 
       {/* Filters */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         {["all", "upcoming", "live", "ended"].map((f) => (
           <button
             key={f}
@@ -198,7 +198,7 @@ export default function TutorLiveSessionsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 ml-4">
+                <div className="flex flex-wrap gap-2 ml-4">
                   {session.status === "scheduled" && (
                     <>
                       <button

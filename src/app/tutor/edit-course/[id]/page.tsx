@@ -466,7 +466,7 @@ export default function EditCoursePage() {
         {activeTab === "details" && (
           <>
             {/* Basic Information */}
-            <div className="bg-white rounded-xl shadow-sm p-8">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Course Details
               </h2>
@@ -609,7 +609,7 @@ export default function EditCoursePage() {
             </div>
 
             {/* Duration */}
-            <div className="bg-white rounded-xl shadow-sm p-8">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Duration
               </h2>
@@ -631,7 +631,7 @@ export default function EditCoursePage() {
             </div>
 
             {/* Course Thumbnail */}
-            <div className="bg-white rounded-xl shadow-sm p-8">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Course Thumbnail
               </h2>
@@ -677,7 +677,7 @@ export default function EditCoursePage() {
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-4 justify-end pt-4">
+            <div className="flex flex-wrap gap-4 justify-end pt-4">
               <button
                 type="button"
                 onClick={() => router.push("/tutor/dashboard")}
@@ -723,7 +723,7 @@ export default function EditCoursePage() {
           <div className="space-y-6">
             {/* Existing Materials */}
             {materials.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm p-8">
+              <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">
                   Existing Materials
                 </h2>
@@ -815,7 +815,7 @@ export default function EditCoursePage() {
             )}
 
             {/* Add New Material */}
-            <div className="bg-white rounded-xl shadow-sm p-8">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Add New Material
               </h2>
@@ -930,7 +930,7 @@ export default function EditCoursePage() {
             </div>
 
             {/* Save Materials Button */}
-            <div className="flex gap-4 justify-end pt-4">
+            <div className="flex flex-wrap gap-4 justify-end pt-4">
               <button
                 type="button"
                 onClick={() => setActiveTab("details")}

@@ -286,7 +286,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -420,7 +420,7 @@ export default function SettingsPage() {
 
           {/* Profile Information Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
                 Profile Information
               </h2>
@@ -530,7 +530,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                <div className="flex flex-wrap gap-3 items-center justify-between pt-6 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={() => router.back()}

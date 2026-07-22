@@ -271,7 +271,7 @@ export default function BecomeVendorPage() {
           )}
 
           {/* Submit Button */}
-          <div className="flex gap-4 pt-6 border-t">
+          <div className="flex flex-wrap gap-4 pt-6 border-t">
             <button
               type="button"
               onClick={() => router.back()}

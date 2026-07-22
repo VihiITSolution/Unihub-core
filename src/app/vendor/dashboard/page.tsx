@@ -105,7 +105,7 @@ export default function VendorDashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 ">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="card bg-gradient-to-br from-blue-50 to-blue-100 p-6">
           <div className="text-sm text-blue-600 font-medium mb-1">
             Total Listings
@@ -192,7 +192,7 @@ export default function VendorDashboardPage() {
       {stats.averageRating > 0 && (
         <div className="card">
           <h2 className="text-2xl font-semibold mb-6">Performance</h2>
-          <div className="flex items-center gap-8">
+          <div className="flex flex-wrap items-center gap-6">
             <div>
               <div className="text-sm text-gray-600 mb-1">Average Rating</div>
               <div className="flex items-center gap-2">

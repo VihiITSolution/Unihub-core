@@ -146,7 +146,7 @@ export default function VendorListingsPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-4 mb-6 border-b">
+      <div className="flex flex-wrap gap-4 mb-6 border-b">
         <button
           onClick={() => setFilter("all")}
           className={`px-4 py-2 font-medium border-b-2 ${

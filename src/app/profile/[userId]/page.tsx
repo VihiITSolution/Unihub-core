@@ -68,7 +68,7 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           {user.profileImage ? (
             <img src={user.profileImage} alt="" className="w-20 h-20 rounded-full object-cover" />
           ) : (
@@ -85,7 +85,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        <div className="flex gap-6 mt-4 pt-4 border-t border-gray-100 text-sm">
+        <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-gray-100 text-sm">
           <span className="text-gray-600">
             <strong className="text-gray-900">{counts.posts}</strong> posts
           </span>

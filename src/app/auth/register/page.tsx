@@ -319,6 +319,7 @@ export default function RegisterPage() {
 
         {/* Card */}
         <div
+          className="auth-card"
           style={{
             background: "#fff",
             border: "1px solid var(--line)",
@@ -362,7 +363,7 @@ export default function RegisterPage() {
             {/* ── Step 1 ── */}
             {step === 1 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="reg-2col-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <Field label="First name">
                     <input
                       name="firstName" type="text" required
@@ -595,7 +596,7 @@ export default function RegisterPage() {
                     )}
 
                     {/* Department + Degree */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div className="reg-2col-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                       <Field label="Department">
                         {selectedFacultyId && selectedFacultyId !== "Other" && deptOptions.length > 0 ? (
                           <select
@@ -657,7 +658,7 @@ export default function RegisterPage() {
                       />
                     </Field>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div className="reg-2col-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                       <Field label="Current year">
                         <select
                           name="currentYear"
@@ -777,6 +778,10 @@ export default function RegisterPage() {
 
       <style jsx global>{`
         @keyframes auth-spin { to { transform: rotate(360deg); } }
+        @media (max-width: 480px) {
+          .auth-card { padding: 20px 16px !important; }
+          .reg-2col-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
     </div>
   );

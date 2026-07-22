@@ -233,7 +233,7 @@ export default function BecomeTutorPage() {
           onSubmit={handleSubmit}
           className="bg-white rounded-2xl shadow-xl overflow-hidden"
         >
-          <div className="p-8 space-y-10">
+          <div className="p-4 sm:p-8 space-y-10">
             {/* Academic Qualification Section */}
             <div className="space-y-6">
               <div className="flex items-center space-x-3 pb-3 border-b-2 border-ocean-500">

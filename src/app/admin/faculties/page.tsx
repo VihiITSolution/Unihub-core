@@ -224,7 +224,7 @@ export default function AdminFacultiesPage() {
   return (
     <div style={{ maxWidth: 900 }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
         <div>
           <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Admin</p>
           <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "var(--ink)" }}>Faculties & Departments</h1>

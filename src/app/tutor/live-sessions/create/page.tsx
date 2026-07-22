@@ -347,7 +347,7 @@ export default function CreateLiveSessionPage() {
           </label>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <button
             type="submit"
             disabled={isLoading}

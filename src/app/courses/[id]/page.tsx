@@ -293,7 +293,7 @@ export default function CourseDetailsPage() {
       {/* Course Header - Hero Section */}
       <div className="bg-gray-50">
         <div className="container-custom py-8">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex flex-wrap items-center gap-4 mb-4">
             <Link
               href="/courses"
               className="text-primary-600 hover:underline text-sm font-medium"

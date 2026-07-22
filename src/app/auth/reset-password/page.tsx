@@ -102,6 +102,7 @@ function ResetPasswordForm() {
         </div>
 
         <div
+          className="auth-card"
           style={{
             background: "#fff",
             border: "1px solid var(--line)",
@@ -214,6 +215,11 @@ function ResetPasswordForm() {
           </Link>
         </p>
       </div>
+      <style jsx global>{`
+        @media (max-width: 480px) {
+          .auth-card { padding: 20px 16px !important; }
+        }
+      `}</style>
     </div>
   );
 }

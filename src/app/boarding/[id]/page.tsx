@@ -113,7 +113,7 @@ export default function BoardingDetailPage() {
             )}
           </div>
           {images.length > 1 && (
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {images.slice(0, 4).map((img, i) => (
                 <button
                   key={i}

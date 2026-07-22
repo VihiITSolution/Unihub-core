@@ -124,7 +124,7 @@ export default function ProductDetailsPage() {
             )}
           </div>
           {product.images && product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {product.images.slice(1, 5).map((img, i) => (
                 <div
                   key={i}

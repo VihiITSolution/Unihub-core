@@ -79,7 +79,7 @@ export default function TutorDashboard() {
 
   return (
     <div className="container-custom py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-bold mb-2">Tutor Dashboard</h1>
           <p className="text-gray-600">
@@ -97,7 +97,7 @@ export default function TutorDashboard() {
         </div>
       )}
 
-      <div className="grid md:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -214,7 +214,7 @@ export default function TutorDashboard() {
                 key={course.id}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
               >
-                <div className="flex gap-6">
+                <div className="flex flex-col sm:flex-row gap-6">
                   {course.thumbnail ? (
                     <img
                       src={
@@ -223,10 +223,10 @@ export default function TutorDashboard() {
                           : `${BACKEND_URL}${course.thumbnail}`
                       }
                       alt={course.title}
-                      className="w-56 h-36 object-cover rounded-lg flex-shrink-0"
+                      className="w-full sm:w-56 h-48 sm:h-36 object-cover rounded-lg flex-shrink-0"
                     />
                   ) : (
-                    <div className="w-56 h-36 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-4xl font-bold flex-shrink-0">
+                    <div className="w-full sm:w-56 h-48 sm:h-36 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-4xl font-bold flex-shrink-0">
                       {course.title.charAt(0)}
                     </div>
                   )}

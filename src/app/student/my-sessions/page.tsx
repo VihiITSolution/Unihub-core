@@ -62,7 +62,7 @@ export default function MySessionsPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">My Enrolled Sessions</h1>
         <Link
           href="/student/live-sessions"
@@ -122,7 +122,7 @@ export default function MySessionsPage() {
                     <h3 className="text-xl font-semibold mb-2">{session.title}</h3>
                     <p className="text-gray-600 mb-2">{session.description}</p>
                     
-                    <div className="flex gap-4 text-sm text-gray-500 mb-2">
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-2">
                       <span>👨‍🏫 {session.tutor?.firstName} {session.tutor?.lastName}</span>
                       <span>📅 {formatDate(session.scheduledStartTime)}</span>
                       {enrollment.amountPaid > 0 && (
@@ -138,7 +138,7 @@ export default function MySessionsPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex flex-wrap gap-2 mt-2 sm:mt-0 sm:ml-4">
                     {session.status === "live" && (
                       <Link
                         href={`/student/live-sessions/${session.id}/watch`}
