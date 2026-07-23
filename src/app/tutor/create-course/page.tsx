@@ -245,7 +245,7 @@ export default function CreateCoursePage() {
     }
   };
 
-  const CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB per chunk — safely under any nginx limit
+  const CHUNK_SIZE = 512 * 1024; // 512 KB — stays well under nginx's default 1 MB body limit
 
   const uploadPdfWithProgress = (
     url: string,
@@ -289,40 +289,54 @@ export default function CreateCoursePage() {
       const end = Math.min(start + CHUNK_SIZE, file.size);
       const chunk = file.slice(start, end);
 
-      const fd = new FormData();
-      fd.append("uploadId", uploadId);
-      fd.append("chunkIndex", String(i));
-      fd.append("chunk", chunk, file.name);
+      let lastError: Error | null = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const fd = new FormData();
+        fd.append("uploadId", uploadId);
+        fd.append("chunkIndex", String(i));
+        fd.append("chunk", chunk, file.name);
 
-      const res = await fetch(`${API_BASE_URL}/courses/${courseId}/content/chunks`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${authToken}` },
-        body: fd,
-      });
+        try {
+          const res = await fetch(`${API_BASE_URL}/courses/${courseId}/content/chunks`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${authToken}` },
+            body: fd,
+          });
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.message || `Chunk ${i + 1}/${totalChunks} failed (${res.status})`);
+          if (res.ok) { lastError = null; break; }
+
+          const body = await res.json().catch(() => ({}));
+          lastError = new Error(body?.message || `Chunk ${i + 1}/${totalChunks} failed (${res.status})`);
+        } catch (e) {
+          lastError = e instanceof Error ? e : new Error("Network error");
+        }
+
+        if (attempt < 2) await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
       }
+
+      if (lastError) throw lastError;
 
       onProgress(Math.round(((i + 1) / totalChunks) * 95)); // reserve last 5% for assembly
     }
 
-    // Finalize: assemble chunks and upload to YouTube
-    const completeBody = new FormData();
-    completeBody.append("uploadId", uploadId);
-    completeBody.append("totalChunks", String(totalChunks));
-    completeBody.append("fileName", file.name);
-    completeBody.append("title", material.title);
-    completeBody.append("type", material.type);
-    completeBody.append("order", String(materialIndex));
-    if (material.duration) completeBody.append("duration", String(material.duration));
-    if (material.isPreview) completeBody.append("isPreview", "true");
-
+    // Finalize: assemble chunks server-side then upload to YouTube.
+    // Send as JSON so express.json() can parse req.body (FormData needs multer which this route doesn't have).
     const completeRes = await fetch(`${API_BASE_URL}/courses/${courseId}/content/chunks/complete`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${authToken}` },
-      body: completeBody,
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        uploadId,
+        totalChunks,
+        fileName: file.name,
+        title: material.title,
+        type: material.type,
+        order: String(materialIndex),
+        duration: material.duration ? String(material.duration) : undefined,
+        isPreview: material.isPreview ? "true" : undefined,
+      }),
     });
 
     if (!completeRes.ok) {
