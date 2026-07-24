@@ -59,9 +59,10 @@ function Row({ label, desc, onClick, open, danger }: { label: string; desc: stri
       onClick={onClick}
       style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        width: "100%", padding: "13px 0", borderBottom: open ? "none" : "1px solid var(--line, #e5e7eb)",
-        background: "none", border: "none", borderBottom: "1px solid var(--line, #e5e7eb)",
+        width: "100%", padding: "13px 0",
+        background: "none", border: "none",
         textAlign: "left", cursor: "pointer", gap: 12,
+        borderBottom: open ? "none" : "1px solid var(--line, #e5e7eb)",
       }}
     >
       <div>
