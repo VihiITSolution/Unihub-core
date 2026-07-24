@@ -27,13 +27,15 @@ const AMENITIES_OPTIONS = [
 
 export default function CreateBoardingListing() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { isChecking } = useRoleCheck({
     requiredRole: "vendor",
     requireApproval: true,
   });
   const [loading, setLoading] = useState(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [mediaError, setMediaError] = useState("");
   const [universities, setUniversities] = useState<University[]>([]);
   const [showCustomUniversity, setShowCustomUniversity] = useState(false);
   const [selectedUniversityId, setSelectedUniversityId] = useState<
@@ -56,6 +58,7 @@ export default function CreateBoardingListing() {
     amenities: [],
     rules: "",
     images: [],
+    videos: [],
     contactPhone: user?.phoneNumber || "",
     contactEmail: user?.email || "",
   });
@@ -159,13 +162,54 @@ export default function CreateBoardingListing() {
     }));
   };
 
-  const handleImageAdd = () => {
-    const url = prompt("Enter image URL:");
-    if (url) {
-      setFormData((prev) => ({
-        ...prev,
-        images: [...(prev.images || []), url],
-      }));
+  const handleMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (files.length === 0 || !token) return;
+
+    const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+    const videoFiles = files.filter((f) => f.type.startsWith("video/"));
+
+    if ((formData.images?.length || 0) + imageFiles.length > 8) {
+      setMediaError("You can upload at most 8 photos per listing");
+      return;
+    }
+    if ((formData.videos?.length || 0) + videoFiles.length > 2) {
+      setMediaError("You can upload at most 2 videos per listing");
+      return;
+    }
+
+    setUploadingMedia(true);
+    setMediaError("");
+
+    try {
+      if (imageFiles.length > 0) {
+        const response = await boardingService.uploadImages(imageFiles, token);
+        if (response.success && response.data) {
+          setFormData((prev) => ({
+            ...prev,
+            images: [...(prev.images || []), ...response.data!.images],
+          }));
+        } else {
+          setMediaError(response.message || "Failed to upload photos");
+        }
+      }
+
+      if (videoFiles.length > 0) {
+        const response = await boardingService.uploadVideos(videoFiles, token);
+        if (response.success && response.data) {
+          setFormData((prev) => ({
+            ...prev,
+            videos: [...(prev.videos || []), ...response.data!.videos],
+          }));
+        } else {
+          setMediaError(response.message || "Failed to upload videos");
+        }
+      }
+    } catch {
+      setMediaError("Failed to upload media. Please try again.");
+    } finally {
+      setUploadingMedia(false);
     }
   };
 
@@ -173,6 +217,13 @@ export default function CreateBoardingListing() {
     setFormData((prev) => ({
       ...prev,
       images: prev.images?.filter((_, i) => i !== index) || [],
+    }));
+  };
+
+  const handleVideoRemove = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      videos: prev.videos?.filter((_, i) => i !== index) || [],
     }));
   };
 
@@ -545,16 +596,37 @@ export default function CreateBoardingListing() {
           />
         </div>
 
-        {/* Images */}
+        {/* Photos & Videos */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900">Images</h2>
-          <button
-            type="button"
-            onClick={handleImageAdd}
-            className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
-          >
-            + Add Image URL
-          </button>
+          <h2 className="text-xl font-semibold text-gray-900">Photos & Videos</h2>
+
+          <div>
+            <input
+              type="file"
+              id="boarding-media"
+              accept="image/png,image/jpeg,video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv"
+              multiple
+              onChange={handleMediaSelect}
+              disabled={uploadingMedia}
+              className="hidden"
+            />
+            <label
+              htmlFor="boarding-media"
+              className={`inline-block bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 cursor-pointer ${
+                uploadingMedia ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {uploadingMedia ? "Uploading…" : "+ Upload Photos or Videos"}
+            </label>
+            <p className="text-sm text-gray-500 mt-2">
+              PNG/JPG up to 5MB each (max 8 photos), MP4/MOV/AVI/WMV up to 100MB each (max 2 videos)
+            </p>
+          </div>
+
+          {mediaError && (
+            <p className="text-sm text-red-600">{mediaError}</p>
+          )}
+
           {formData.images && formData.images.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {formData.images.map((url, index) => (
@@ -567,6 +639,23 @@ export default function CreateBoardingListing() {
                   <button
                     type="button"
                     onClick={() => handleImageRemove(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 text-xs"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {formData.videos && formData.videos.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {formData.videos.map((url, index) => (
+                <div key={index} className="relative">
+                  <video src={url} controls className="w-full h-32 object-cover rounded bg-black" />
+                  <button
+                    type="button"
+                    onClick={() => handleVideoRemove(index)}
                     className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 text-xs"
                   >
                     ×

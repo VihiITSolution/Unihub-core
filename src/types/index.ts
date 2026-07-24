@@ -441,6 +441,7 @@ export interface BoardingPlace {
   amenities?: string[];
   rules?: string;
   images?: string[];
+  videos?: string[];
   contactPhone: string;
   contactEmail?: string;
   isActive: boolean;
@@ -496,6 +497,7 @@ export interface BoardingPlaceFormData {
   amenities?: string[];
   rules?: string;
   images?: string[];
+  videos?: string[];
   contactPhone: string;
   contactEmail?: string;
 }

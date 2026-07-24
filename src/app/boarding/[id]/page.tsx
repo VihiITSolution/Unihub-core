@@ -127,6 +127,19 @@ export default function BoardingDetailPage() {
               ))}
             </div>
           )}
+
+          {place.videos && place.videos.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {place.videos.map((videoUrl, i) => (
+                <video
+                  key={i}
+                  src={videoUrl}
+                  controls
+                  className="w-full rounded-lg bg-black"
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Details */}

@@ -1,8 +1,44 @@
 import { BoardingPlace, BoardingPlaceFilters, BoardingPlaceFormData } from '@/types';
 import { apiClient } from '@/lib/api-client';
+import { API_BASE_URL } from '@/lib/constants';
+import type { ApiResponse } from '@/types';
 
 class BoardingService {
   private baseUrl = '/boarding';
+
+  // Upload images for a boarding listing (returns Cloudinary URLs)
+  async uploadImages(
+    files: File[],
+    token: string,
+  ): Promise<ApiResponse<{ images: string[] }>> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('images', file));
+
+    const response = await fetch(`${API_BASE_URL}${this.baseUrl}/upload-images`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    return response.json();
+  }
+
+  // Upload videos for a boarding listing (returns Cloudinary URLs)
+  async uploadVideos(
+    files: File[],
+    token: string,
+  ): Promise<ApiResponse<{ videos: string[] }>> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('videos', file));
+
+    const response = await fetch(`${API_BASE_URL}${this.baseUrl}/upload-videos`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    return response.json();
+  }
 
   // Create a new boarding place listing
   async createListing(data: BoardingPlaceFormData): Promise<BoardingPlace> {
