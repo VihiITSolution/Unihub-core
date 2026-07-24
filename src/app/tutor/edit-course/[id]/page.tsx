@@ -13,9 +13,13 @@ interface CourseMaterial {
   type: "video" | "pdf";
   url?: string;
   file?: File;
+  videoUrl?: string;
   duration?: number;
   order?: number;
 }
+
+const isYouTubeUrl = (url: string) =>
+  /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test(url.trim());
 
 export default function EditCoursePage() {
   const router = useRouter();
@@ -49,10 +53,13 @@ export default function EditCoursePage() {
   const [currentMaterial, setCurrentMaterial] = useState({
     title: "",
     type: "video" as "video" | "pdf",
+    source: "upload" as "upload" | "youtube",
     file: null as File | null,
+    videoUrl: "",
     duration: "",
     order: "",
   });
+  const [youtubeRightsConfirmed, setYoutubeRightsConfirmed] = useState(false);
   const MAX_VIDEO_UPLOAD_MB = Number(
     process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 5000,
   );
@@ -239,7 +246,24 @@ export default function EditCoursePage() {
   };
 
   const handleAddMaterial = () => {
-    if (!currentMaterial.title || !currentMaterial.file) {
+    if (!currentMaterial.title) {
+      alert("Please provide a title for the material");
+      return;
+    }
+
+    if (currentMaterial.type === "video" && currentMaterial.source === "youtube") {
+      const url = currentMaterial.videoUrl.trim();
+      if (!url || !isYouTubeUrl(url)) {
+        alert("Please enter a valid YouTube link (youtube.com or youtu.be).");
+        return;
+      }
+      if (!youtubeRightsConfirmed) {
+        alert(
+          "Please confirm this is your own original content before adding a YouTube link.",
+        );
+        return;
+      }
+    } else if (!currentMaterial.file) {
       alert("Please provide a title and file for the material");
       return;
     }
@@ -253,7 +277,11 @@ export default function EditCoursePage() {
       id: Date.now().toString(),
       title: currentMaterial.title,
       type: currentMaterial.type,
-      file: currentMaterial.file,
+      file: currentMaterial.source === "upload" ? currentMaterial.file ?? undefined : undefined,
+      videoUrl:
+        currentMaterial.type === "video" && currentMaterial.source === "youtube"
+          ? currentMaterial.videoUrl.trim()
+          : undefined,
       duration: currentMaterial.duration
         ? parseInt(currentMaterial.duration)
         : undefined,
@@ -264,10 +292,13 @@ export default function EditCoursePage() {
     setCurrentMaterial({
       title: "",
       type: "video",
+      source: "upload",
       file: null,
+      videoUrl: "",
       duration: "",
       order: "",
     });
+    setYoutubeRightsConfirmed(false);
   };
 
   const handleRemoveMaterial = (id: string) => {
@@ -282,6 +313,34 @@ export default function EditCoursePage() {
       for (const material of materials) {
         // Skip if material already has a URL (already uploaded)
         if (material.url) continue;
+
+        if (material.videoUrl) {
+          const linkResponse = await fetch(
+            `${API_BASE_URL}/courses/${courseId}/content`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                title: material.title,
+                type: "video",
+                url: material.videoUrl,
+                order: materials.indexOf(material),
+                duration: material.duration,
+              }),
+            },
+          );
+
+          if (!linkResponse.ok) {
+            const body = await linkResponse.json().catch(() => ({}));
+            throw new Error(
+              body?.message || `Failed to add YouTube link "${material.title}"`,
+            );
+          }
+          continue;
+        }
 
         if (!material.file) continue;
 
@@ -341,7 +400,8 @@ export default function EditCoursePage() {
   };
 
   const hasUnsavedMaterials = materials.some(
-    (material) => Boolean(material.file) && !material.url,
+    (material) =>
+      (Boolean(material.file) || Boolean(material.videoUrl)) && !material.url,
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -785,6 +845,14 @@ export default function EditCoursePage() {
                             <span className="text-sm text-gray-500">
                               Order: {material.order}
                             </span>
+                            {material.videoUrl && !material.url && (
+                              <>
+                                <span className="text-gray-300">•</span>
+                                <span className="text-sm font-semibold text-amber-600">
+                                  🔗 YouTube link (not yet saved)
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -857,27 +925,126 @@ export default function EditCoursePage() {
                   </select>
                 </div>
 
+                {/* Video Source Toggle */}
+                {currentMaterial.type === "video" && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Video Source
+                    </label>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCurrentMaterial((prev) => ({
+                            ...prev,
+                            source: "upload",
+                            videoUrl: "",
+                          }))
+                        }
+                        className={`flex-1 px-4 py-3 rounded-lg border-2 font-semibold transition-colors ${
+                          currentMaterial.source === "upload"
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        📤 Upload a video file
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentMaterial((prev) => ({
+                            ...prev,
+                            source: "youtube",
+                            file: null,
+                          }));
+                          setYoutubeRightsConfirmed(false);
+                        }}
+                        className={`flex-1 px-4 py-3 rounded-lg border-2 font-semibold transition-colors ${
+                          currentMaterial.source === "youtube"
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        🔗 Already on YouTube
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* File Upload */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Upload File *
-                  </label>
-                  <input
-                    type="file"
-                    accept={
-                      currentMaterial.type === "video"
-                        ? "video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv"
-                        : "application/pdf"
-                    }
-                    onChange={handleMaterialFileChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <p className="text-sm text-gray-500 mt-2">
-                    {currentMaterial.type === "video"
-                      ? `Accepted formats: MP4, MOV, AVI, WMV. Max size: ${MAX_VIDEO_UPLOAD_MB}MB`
-                      : "Accepted format: PDF. Max size: 10MB"}
-                  </p>
-                </div>
+                {(currentMaterial.type === "pdf" ||
+                  currentMaterial.source === "upload") && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Upload File *
+                    </label>
+                    <input
+                      type="file"
+                      accept={
+                        currentMaterial.type === "video"
+                          ? "video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv"
+                          : "application/pdf"
+                      }
+                      onChange={handleMaterialFileChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <p className="text-sm text-gray-500 mt-2">
+                      {currentMaterial.type === "video"
+                        ? `Accepted formats: MP4, MOV, AVI, WMV. Max size: ${MAX_VIDEO_UPLOAD_MB}MB`
+                        : "Accepted format: PDF. Max size: 10MB"}
+                    </p>
+                  </div>
+                )}
+
+                {/* YouTube Link */}
+                {currentMaterial.type === "video" &&
+                  currentMaterial.source === "youtube" && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          YouTube Video Link *
+                        </label>
+                        <input
+                          type="url"
+                          value={currentMaterial.videoUrl}
+                          onChange={(e) =>
+                            handleMaterialChange("videoUrl", e.target.value)
+                          }
+                          placeholder="https://www.youtube.com/watch?v=..."
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900">
+                        <p className="font-semibold mb-1">⚠️ Before you add a YouTube link</p>
+                        <p>
+                          Only link videos that are your own original content, or that you
+                          have full rights/permission to use. UniHub does not host or
+                          review externally linked videos. Any copyright claims, takedown
+                          notices, or other legal issues arising from content you link are
+                          entirely your responsibility as the publisher.
+                        </p>
+                      </div>
+
+                      <div className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <input
+                          type="checkbox"
+                          id="youtubeRightsConfirmedEdit"
+                          checked={youtubeRightsConfirmed}
+                          onChange={(e) => setYoutubeRightsConfirmed(e.target.checked)}
+                          className="w-5 h-5 mt-0.5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                        />
+                        <label
+                          htmlFor="youtubeRightsConfirmedEdit"
+                          className="text-sm font-semibold text-gray-700 cursor-pointer"
+                        >
+                          I confirm this is my own original content (or I hold full rights
+                          to it), and I accept sole responsibility for any copyright or
+                          legal issues that may arise from it.
+                        </label>
+                      </div>
+                    </div>
+                  )}
 
                 {/* Duration (for videos) */}
                 {currentMaterial.type === "video" && (

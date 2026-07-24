@@ -13,9 +13,13 @@ interface CourseMaterial {
   title: string;
   type: "video" | "pdf";
   file?: File;
+  videoUrl?: string;
   duration?: number;
   isPreview?: boolean;
 }
+
+const isYouTubeUrl = (url: string) =>
+  /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test(url.trim());
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -51,10 +55,13 @@ export default function CreateCoursePage() {
   const [currentMaterial, setCurrentMaterial] = useState({
     title: "",
     type: "video" as "video" | "pdf",
+    source: "upload" as "upload" | "youtube",
     file: null as File | null,
+    videoUrl: "",
     duration: "",
     isPreview: false,
   });
+  const [youtubeRightsConfirmed, setYoutubeRightsConfirmed] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{
     current: number;
     total: number;
@@ -160,7 +167,24 @@ export default function CreateCoursePage() {
   };
 
   const addMaterial = () => {
-    if (!currentMaterial.title || !currentMaterial.file) {
+    if (!currentMaterial.title) {
+      alert("Please fill in a title");
+      return;
+    }
+
+    if (currentMaterial.type === "video" && currentMaterial.source === "youtube") {
+      const url = currentMaterial.videoUrl.trim();
+      if (!url || !isYouTubeUrl(url)) {
+        alert("Please enter a valid YouTube link (youtube.com or youtu.be).");
+        return;
+      }
+      if (!youtubeRightsConfirmed) {
+        alert(
+          "Please confirm this is your own original content before adding a YouTube link.",
+        );
+        return;
+      }
+    } else if (!currentMaterial.file) {
       alert("Please fill in title and select a file");
       return;
     }
@@ -169,7 +193,11 @@ export default function CreateCoursePage() {
       id: Date.now().toString(),
       title: currentMaterial.title,
       type: currentMaterial.type,
-      file: currentMaterial.file,
+      file: currentMaterial.source === "upload" ? currentMaterial.file ?? undefined : undefined,
+      videoUrl:
+        currentMaterial.type === "video" && currentMaterial.source === "youtube"
+          ? currentMaterial.videoUrl.trim()
+          : undefined,
       duration: currentMaterial.duration
         ? parseInt(currentMaterial.duration)
         : undefined,
@@ -180,10 +208,13 @@ export default function CreateCoursePage() {
     setCurrentMaterial({
       title: "",
       type: "video",
+      source: "upload",
       file: null,
+      videoUrl: "",
       duration: "",
       isPreview: false,
     });
+    setYoutubeRightsConfirmed(false);
   };
 
   const removeMaterial = (id: string) => {
@@ -347,6 +378,37 @@ export default function CreateCoursePage() {
     onProgress(100);
   };
 
+  const addYouTubeLinkMaterial = async (
+    courseId: string,
+    material: CourseMaterial,
+    materialIndex: number,
+    authToken: string,
+    onProgress: (percent: number) => void,
+  ): Promise<void> => {
+    const res = await fetch(`${API_BASE_URL}/courses/${courseId}/content`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: material.title,
+        type: "video",
+        url: material.videoUrl,
+        order: String(materialIndex),
+        duration: material.duration ? String(material.duration) : undefined,
+        isPreview: material.isPreview ? "true" : undefined,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body?.message || "Failed to add YouTube video link.");
+    }
+
+    onProgress(100);
+  };
+
   const handleFinish = async () => {
     if (materials.length === 0) {
       const confirm = window.confirm(
@@ -375,6 +437,8 @@ export default function CreateCoursePage() {
 
         if (material.type === "video" && material.file) {
           await uploadVideoInChunks(createdCourseId!, material, i, token!, onProgress);
+        } else if (material.type === "video" && material.videoUrl) {
+          await addYouTubeLinkMaterial(createdCourseId!, material, i, token!, onProgress);
         } else {
           const materialFormData = new FormData();
           materialFormData.append("title", material.title);
@@ -701,39 +765,135 @@ export default function CreateCoursePage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {currentMaterial.type === "video"
-                      ? "Upload Video File"
-                      : "Upload PDF File"}
-                  </label>
-                  <input
-                    type="file"
-                    accept={
-                      currentMaterial.type === "video"
-                        ? "video/*"
-                        : "application/pdf"
-                    }
-                    onChange={handleMaterialFileChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  {currentMaterial.type === "video" && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      🎥 Video is uploaded in small chunks then sent to YouTube as unlisted — no file size limit.
-                    </p>
+                {currentMaterial.type === "video" && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Video Source
+                    </label>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCurrentMaterial((prev) => ({
+                            ...prev,
+                            source: "upload",
+                            videoUrl: "",
+                          }))
+                        }
+                        className={`flex-1 px-4 py-3 rounded-lg border-2 font-semibold transition-colors ${
+                          currentMaterial.source === "upload"
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        📤 Upload a video file
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentMaterial((prev) => ({
+                            ...prev,
+                            source: "youtube",
+                            file: null,
+                          }));
+                          setYoutubeRightsConfirmed(false);
+                        }}
+                        className={`flex-1 px-4 py-3 rounded-lg border-2 font-semibold transition-colors ${
+                          currentMaterial.source === "youtube"
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        🔗 Already on YouTube
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {(currentMaterial.type === "pdf" ||
+                  currentMaterial.source === "upload") && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      {currentMaterial.type === "video"
+                        ? "Upload Video File"
+                        : "Upload PDF File"}
+                    </label>
+                    <input
+                      type="file"
+                      accept={
+                        currentMaterial.type === "video"
+                          ? "video/*"
+                          : "application/pdf"
+                      }
+                      onChange={handleMaterialFileChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    {currentMaterial.type === "video" && (
+                      <p className="text-sm text-gray-500 mt-2">
+                        🎥 Video is uploaded in small chunks then sent to YouTube as unlisted — no file size limit.
+                      </p>
+                    )}
+                    {currentMaterial.type === "pdf" && (
+                      <p className="text-sm text-gray-500 mt-2">
+                        📄 PDF files will be stored securely on the server
+                      </p>
+                    )}
+                    {currentMaterial.file && (
+                      <p className="text-sm text-green-600 mt-2">
+                        ✓ Selected: {currentMaterial.file.name} (
+                        {(currentMaterial.file.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {currentMaterial.type === "video" &&
+                  currentMaterial.source === "youtube" && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          YouTube Video Link
+                        </label>
+                        <input
+                          type="url"
+                          name="videoUrl"
+                          value={currentMaterial.videoUrl}
+                          onChange={handleMaterialChange}
+                          placeholder="https://www.youtube.com/watch?v=..."
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900">
+                        <p className="font-semibold mb-1">⚠️ Before you add a YouTube link</p>
+                        <p>
+                          Only link videos that are your own original content, or that you
+                          have full rights/permission to use. UniHub does not host or
+                          review externally linked videos. Any copyright claims, takedown
+                          notices, or other legal issues arising from content you link are
+                          entirely your responsibility as the publisher.
+                        </p>
+                      </div>
+
+                      <div className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <input
+                          type="checkbox"
+                          id="youtubeRightsConfirmed"
+                          checked={youtubeRightsConfirmed}
+                          onChange={(e) => setYoutubeRightsConfirmed(e.target.checked)}
+                          className="w-5 h-5 mt-0.5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                        />
+                        <label
+                          htmlFor="youtubeRightsConfirmed"
+                          className="text-sm font-semibold text-gray-700 cursor-pointer"
+                        >
+                          I confirm this is my own original content (or I hold full rights
+                          to it), and I accept sole responsibility for any copyright or
+                          legal issues that may arise from it.
+                        </label>
+                      </div>
+                    </div>
                   )}
-                  {currentMaterial.type === "pdf" && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      📄 PDF files will be stored securely on the server
-                    </p>
-                  )}
-                  {currentMaterial.file && (
-                    <p className="text-sm text-green-600 mt-2">
-                      ✓ Selected: {currentMaterial.file.name} (
-                      {(currentMaterial.file.size / 1024 / 1024).toFixed(2)} MB)
-                    </p>
-                  )}
-                </div>
 
                 {currentMaterial.type === "video" && (
                   <div>
@@ -826,6 +986,11 @@ export default function CreateCoursePage() {
                               File: {material.file.name} (
                               {(material.file.size / 1024 / 1024).toFixed(2)}{" "}
                               MB)
+                            </p>
+                          )}
+                          {material.videoUrl && (
+                            <p className="text-sm text-gray-500 mt-1 truncate">
+                              🔗 YouTube link: {material.videoUrl}
                             </p>
                           )}
                           {material.duration && (
