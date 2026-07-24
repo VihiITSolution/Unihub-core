@@ -7,6 +7,11 @@ import { SidebarProvider } from "@/contexts/SidebarContext";
 export const metadata: Metadata = {
   title: "UniHub - E-Learning & Marketplace",
   description: "Your platform for online learning and marketplace solutions",
+  icons: {
+    icon: "/Unihub.webp",
+    shortcut: "/Unihub.webp",
+    apple: "/Unihub.webp",
+  },
 };
 
 export default function RootLayout({
