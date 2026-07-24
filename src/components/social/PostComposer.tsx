@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { postService } from "@/services/social.service";
-import { Button } from "@/components/ui";
+import { Button, Avatar } from "@/components/ui";
 import type { Post } from "@/types/social";
 
 interface PostComposerProps {
@@ -62,11 +62,7 @@ export function PostComposer({ onPosted }: PostComposerProps) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
       <div className="flex gap-3">
-        {user?.profileImage ? (
-          <img src={user.profileImage} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
-        )}
+        <Avatar src={user?.profileImage} firstName={user?.firstName} lastName={user?.lastName} size={40} />
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}

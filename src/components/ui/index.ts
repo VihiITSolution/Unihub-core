@@ -9,3 +9,4 @@ export { default as PaymentModal } from "./PaymentModal";
 export { NotificationBell } from "./NotificationBell";
 export { ChatBadge } from "./ChatBadge";
 export { HoverCard } from "./HoverCard";
+export { Avatar } from "./Avatar";

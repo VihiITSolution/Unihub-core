@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { chatService } from "@/services/chat.service";
 import { MessageThread, MessageComposer } from "@/components/chat";
+import { Avatar } from "@/components/ui";
 import type { ChatMessage, Conversation } from "@/types/chat";
 
 export default function ChatThreadPage() {
@@ -152,21 +153,7 @@ export default function ChatThreadPage() {
         >
           <ArrowLeft size={20} />
         </button>
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: "50%",
-            background: "var(--brand)",
-            color: "#fff",
-            fontSize: 12,
-            fontWeight: 800,
-            display: "grid",
-            placeItems: "center",
-          }}
-        >
-          {other ? `${other.firstName?.[0] ?? ""}${other.lastName?.[0] ?? ""}` : "?"}
-        </div>
+        <Avatar src={other?.profileImage} firstName={other?.firstName} lastName={other?.lastName} size={34} />
         <div>
           <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
             {other ? `${other.firstName} ${other.lastName}` : "Conversation"}

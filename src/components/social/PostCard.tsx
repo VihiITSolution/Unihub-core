@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { postService } from "@/services/social.service";
 import { CommentSection } from "./CommentSection";
+import { Avatar } from "@/components/ui";
 import type { Post } from "@/types/social";
 
 interface PostCardProps {
@@ -67,11 +68,7 @@ export function PostCard({ post, onDeleted }: PostCardProps) {
     <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
       <div className="flex items-start justify-between">
         <Link href={`/profile/${post.userId}`} className="flex items-center gap-3">
-          {post.author.profileImage ? (
-            <img src={post.author.profileImage} alt="" className="w-10 h-10 rounded-full object-cover" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-200" />
-          )}
+          <Avatar src={post.author.profileImage} firstName={post.author.firstName} lastName={post.author.lastName} size={40} />
           <div>
             <p className="font-medium text-gray-900">
               {post.author.firstName} {post.author.lastName}

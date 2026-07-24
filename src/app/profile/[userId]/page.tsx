@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { postService, socialProfileService, followService } from "@/services/social.service";
 import { PostCard } from "@/components/social/PostCard";
 import { FollowButton } from "@/components/social/FollowButton";
-import { Loading } from "@/components/ui";
+import { Loading, Avatar } from "@/components/ui";
 import type { Post, PublicSocialProfile, SocialAuthor } from "@/types/social";
 
 type FollowListTab = "followers" | "following" | null;
@@ -69,11 +69,7 @@ export default function ProfilePage() {
     <div className="max-w-2xl mx-auto py-8 px-4">
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <div className="flex flex-wrap items-center gap-4">
-          {user.profileImage ? (
-            <img src={user.profileImage} alt="" className="w-20 h-20 rounded-full object-cover" />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-gray-200" />
-          )}
+          <Avatar src={user.profileImage} firstName={user.firstName} lastName={user.lastName} size={80} />
           <div className="flex-1">
             <h1 className="text-xl font-bold text-gray-900">
               {user.firstName} {user.lastName}
@@ -122,11 +118,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               {followList.map((u) => (
                 <a key={u.id} href={`/profile/${u.id}`} className="flex items-center gap-3 py-1">
-                  {u.profileImage ? (
-                    <img src={u.profileImage} alt="" className="w-8 h-8 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-200" />
-                  )}
+                  <Avatar src={u.profileImage} firstName={u.firstName} lastName={u.lastName} size={32} />
                   <span className="text-sm text-gray-800">
                     {u.firstName} {u.lastName}
                   </span>

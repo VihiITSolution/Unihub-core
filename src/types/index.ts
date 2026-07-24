@@ -462,6 +462,7 @@ export interface BoardingPlace {
     firstName: string;
     lastName: string;
     email: string;
+    profileImage?: string;
     vendorProfile?: {
       shopName: string;
       contactPhone?: string;

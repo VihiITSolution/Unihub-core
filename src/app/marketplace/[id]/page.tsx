@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { marketplaceService } from "@/services/marketplace.service";
 import { StartConversationButton } from "@/components/chat";
+import { Avatar } from "@/components/ui";
 import type { MarketplaceItem } from "@/types";
 
 // Buy Now imports — re-enable when purchase flow is ready
@@ -252,9 +253,12 @@ export default function ProductDetailsPage() {
             <div className="p-5 space-y-4">
               {/* Seller avatar + name */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-lg shrink-0">
-                  {product.seller ? product.seller.firstName.charAt(0).toUpperCase() : "?"}
-                </div>
+                <Avatar
+                  src={product.seller?.profileImage}
+                  firstName={product.seller?.firstName}
+                  lastName={product.seller?.lastName}
+                  size={40}
+                />
                 <div>
                   <p className="font-semibold text-gray-900">
                     {product.seller?.vendorProfile?.shopName ||

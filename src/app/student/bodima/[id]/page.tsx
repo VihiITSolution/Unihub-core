@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { boardingService } from '@/services/boarding.service';
+import { Avatar } from '@/components/ui';
 import { BoardingPlace } from '@/types';
 
 export default function BodimaDetailPage() {
@@ -286,9 +287,12 @@ export default function BodimaDetailPage() {
                 <div className="border-t pt-4">
                   <h3 className="font-semibold text-gray-900 mb-3">Listed by</h3>
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-bold">
-                      {listing.vendor.firstName[0]}{listing.vendor.lastName[0]}
-                    </div>
+                    <Avatar
+                      src={listing.vendor.profileImage}
+                      firstName={listing.vendor.firstName}
+                      lastName={listing.vendor.lastName}
+                      size={48}
+                    />
                     <div>
                       <p className="font-semibold text-gray-900">
                         {listing.vendor.firstName} {listing.vendor.lastName}

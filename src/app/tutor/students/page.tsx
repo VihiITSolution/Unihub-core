@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { BACKEND_URL } from "@/lib/constants";
+import { Avatar } from "@/components/ui";
 import enrollmentService from "@/services/enrollment.service";
 
 interface StudentEnrollment {
@@ -330,20 +331,12 @@ export default function TutorStudentsPage() {
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
-                              {enrollment.student.profileImage ? (
-                                <img
-                                  src={enrollment.student.profileImage}
-                                  alt={`${enrollment.student.firstName} ${enrollment.student.lastName}`}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <>
-                                  {enrollment.student.firstName.charAt(0)}
-                                  {enrollment.student.lastName.charAt(0)}
-                                </>
-                              )}
-                            </div>
+                            <Avatar
+                              src={enrollment.student.profileImage}
+                              firstName={enrollment.student.firstName}
+                              lastName={enrollment.student.lastName}
+                              size={40}
+                            />
                             <div>
                               <p className="font-medium text-gray-900">
                                 {enrollment.student.firstName}{" "}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Conversation } from "@/types/chat";
-import { Loading } from "@/components/ui";
+import { Loading, Avatar } from "@/components/ui";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -59,22 +59,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               cursor: "pointer",
             }}
           >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                background: "var(--brand)",
-                color: "#fff",
-                fontSize: 14,
-                fontWeight: 800,
-                display: "grid",
-                placeItems: "center",
-                flexShrink: 0,
-              }}
-            >
-              {other ? `${other.firstName?.[0] ?? ""}${other.lastName?.[0] ?? ""}` : "?"}
-            </div>
+            <Avatar src={other?.profileImage} firstName={other?.firstName} lastName={other?.lastName} size={40} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span

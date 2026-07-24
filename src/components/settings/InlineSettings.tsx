@@ -7,6 +7,7 @@ import { authService } from "@/services/auth.service";
 import { socialProfileService } from "@/services/social.service";
 import { isValidPhone, isNameLike } from "@/lib/validation";
 import { API_BASE_URL } from "@/lib/constants";
+import { Avatar } from "@/components/ui";
 
 // ── tiny helpers ──────────────────────────────────────────────────────────────
 const BIO_MAX = 500;
@@ -197,13 +198,14 @@ function EditProfile() {
     <div>
       {/* Photo row */}
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20, padding: "14px", background: "#f9fafb", borderRadius: 8 }}>
-        {avatar ? (
-          <img src={avatar} alt="avatar" style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: "2px solid #e5e7eb" }} />
-        ) : (
-          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--brand, #16a34a)", display: "grid", placeItems: "center", color: "#fff", fontSize: 20, fontWeight: 800 }}>
-            {user?.firstName?.[0]}{user?.lastName?.[0]}
-          </div>
-        )}
+        <Avatar
+          src={avatar}
+          firstName={user?.firstName}
+          lastName={user?.lastName}
+          size={56}
+          editable
+          onEditClick={() => fileRef.current?.click()}
+        />
         <div>
           {photoMsg && <Msg {...photoMsg} />}
           <input ref={fileRef} type="file" accept="image/jpeg,image/jpg,image/png,image/gif" onChange={pickFile} style={{ display: "none" }} />

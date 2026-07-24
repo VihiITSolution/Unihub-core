@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
 import reviewService, { Review } from "@/services/review.service";
+import { Avatar } from "@/components/ui";
 import type { Course } from "@/types";
 
 export default function TutorCoursesPage() {
@@ -420,20 +421,12 @@ export default function TutorCoursesPage() {
                             >
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold overflow-hidden">
-                                    {review.user?.profileImage ? (
-                                      <img
-                                        src={review.user.profileImage}
-                                        alt={`${review.user.firstName} ${review.user.lastName}`}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <>
-                                        {review.user?.firstName?.charAt(0)}
-                                        {review.user?.lastName?.charAt(0)}
-                                      </>
-                                    )}
-                                  </div>
+                                  <Avatar
+                                    src={review.user?.profileImage}
+                                    firstName={review.user?.firstName}
+                                    lastName={review.user?.lastName}
+                                    size={32}
+                                  />
                                   <div>
                                     <p className="font-medium text-sm">
                                       {review.user?.firstName}{" "}

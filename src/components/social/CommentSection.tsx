@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { postService } from "@/services/social.service";
+import { Avatar } from "@/components/ui";
 import type { PostComment } from "@/types/social";
 
 interface CommentSectionProps {
@@ -55,11 +56,7 @@ export function CommentSection({ postId, onCommentAdded }: CommentSectionProps) 
         <div className="space-y-2 mb-3">
           {comments.map((comment) => (
             <div key={comment.id} className="flex gap-2 text-sm">
-              {comment.author.profileImage ? (
-                <img src={comment.author.profileImage} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-7 h-7 rounded-full bg-gray-200 flex-shrink-0" />
-              )}
+              <Avatar src={comment.author.profileImage} firstName={comment.author.firstName} lastName={comment.author.lastName} size={28} />
               <div className="bg-gray-100 rounded-2xl px-3 py-1.5 flex-1">
                 <span className="font-medium text-gray-900 mr-1">
                   {comment.author.firstName} {comment.author.lastName}

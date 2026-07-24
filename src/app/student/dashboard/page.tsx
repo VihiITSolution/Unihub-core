@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import enrollmentService, { Enrollment } from "@/services/enrollment.service";
 import { BACKEND_URL } from "@/lib/constants";
 import InlineSettings from "@/components/settings/InlineSettings";
+import { Avatar } from "@/components/ui";
 
 // ── Progress bar ─────────────────────────────────────────────────────────────
 function ProgressBar({ value }: { value: number }) {
@@ -141,8 +142,6 @@ export default function StudentDashboard() {
     }
   };
 
-  const initials = `${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`;
-
   const navLinks = [
     { id: "courses",     label: "My courses" },
     { id: "wishlist",    label: "Wishlist" },
@@ -185,17 +184,13 @@ export default function StudentDashboard() {
       >
         {/* Avatar + info */}
         <div style={{ padding: "0 20px 18px", borderBottom: "1px solid var(--line)" }}>
-          <div
-            style={{
-              width: 52, height: 52, borderRadius: "50%",
-              background: "var(--brand)", color: "#fff",
-              fontSize: 20, fontWeight: 800,
-              display: "grid", placeItems: "center",
-              marginBottom: 12,
-            }}
-          >
-            {initials || "S"}
-          </div>
+          <Avatar
+            src={user?.profileImage}
+            firstName={user?.firstName || "S"}
+            lastName={user?.lastName}
+            size={52}
+            style={{ marginBottom: 12 }}
+          />
           <div style={{ fontSize: 15, fontWeight: 800, color: "var(--ink)", marginBottom: 4 }}>
             {user?.firstName} {user?.lastName}
           </div>

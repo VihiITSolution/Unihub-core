@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { RoleUpgradeModal, NotificationBell, ChatBadge } from "@/components/ui";
+import { RoleUpgradeModal, NotificationBell, ChatBadge, Avatar } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
@@ -258,16 +258,7 @@ export default function Header() {
                 }}
                 className="hover:bg-soft"
               >
-                <div
-                  style={{
-                    width: 26, height: 26, borderRadius: "50%",
-                    background: "var(--brand)", color: "#fff",
-                    fontSize: 11, fontWeight: 800,
-                    display: "grid", placeItems: "center", flexShrink: 0,
-                  }}
-                >
-                  {user.firstName?.[0]}{user.lastName?.[0]}
-                </div>
+                <Avatar src={user.profileImage} firstName={user.firstName} lastName={user.lastName} size={26} />
                 <span className="hidden md:block" style={{ maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {user.firstName}
                 </span>
@@ -504,16 +495,7 @@ export default function Header() {
           ) : user && (
             <div style={{ borderTop: "1px solid var(--line)", padding: 14 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <div
-                  style={{
-                    width: 36, height: 36, borderRadius: "50%",
-                    background: "var(--brand)", color: "#fff",
-                    fontSize: 13, fontWeight: 800,
-                    display: "grid", placeItems: "center",
-                  }}
-                >
-                  {user.firstName?.[0]}{user.lastName?.[0]}
-                </div>
+                <Avatar src={user.profileImage} firstName={user.firstName} lastName={user.lastName} size={36} />
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{user.firstName} {user.lastName}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)", textTransform: "capitalize" }}>{user.primaryRole}</div>

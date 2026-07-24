@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar } from "@/components/ui";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -208,16 +209,7 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: isOpen ? "flex-start" : "center" }}>
-          <div
-            style={{
-              width: 32, height: 32, borderRadius: "50%",
-              background: "var(--brand)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#fff", fontWeight: 800, fontSize: 12, flexShrink: 0,
-            }}
-          >
-            {user?.firstName?.[0] || "U"}{user?.lastName?.[0] || ""}
-          </div>
+          <Avatar src={user?.profileImage} firstName={user?.firstName || "U"} lastName={user?.lastName} size={32} />
           {isOpen && (
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#f9fafb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

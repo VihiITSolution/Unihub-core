@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { StartConversationButton } from "@/components/chat";
 import YouTubePlayer from "@/components/ui/YouTubePlayer";
+import { Avatar } from "@/components/ui";
 import type { Course, CourseContent } from "@/types";
 
 function getEmbedUrl(url?: string, youtubeVideoId?: string) {
@@ -357,11 +358,12 @@ export default function CourseDetailsPage() {
 
             {/* Instructor */}
             <div className="flex items-center flex-wrap gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-                {course.tutor?.firstName
-                  ? course.tutor.firstName.charAt(0)
-                  : course.tutorName?.charAt(0) || "T"}
-              </div>
+              <Avatar
+                src={course.tutor?.profileImage || course.tutorAvatar}
+                firstName={course.tutor?.firstName || course.tutorName}
+                lastName={course.tutor?.lastName}
+                size={48}
+              />
               <div className="flex-1">
                 <h5 className="text-sm font-semibold text-gray-900">
                   {course.tutor

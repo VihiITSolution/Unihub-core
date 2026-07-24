@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/services/auth.service";
 import { socialProfileService } from "@/services/social.service";
 import { isValidPhone, isNameLike } from "@/lib/validation";
+import { Avatar } from "@/components/ui";
 
 const BIO_MAX = 500;
 
@@ -102,15 +103,14 @@ export default function ProfileSettings() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile Photo</h2>
         {photoMsg && <Alert {...photoMsg} />}
         <div className="flex items-center gap-5">
-          <div className="relative w-20 h-20 flex-shrink-0">
-            {avatar ? (
-              <img src={avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover border-2 border-gray-200" />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </div>
-            )}
-          </div>
+          <Avatar
+            src={avatar}
+            firstName={user?.firstName}
+            lastName={user?.lastName}
+            size={80}
+            editable
+            onEditClick={() => fileRef.current?.click()}
+          />
           <div className="flex flex-col gap-2">
             <input ref={fileRef} type="file" accept="image/jpeg,image/jpg,image/png,image/gif" onChange={handleFileSelect} className="hidden" />
             {file ? (
