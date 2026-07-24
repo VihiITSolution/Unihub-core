@@ -104,4 +104,15 @@ export const courseService = {
       token,
     });
   },
+
+  async submitForReview(
+    id: string,
+    token: string,
+  ): Promise<ApiResponse<Course>> {
+    return apiClient.post<ApiResponse<Course>>(
+      `/courses/${id}/submit-for-review`,
+      {},
+      { token },
+    );
+  },
 };

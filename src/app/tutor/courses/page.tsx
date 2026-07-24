@@ -21,6 +21,7 @@ export default function TutorCoursesPage() {
   const [showReviews, setShowReviews] = useState<{ [key: string]: boolean }>(
     {},
   );
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -117,6 +118,28 @@ export default function TutorCoursesPage() {
     }
   };
 
+  const handleSubmitForReview = async (courseId: string) => {
+    if (!token) return;
+
+    setSubmittingId(courseId);
+    try {
+      const response = await courseService.submitForReview(courseId, token);
+
+      if (response.success && response.data) {
+        setCourses((prev) =>
+          prev.map((c) => (c.id === courseId ? { ...c, ...response.data } : c)),
+        );
+      } else {
+        alert(response.message || "Failed to submit course for review");
+      }
+    } catch (error) {
+      console.error("Failed to submit course for review:", error);
+      alert("Failed to submit course for review");
+    } finally {
+      setSubmittingId(null);
+    }
+  };
+
   return (
     <div className="container-custom py-8">
       <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
@@ -210,6 +233,19 @@ export default function TutorCoursesPage() {
                             </p>
                           </div>
                         )}
+                      {/* Submit for Review */}
+                      {(course.approvalStatus === "draft" ||
+                        course.approvalStatus === "rejected") && (
+                        <button
+                          onClick={() => handleSubmitForReview(course.id)}
+                          disabled={submittingId === course.id}
+                          className="mt-2 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                        >
+                          {submittingId === course.id
+                            ? "Submitting…"
+                            : "Submit for Review"}
+                        </button>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 ml-4">
                       <Link
