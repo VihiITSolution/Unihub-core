@@ -183,7 +183,7 @@ export default function TutorLiveSessionsPage() {
                     {getStatusBadge(session.status)}
                   </div>
                   <p className="text-gray-600 mb-2">{session.description}</p>
-                  <div className="flex gap-4 text-sm text-gray-500">
+                  <div className="flex flex-wrap gap-3 text-sm text-gray-500">
                     <span>📅 {formatDate(session.scheduledStartTime)}</span>
                     <span>
                       {session.isFree ? "🆓 Free" : `💰 Rs. ${session.price}`}

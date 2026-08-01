@@ -71,7 +71,7 @@ export default function PrivacySettings() {
         <p className="text-sm text-gray-500 mb-6">Control who can see your profile and activity on UniHub.</p>
         <div className="space-y-5">
           {ITEMS.map(({ key, label, desc }) => (
-            <div key={key} className="flex items-start justify-between gap-4 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
+            <div key={key} className="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-gray-50 last:border-0 last:pb-0">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900">{label}</p>
                 <p className="text-xs text-gray-400 mt-0.5">{desc}</p>

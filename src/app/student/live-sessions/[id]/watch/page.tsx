@@ -102,9 +102,9 @@ export default function WatchLiveSessionPage() {
   return (
     <div className="h-screen bg-black flex flex-col">
       {/* Header */}
-      <div className="bg-gray-900 text-white px-6 py-3 flex justify-between items-center">
-        <div>
-          <h1 className="text-lg font-semibold">{session.title}</h1>
+      <div className="bg-gray-900 text-white px-4 py-3 flex flex-wrap gap-3 justify-between items-center">
+        <div className="min-w-0">
+          <h1 className="text-base sm:text-lg font-semibold truncate">{session.title}</h1>
           <p className="text-sm text-gray-400">
             with {session.tutor?.firstName} {session.tutor?.lastName}
           </p>
@@ -116,16 +116,16 @@ export default function WatchLiveSessionPage() {
               router.push("/student/my-sessions");
             }
           }}
-          className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md font-medium"
+          className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md font-medium flex-shrink-0"
         >
           Leave Session
         </button>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex flex-col md:flex-row">
         {/* Video Player */}
-        <div className={`${session.enableChat ? "w-3/4" : "w-full"} bg-black`}>
+        <div className={`${session.enableChat ? "md:w-3/4 w-full" : "w-full"} bg-black`}>
           <div className="relative h-full">
             <iframe
               src={embedUrl}
@@ -139,7 +139,7 @@ export default function WatchLiveSessionPage() {
 
         {/* Live Chat (if enabled) */}
         {session.enableChat && chatUrl && (
-          <div className="w-1/4 bg-gray-900">
+          <div className="md:w-1/4 w-full bg-gray-900 border-t md:border-t-0 md:border-l border-gray-700" style={{ minHeight: 220 }}>
             <div className="h-full flex flex-col">
               <div className="bg-gray-800 text-white px-4 py-3 font-semibold">
                 Live Chat

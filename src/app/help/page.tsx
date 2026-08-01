@@ -467,7 +467,7 @@ export default function HelpCenterPage() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+            <div className="flex flex-wrap gap-3 items-center justify-between pt-6 border-t border-gray-200">
               <Link
                 href="/"
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"

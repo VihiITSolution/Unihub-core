@@ -135,12 +135,12 @@ export default function VendorListingsPage() {
 
   return (
     <div className="container-custom py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-wrap gap-3 justify-between items-center mb-8">
         <div>
           <h1 className="text-4xl font-bold mb-2">My Listings</h1>
           <p className="text-gray-600">Manage your marketplace products</p>
         </div>
-        <Link href="/vendor/listings/create" className="btn-primary">
+        <Link href="/vendor/listings/create" className="btn-primary flex-shrink-0">
           + Create New Listing
         </Link>
       </div>

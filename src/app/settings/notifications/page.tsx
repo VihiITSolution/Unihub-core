@@ -97,7 +97,7 @@ export default function NotificationSettings() {
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">{group.title}</h3>
           <div className="space-y-5">
             {group.items.map(({ key, label, desc }) => (
-              <div key={key} className="flex items-start justify-between gap-4">
+              <div key={key} className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900">{label}</p>
                   <p className="text-xs text-gray-400 mt-0.5">{desc}</p>

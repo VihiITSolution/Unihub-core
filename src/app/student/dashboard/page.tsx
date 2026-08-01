@@ -33,8 +33,8 @@ function Section({ title, subtitle, cta, children }: {
 }) {
   return (
     <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 8, padding: "22px 24px", marginBottom: 16 }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
-        <div>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 16 }}>
+        <div style={{ minWidth: 0 }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "var(--ink)" }}>{title}</h2>
           {subtitle && <p style={{ margin: "5px 0 0", fontSize: 13, color: "var(--muted)" }}>{subtitle}</p>}
         </div>
@@ -45,7 +45,7 @@ function Section({ title, subtitle, cta, children }: {
               display: "inline-flex", alignItems: "center", height: 36, padding: "0 14px",
               border: "1.5px solid var(--ink)", borderRadius: 4,
               fontSize: 13, fontWeight: 800, color: "var(--ink)", textDecoration: "none",
-              whiteSpace: "nowrap", flexShrink: 0, marginLeft: 16,
+              flexShrink: 0,
             }}
           >
             {cta.label}

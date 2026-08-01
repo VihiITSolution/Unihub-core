@@ -20,8 +20,8 @@ export default function PrivacyPolicy() {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-lg shadow p-8 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-12">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-8 space-y-8">
           {/* Introduction */}
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">

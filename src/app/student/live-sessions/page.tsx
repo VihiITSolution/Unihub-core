@@ -109,11 +109,11 @@ export default function StudentLiveSessionsPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Live Sessions</h1>
         <Link
           href="/student/my-sessions"
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 font-medium"
+          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 font-medium flex-shrink-0"
         >
           My Enrolled Sessions
         </Link>

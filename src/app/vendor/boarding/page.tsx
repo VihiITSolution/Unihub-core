@@ -81,14 +81,14 @@ export default function VendorBoardingListings() {
       )}
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Boarding Places</h1>
           <p className="text-gray-600 mt-1">Manage your accommodation listings</p>
         </div>
         <Link
           href="/vendor/boarding/create"
-          className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 transition"
+          className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 transition flex-shrink-0"
         >
           + Add New Listing
         </Link>

@@ -340,7 +340,7 @@ export default function AdminFacultiesPage() {
                   </button>
 
                   {/* Faculty actions */}
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap" }}>
                     <button
                       onClick={() => toggleActive(f)}
                       title={f.isActive ? "Deactivate" : "Activate"}
