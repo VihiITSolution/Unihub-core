@@ -188,7 +188,6 @@ export default function FacultyNav() {
 
   return (
     <div
-      className="hidden lg:block"
       style={{ borderTop: "1px solid var(--line)", position: "relative" }}
     >
       {/* Left fade + arrow */}
