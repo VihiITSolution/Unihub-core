@@ -68,13 +68,13 @@ function CoursesInner() {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
   // notify subscriptions — Set of courseIds the user has already subscribed to
-  const [notifiedCourses, setNotifiedCourses] = useState<Set<number>>(() => {
+  const [notifiedCourses, setNotifiedCourses] = useState<Set<string>>(() => {
     try {
       const raw = typeof window !== "undefined" ? localStorage.getItem("unihub_notify_set") : null;
       return raw ? new Set(JSON.parse(raw)) : new Set();
     } catch { return new Set(); }
   });
-  const [notifyingId, setNotifyingId] = useState<number | null>(null);
+  const [notifyingId, setNotifyingId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   // Departments derived from selected faculty (no extra fetch)
@@ -142,7 +142,7 @@ function CoursesInner() {
 
   useEffect(() => { loadCourses(); }, [loadCourses]);
 
-  const handleNotify = async (courseId: number, courseTitle: string) => {
+  const handleNotify = async (courseId: string, courseTitle: string) => {
     if (!user) { window.location.href = "/auth/login"; return; }
     setNotifyingId(courseId);
     try {
@@ -430,7 +430,14 @@ function CoursesInner() {
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }} className="course-result-grid">
                 {courses.map((course) => (
-                  <CourseCard key={course.id} course={course} user={user} />
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    user={user}
+                    notifyingId={notifyingId}
+                    notifiedCourses={notifiedCourses}
+                    handleNotify={handleNotify}
+                  />
                 ))}
               </div>
             )}
@@ -455,7 +462,15 @@ function CoursesInner() {
 }
 
 // ── Course card ───────────────────────────────────────────────────────────────
-function CourseCard({ course, user }: { course: Course; user: any }) {
+function CourseCard({
+  course, user, notifyingId, notifiedCourses, handleNotify,
+}: {
+  course: Course;
+  user: any;
+  notifyingId: string | null;
+  notifiedCourses: Set<string>;
+  handleNotify: (courseId: string, courseTitle: string) => void;
+}) {
   const tutorName  = course.tutor ? `${course.tutor.firstName} ${course.tutor.lastName}` : (course as any).tutorName || "Instructor";
   const thumbnail  = course.thumbnail
     ? course.thumbnail.startsWith("http") ? course.thumbnail : `${BACKEND_URL}${course.thumbnail}`
