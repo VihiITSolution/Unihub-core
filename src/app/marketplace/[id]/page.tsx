@@ -6,25 +6,17 @@ import Link from "next/link";
 import { marketplaceService } from "@/services/marketplace.service";
 import { StartConversationButton } from "@/components/chat";
 import { Avatar } from "@/components/ui";
+import { useAuth } from "@/contexts/AuthContext";
 import type { MarketplaceItem } from "@/types";
-
-// Buy Now imports — re-enable when purchase flow is ready
-// import { useRouter } from "next/navigation";
-// import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProductDetailsPage() {
   const params = useParams();
   const productId = parseInt(params.id as string);
+  const { user } = useAuth();
 
   const [product, setProduct] = useState<MarketplaceItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  // Buy Now state — re-enable when purchase flow is ready
-  // const router = useRouter();
-  // const { user, token } = useAuth();
-  // const [purchasing, setPurchasing] = useState(false);
-  // const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     loadProductDetails();
@@ -47,30 +39,7 @@ export default function ProductDetailsPage() {
     }
   };
 
-  // Buy Now handler — re-enable when purchase flow is ready
-  // const handleBuyNow = async () => {
-  //   if (!user || !token) { router.push("/auth/login"); return; }
-  //   if (!product || product.stock < quantity) { setError("Insufficient stock available"); return; }
-  //   setPurchasing(true);
-  //   setError("");
-  //   try {
-  //     const response = await marketplaceService.createOrder(
-  //       { itemId: product.id, quantity, shippingAddress: "User's default address" },
-  //       token,
-  //     );
-  //     if (response.success) {
-  //       alert("Order placed successfully! Check your orders page for details.");
-  //       router.push("/student/orders");
-  //     } else {
-  //       setError(response.error || "Failed to place order");
-  //     }
-  //   } catch (err: any) {
-  //     setError(err.message || "Failed to place order");
-  //   } finally {
-  //     setPurchasing(false);
-  //   }
-  // };
-  // const isOwnListing = user && product && String(product.sellerId) === String(user.id);
+  const isOwnListing = user && product && String((product as any).sellerId) === String(user.id);
 
   if (loading) {
     return (
@@ -195,58 +164,22 @@ export default function ProductDetailsPage() {
             </div>
           </div>
 
-          {/* ── Buy Now (disabled — coming soon) ──────────────────────────────
-          {product.stock > 0 && !isOwnListing ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <label className="text-gray-700 font-semibold">Quantity:</label>
-                <div className="flex items-center border-2 border-gray-300 rounded-lg">
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-4 py-2 hover:bg-gray-100 font-bold text-lg">-</button>
-                  <span className="px-6 py-2 border-x-2 border-gray-300 font-semibold min-w-[60px] text-center">
-                    {quantity}
-                  </span>
-                  <button onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    className="px-4 py-2 hover:bg-gray-100 font-bold text-lg">+</button>
-                </div>
-                <span className="text-gray-600 text-sm">
-                  Total: Rs. {(Number(product.price) * quantity).toFixed(2)}
-                </span>
-              </div>
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
-              )}
-              <button onClick={handleBuyNow} disabled={purchasing}
-                className="btn-primary w-full py-4 text-lg font-semibold">
-                {purchasing ? "Processing..." : "Buy Now"}
-              </button>
-              {!user && (
-                <p className="text-center text-sm text-gray-600">
-                  <Link href="/auth/login" className="text-primary-600 hover:underline font-medium">Sign in</Link>
-                  {" "}to purchase this item
-                </p>
-              )}
-            </div>
-          ) : isOwnListing ? (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700">
+          {/* Own listing — manage link */}
+          {isOwnListing && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 mb-6">
               <p className="font-medium">This is your own listing</p>
-              <p className="text-sm mt-1">You cannot purchase your own products</p>
-              <Link href="/vendor/listings" className="btn-outline mt-3 inline-block">Manage Your Listings</Link>
-            </div>
-          ) : (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-              <p className="font-medium">Out of Stock</p>
-              <p className="text-sm mt-1">This item is currently unavailable</p>
+              <Link href="/vendor/listings" className="btn-outline mt-3 inline-block text-sm">
+                Manage Your Listings
+              </Link>
             </div>
           )}
-          ──────────────────────────────────────────────────────────────────── */}
 
-          {/* Contact the Seller */}
-          <div className="border border-gray-200 rounded-xl overflow-hidden">
-            <div className="bg-gray-50 px-5 py-3 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900">Contact the Seller</h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Reach out directly to arrange purchase and payment.
+          {/* Contact the Seller — primary action */}
+          <div className="border-2 border-gray-200 rounded-xl overflow-hidden">
+            <div className="bg-gray-50 px-5 py-4 border-b border-gray-200">
+              <h2 className="font-bold text-gray-900 text-lg">Contact the Seller</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Message the seller to ask questions, arrange viewing, and agree on payment.
               </p>
             </div>
 
@@ -257,7 +190,7 @@ export default function ProductDetailsPage() {
                   src={product.seller?.profileImage}
                   firstName={product.seller?.firstName}
                   lastName={product.seller?.lastName}
-                  size={40}
+                  size={44}
                 />
                 <div>
                   <p className="font-semibold text-gray-900">
@@ -274,7 +207,7 @@ export default function ProductDetailsPage() {
                 </div>
               </div>
 
-              {product.seller?.id && (
+              {product.seller?.id ? (
                 <StartConversationButton
                   recipientId={Number(product.seller.id)}
                   contextType="marketplace_item"
@@ -282,71 +215,9 @@ export default function ProductDetailsPage() {
                   label="Message Seller"
                   className="w-full justify-center"
                 />
+              ) : (
+                <p className="text-sm text-gray-500 italic">Seller contact unavailable.</p>
               )}
-
-              <hr className="border-gray-100" />
-
-              {/* Email */}
-              {product.seller?.email && (
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-400 w-6 text-center">✉</span>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-0.5">Email</p>
-                    <a
-                      href={`mailto:${product.seller.email}`}
-                      className="text-primary-600 hover:underline font-medium text-sm"
-                    >
-                      {product.seller.email}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Phone */}
-              {(product.seller as any)?.phoneNumber && (
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-400 w-6 text-center">📞</span>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-0.5">Phone</p>
-                    <a
-                      href={`tel:${(product.seller as any).phoneNumber}`}
-                      className="text-primary-600 hover:underline font-medium text-sm"
-                    >
-                      {(product.seller as any).phoneNumber}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Additional contact info from listing */}
-              {product.contactInfo && (
-                <div className="flex items-start gap-3">
-                  <span className="text-gray-400 w-6 text-center mt-0.5">💬</span>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-0.5">Additional Contact</p>
-                    <p className="text-sm text-gray-700">{product.contactInfo}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Location */}
-              {product.location && (
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-400 w-6 text-center">📍</span>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-0.5">Location</p>
-                    <p className="text-sm text-gray-700">{product.location}</p>
-                  </div>
-                </div>
-              )}
-
-              {!product.seller?.email &&
-                !(product.seller as any)?.phoneNumber &&
-                !product.contactInfo && (
-                  <p className="text-sm text-gray-500 italic">
-                    No contact details provided by the seller.
-                  </p>
-                )}
             </div>
           </div>
         </div>

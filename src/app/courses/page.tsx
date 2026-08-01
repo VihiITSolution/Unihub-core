@@ -491,7 +491,13 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
         <div style={{ marginTop: 10 }}>
           {course.isUpcoming ? (
             <button
-              onClick={() => { if (!user) window.location.href = "/auth/login"; else alert(`${course.title} is coming soon!`); }}
+              onClick={() => {
+                if (!user) { window.location.href = "/auth/login"; return; }
+                const key = `unihub_notify_${course.id}`;
+                if (localStorage.getItem(key)) { alert("You're already on the notify list for this course!"); return; }
+                localStorage.setItem(key, "1");
+                alert(`You'll be notified when "${course.title}" launches!`);
+              }}
               style={{ width: "100%", height: 36, background: "#f97316", color: "#fff", border: "none", fontWeight: 800, fontSize: 13, cursor: "pointer", borderRadius: 5 }}
             >
               Notify Me

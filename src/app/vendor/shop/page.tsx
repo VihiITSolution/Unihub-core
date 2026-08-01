@@ -23,7 +23,7 @@ export default function VendorShopSettingsPage() {
     city: "",
     state: "",
     postalCode: "",
-    country: "USA",
+    country: "Sri Lanka",
     bankAccountName: "",
     bankAccountNumber: "",
     bankName: ""

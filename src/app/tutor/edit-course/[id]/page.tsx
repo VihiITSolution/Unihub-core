@@ -100,13 +100,10 @@ export default function EditCoursePage() {
       setLoading(true);
       setError(null);
 
-      console.log("Loading course with ID:", courseId);
       const response = await courseService.getCourseById(courseId);
-      console.log("Course response:", response);
 
       if (response.success && response.data) {
         const course = response.data.course || response.data;
-        console.log("Course data:", course);
 
         setFormData({
           title: course.title || "",

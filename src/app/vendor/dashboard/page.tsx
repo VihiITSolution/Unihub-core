@@ -47,16 +47,16 @@ export default function VendorDashboardPage() {
       let vendorStats = null;
       try {
         vendorStats = await vendorService.getStats(token);
-      } catch (error) {
-        console.log("Vendor stats not available (profile may not exist yet)");
+      } catch {
+        // vendor profile may not exist yet — stats unavailable
       }
 
       // Load listings
       let listings: any = { success: true, data: { items: [] } };
       try {
         listings = await marketplaceService.getMyListings(token);
-      } catch (error) {
-        console.log("No listings found");
+      } catch {
+        // no listings yet
       }
 
       // Load sales - handle if there are none
@@ -66,8 +66,8 @@ export default function VendorDashboardPage() {
           { status: "pending" },
           token,
         );
-      } catch (error) {
-        console.log("No sales found (expected for new vendors)");
+      } catch {
+        // no sales yet
       }
 
       setStats({
@@ -133,7 +133,7 @@ export default function VendorDashboardPage() {
             Total Revenue
           </div>
           <div className="text-3xl font-bold text-purple-900">
-            $
+            Rs.{" "}
             {typeof stats.totalRevenue === "number"
               ? stats.totalRevenue.toFixed(2)
               : parseFloat(stats.totalRevenue || 0).toFixed(2)}
@@ -167,7 +167,7 @@ export default function VendorDashboardPage() {
           </Link>
 
           <Link
-            href="/vendor/orders"
+            href="/vendor/sales"
             className="p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition text-center"
           >
             <div className="font-semibold">Manage Orders</div>

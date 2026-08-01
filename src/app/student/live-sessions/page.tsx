@@ -56,13 +56,6 @@ export default function StudentLiveSessionsPage() {
         return;
       }
 
-      if (!isFree) {
-        // TODO: Implement payment flow
-        alert(
-          "Payment integration coming soon! For now, this will enroll you for free.",
-        );
-      }
-
       await liveSessionService.enrollInSession(sessionId, {}, token);
       alert("Successfully enrolled in the session!");
       loadSessions();
