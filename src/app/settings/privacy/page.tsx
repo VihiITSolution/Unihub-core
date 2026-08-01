@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { API_BASE_URL } from "@/lib/constants";
 
 interface Privacy {
   profileVisible: boolean;
@@ -43,25 +45,65 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 }
 
 export default function PrivacySettings() {
+  const { token } = useAuth();
   const [prefs, setPrefs] = useState<Privacy>(DEFAULTS);
-  const [saved, setSaved] = useState(false);
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
+  // Load: API first (if authenticated), fall back to localStorage
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setPrefs({ ...DEFAULTS, ...JSON.parse(stored) });
-    } catch {}
-  }, []);
+    const localRaw = localStorage.getItem(STORAGE_KEY);
+    const localPrefs = localRaw ? { ...DEFAULTS, ...JSON.parse(localRaw) } : null;
+
+    if (!token) {
+      if (localPrefs) setPrefs(localPrefs);
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/profile/preferences`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.data.privacyPrefs) {
+          const merged = { ...DEFAULTS, ...data.data.privacyPrefs };
+          setPrefs(merged);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        } else if (localPrefs) {
+          setPrefs(localPrefs);
+        }
+      })
+      .catch(() => {
+        if (localPrefs) setPrefs(localPrefs);
+      });
+  }, [token]);
 
   const set = (key: keyof Privacy, val: boolean) => {
-    setPrefs(p => ({ ...p, [key]: val }));
-    setSaved(false);
+    setPrefs((p) => ({ ...p, [key]: val }));
+    setStatus("idle");
   };
 
-  const save = () => {
+  const save = async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+
+    if (!token) {
+      setStatus("saved");
+      setTimeout(() => setStatus("idle"), 2500);
+      return;
+    }
+
+    setStatus("saving");
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile/preferences`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "privacy", prefs }),
+      });
+      const data = await res.json();
+      setStatus(data.success ? "saved" : "error");
+    } catch {
+      setStatus("error");
+    }
+    setTimeout(() => setStatus("idle"), 2500);
   };
 
   return (
@@ -76,16 +118,22 @@ export default function PrivacySettings() {
                 <p className="text-sm font-medium text-gray-900">{label}</p>
                 <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
               </div>
-              <Toggle checked={prefs[key]} onChange={v => set(key, v)} />
+              <Toggle checked={prefs[key]} onChange={(v) => set(key, v)} />
             </div>
           ))}
         </div>
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-xs text-gray-400">Settings are saved locally on this device.</p>
-        <button onClick={save} className="px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-          {saved ? "Saved!" : "Save Settings"}
+        <p className="text-xs text-gray-400">
+          {token ? "Settings synced to your account." : "Sign in to sync across devices."}
+        </p>
+        <button
+          onClick={save}
+          disabled={status === "saving"}
+          className="px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60"
+        >
+          {status === "saving" ? "Saving…" : status === "saved" ? "Saved!" : status === "error" ? "Error — retry" : "Save Settings"}
         </button>
       </div>
     </div>

@@ -73,4 +73,4 @@ jobs:
               -e DO_HOST=${{ secrets.DO_HOST }} \
               ${{ secrets.DOCKER_USERNAME }}/unihub-social:latest
 
-            docker image prune -f
+            docker image prune -a -f

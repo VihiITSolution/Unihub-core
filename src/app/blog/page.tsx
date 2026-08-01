@@ -1,6 +1,8 @@
-import Link from "next/link";
+"use client";
 
-export const metadata = { title: "Blog — UniHub" };
+import { useState } from "react";
+import Link from "next/link";
+import { API_BASE_URL } from "@/lib/constants";
 
 const POSTS = [
   {
@@ -65,6 +67,72 @@ const categoryColors: Record<string, string> = {
   "Boarding": "bg-orange-100 text-orange-800",
   "Careers": "bg-green-100 text-green-800",
 };
+
+function NewsletterForm() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "already" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setStatus("loading");
+    try {
+      const res = await fetch(`${API_BASE_URL}/newsletter/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus(data.alreadySubscribed ? "already" : "success");
+        setMessage(data.message);
+        setEmail("");
+      } else {
+        setStatus("error");
+        setMessage(data.message || "Something went wrong.");
+      }
+    } catch {
+      setStatus("error");
+      setMessage("Network error. Please try again.");
+    }
+  };
+
+  if (status === "success" || status === "already") {
+    return (
+      <div className="flex items-center justify-center gap-2 py-2">
+        <span className="text-2xl">{status === "success" ? "🎉" : "✅"}</span>
+        <p className="text-white font-semibold">{message}</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
+        <input
+          type="email"
+          placeholder="your@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          disabled={status === "loading"}
+          className="flex-1 px-4 py-2.5 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-60"
+        />
+        <button
+          type="submit"
+          disabled={status === "loading" || !email.trim()}
+          className="px-5 py-2.5 bg-white text-green-700 font-semibold rounded-lg text-sm hover:bg-green-50 transition-colors whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {status === "loading" ? "Subscribing…" : "Subscribe"}
+        </button>
+      </div>
+      {status === "error" && (
+        <p className="text-red-300 text-xs mt-3">{message}</p>
+      )}
+    </form>
+  );
+}
 
 export default function BlogPage() {
   const [featured, ...rest] = POSTS;
@@ -133,16 +201,7 @@ export default function BlogPage() {
           <p className="text-green-200 mb-6 max-w-md mx-auto">
             Get the latest articles, guides, and course recommendations delivered to your inbox every week.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="flex-1 px-4 py-2.5 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-white"
-            />
-            <button className="px-5 py-2.5 bg-white text-green-700 font-semibold rounded-lg text-sm hover:bg-green-50 transition-colors whitespace-nowrap">
-              Subscribe
-            </button>
-          </div>
+          <NewsletterForm />
           <p className="text-green-300 text-xs mt-3">No spam. Unsubscribe any time.</p>
         </div>
       </div>
