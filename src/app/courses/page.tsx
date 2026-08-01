@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/types";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
+import { TOKEN_KEY } from "@/lib/constants";
 import facultyService, { FALLBACK_FACULTIES, type Faculty } from "@/services/faculty.service";
 
 const YEARS = [
@@ -66,6 +67,14 @@ function CoursesInner() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
+  // notify subscriptions — Set of courseIds the user has already subscribed to
+  const [notifiedCourses, setNotifiedCourses] = useState<Set<number>>(() => {
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem("unihub_notify_set") : null;
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch { return new Set(); }
+  });
+  const [notifyingId, setNotifyingId] = useState<number | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   // Departments derived from selected faculty (no extra fetch)
@@ -132,6 +141,31 @@ function CoursesInner() {
   }, [selectedFaculty, selectedDept, selectedYear, searchQuery, sortBy, minPrice, maxPrice, token]);
 
   useEffect(() => { loadCourses(); }, [loadCourses]);
+
+  const handleNotify = async (courseId: number, courseTitle: string) => {
+    if (!user) { window.location.href = "/auth/login"; return; }
+    setNotifyingId(courseId);
+    try {
+      const authToken = token || localStorage.getItem(TOKEN_KEY);
+      const res = await fetch(`${API_BASE_URL}/courses/${courseId}/notify`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifiedCourses((prev) => {
+          const next = new Set(prev);
+          data.subscribed ? next.add(courseId) : next.delete(courseId);
+          localStorage.setItem("unihub_notify_set", JSON.stringify([...next]));
+          return next;
+        });
+      }
+    } catch (e) {
+      console.error("Notify toggle failed:", e);
+    } finally {
+      setNotifyingId(null);
+    }
+  };
 
   const clearFilters = () => {
     setSelectedFaculty("all");
@@ -491,16 +525,17 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
         <div style={{ marginTop: 10 }}>
           {course.isUpcoming ? (
             <button
-              onClick={() => {
-                if (!user) { window.location.href = "/auth/login"; return; }
-                const key = `unihub_notify_${course.id}`;
-                if (localStorage.getItem(key)) { alert("You're already on the notify list for this course!"); return; }
-                localStorage.setItem(key, "1");
-                alert(`You'll be notified when "${course.title}" launches!`);
+              onClick={() => handleNotify(course.id, course.title)}
+              disabled={notifyingId === course.id}
+              style={{
+                width: "100%", height: 36,
+                background: notifiedCourses.has(course.id) ? "#166534" : "#f97316",
+                color: "#fff", border: "none", fontWeight: 800, fontSize: 13,
+                cursor: notifyingId === course.id ? "wait" : "pointer", borderRadius: 5,
+                opacity: notifyingId === course.id ? 0.7 : 1,
               }}
-              style={{ width: "100%", height: 36, background: "#f97316", color: "#fff", border: "none", fontWeight: 800, fontSize: 13, cursor: "pointer", borderRadius: 5 }}
             >
-              Notify Me
+              {notifyingId === course.id ? "..." : notifiedCourses.has(course.id) ? "✓ Notified" : "Notify Me"}
             </button>
           ) : isOwner ? (
             <Link href={`/tutor/edit-course/${course.id}`} style={{ display: "block", textAlign: "center", height: 36, lineHeight: "36px", border: "1px solid var(--ink)", color: "var(--ink)", fontWeight: 800, fontSize: 13, textDecoration: "none", borderRadius: 5 }}>

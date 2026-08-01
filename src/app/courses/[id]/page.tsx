@@ -43,6 +43,8 @@ export default function CourseDetailsPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [expandedPreviewId, setExpandedPreviewId] = useState<string | number | null>(null);
+  const [notifySubscribed, setNotifySubscribed] = useState(false);
+  const [notifyLoading, setNotifyLoading] = useState(false);
 
   useEffect(() => {
     if (courseId) {
@@ -121,6 +123,19 @@ export default function CourseDetailsPage() {
         } catch (enrollmentError) {
           console.error("Failed to check enrollment:", enrollmentError);
         }
+
+        // Check notify subscription status
+        try {
+          const notifyRes = await fetch(`${API_BASE_URL}/courses/${courseId}/notify`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (notifyRes.ok) {
+            const notifyData = await notifyRes.json();
+            if (notifyData.success) setNotifySubscribed(notifyData.subscribed);
+          }
+        } catch {
+          // non-critical
+        }
       }
     } catch (error) {
       console.error("Failed to load course:", error);
@@ -132,12 +147,27 @@ export default function CourseDetailsPage() {
     }
   };
 
+  const handleNotify = async () => {
+    if (!isAuthenticated) { router.push("/auth/login"); return; }
+    setNotifyLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/courses/${courseId}/notify`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setNotifySubscribed(data.subscribed);
+    } catch (e) {
+      console.error("Notify toggle failed:", e);
+    } finally {
+      setNotifyLoading(false);
+    }
+  };
+
   const handleEnroll = async () => {
-    // Check if course is upcoming
+    // Upcoming courses use the Notify Me flow instead
     if (course?.isUpcoming) {
-      alert(
-        `${course.title} is coming soon! We'll notify you when it's available.`,
-      );
+      handleNotify();
       return;
     }
 
@@ -504,10 +534,15 @@ export default function CourseDetailsPage() {
 
                 {course.isUpcoming ? (
                   <button
-                    onClick={handleEnroll}
-                    className="btn-primary w-full flex items-center justify-center gap-2 hover:shadow-lg transition-all text-lg py-3 bg-orange-500 hover:bg-orange-600"
+                    onClick={handleNotify}
+                    disabled={notifyLoading}
+                    className={`w-full flex items-center justify-center gap-2 hover:shadow-lg transition-all text-lg py-3 rounded font-bold text-white disabled:opacity-70 disabled:cursor-not-allowed ${
+                      notifySubscribed
+                        ? "bg-green-700 hover:bg-green-800"
+                        : "bg-orange-500 hover:bg-orange-600"
+                    }`}
                   >
-                    Notify Me
+                    {notifyLoading ? "..." : notifySubscribed ? "✓ You'll be notified" : "Notify Me"}
                   </button>
                 ) : isEnrolled ? (
                   <button
