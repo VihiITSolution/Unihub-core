@@ -10,6 +10,9 @@ export interface SupportTicket {
   description: string;
   attachments: string[];
   status: "open" | "in_progress" | "resolved" | "closed";
+  adminResponse?: string;
+  respondedAt?: string;
+  resolvedAt?: string;
   createdAt: string;
 }
 

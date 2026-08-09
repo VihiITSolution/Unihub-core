@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ContactSupportButton } from "@/components/chat";
 import { useAuth } from "@/contexts/AuthContext";
-import { supportTicketService } from "@/services/supportTicket.service";
+import {
+  supportTicketService,
+  type SupportTicket,
+} from "@/services/supportTicket.service";
 
 const MAX_ATTACHMENTS = 5;
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10MB
@@ -23,9 +26,26 @@ export default function HelpCenterPage() {
   const [formData, setFormData] = useState(initialFormData);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
   const [message, setMessage] = useState<
     { type: "success" | "error"; text: string } | null
   >(null);
+
+  const loadMyTickets = async () => {
+    if (!token) return;
+    setTicketsLoading(true);
+    try {
+      const response = await supportTicketService.getMyTickets(token);
+      if (response.success && response.data) setTickets(response.data.tickets);
+    } finally {
+      setTicketsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && token) loadMyTickets();
+  }, [isAuthenticated, token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +90,7 @@ export default function HelpCenterPage() {
         });
         setFormData(initialFormData);
         setAttachments([]);
+        await loadMyTickets();
       } else {
         setMessage({
           type: "error",
@@ -497,6 +518,48 @@ export default function HelpCenterPage() {
             </div>
           </form>
         </div>
+
+        {isAuthenticated && (
+          <div className="mt-8 bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">My Support Tickets</h2>
+                <p className="text-gray-600 mt-1">Track status and read responses from the support team.</p>
+              </div>
+              <button onClick={loadMyTickets} disabled={ticketsLoading} className="px-4 py-2 border rounded-lg text-sm font-medium disabled:opacity-50">
+                Refresh
+              </button>
+            </div>
+            {ticketsLoading ? (
+              <p className="py-8 text-center text-gray-500">Loading tickets…</p>
+            ) : tickets.length === 0 ? (
+              <p className="py-8 text-center text-gray-500">You have not submitted any tickets.</p>
+            ) : (
+              <div className="space-y-4">
+                {tickets.map((ticket) => (
+                  <article key={ticket.id} className="rounded-xl border border-gray-200 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-bold text-gray-900">#{ticket.id} {ticket.subject}</h3>
+                        <p className="text-sm text-gray-500 mt-1">Submitted {new Date(ticket.createdAt).toLocaleString()}</p>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold capitalize">
+                        {ticket.status.replace("_", " ")}
+                      </span>
+                    </div>
+                    {ticket.adminResponse && (
+                      <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
+                        <p className="text-sm font-bold text-green-900">Support response</p>
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-green-900">{ticket.adminResponse}</p>
+                        {ticket.respondedAt && <p className="mt-2 text-xs text-green-700">Responded {new Date(ticket.respondedAt).toLocaleString()}</p>}
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Additional Help */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
