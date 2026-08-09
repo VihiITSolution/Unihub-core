@@ -5,7 +5,12 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
+import YouTubeRightsDeclarationForm from "@/components/tutor/YouTubeRightsDeclarationForm";
 import { FALLBACK_FACULTIES, type Faculty, type Department } from "@/services/faculty.service";
+import {
+  youtubeRightsService,
+  type YouTubeRightsDeclarationStatus,
+} from "@/services/youtube-rights.service";
 
 interface CourseMaterial {
   id: string;
@@ -60,6 +65,11 @@ export default function EditCoursePage() {
     order: "",
   });
   const [youtubeRightsConfirmed, setYoutubeRightsConfirmed] = useState(false);
+  const [youtubeDeclarationStatus, setYoutubeDeclarationStatus] =
+    useState<YouTubeRightsDeclarationStatus | null>(null);
+  const [youtubeDeclarationLoading, setYoutubeDeclarationLoading] = useState(true);
+  const [youtubeDeclarationSubmitting, setYoutubeDeclarationSubmitting] = useState(false);
+  const [youtubeSignature, setYoutubeSignature] = useState("");
   const MAX_VIDEO_UPLOAD_MB = Number(
     process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 5000,
   );
@@ -83,6 +93,17 @@ export default function EditCoursePage() {
     }
     fetchFaculties();
   }, [courseId, token, isAuthenticated, hasRole, router]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    setYoutubeDeclarationLoading(true);
+    youtubeRightsService
+      .getStatus(token)
+      .then(setYoutubeDeclarationStatus)
+      .catch(() => setYoutubeDeclarationStatus(null))
+      .finally(() => setYoutubeDeclarationLoading(false));
+  }, [token]);
 
   const fetchFaculties = async () => {
     try {
@@ -242,7 +263,40 @@ export default function EditCoursePage() {
     setCurrentMaterial((prev) => ({ ...prev, file }));
   };
 
-  const handleAddMaterial = () => {
+  const ensureYouTubeRightsDeclaration = async () => {
+    if (!youtubeDeclarationStatus) {
+      alert("The YouTube rights declaration is unavailable. Please refresh and try again.");
+      return false;
+    }
+    if (!youtubeRightsConfirmed) {
+      alert("Please confirm the video ownership and rights declaration.");
+      return false;
+    }
+    if (youtubeDeclarationStatus.hasDeclaration) return true;
+    if (!youtubeSignature.trim()) {
+      alert(`Type your full account name to sign: ${youtubeDeclarationStatus.expectedSignatoryName}`);
+      return false;
+    }
+
+    setYoutubeDeclarationSubmitting(true);
+    try {
+      const declaration = await youtubeRightsService.sign(token!, youtubeSignature);
+      setYoutubeDeclarationStatus((current) => current && ({
+        ...current,
+        hasDeclaration: true,
+        declaration,
+      }));
+      setYoutubeSignature("");
+      return true;
+    } catch (declarationError) {
+      alert(declarationError instanceof Error ? declarationError.message : "Unable to save the declaration.");
+      return false;
+    } finally {
+      setYoutubeDeclarationSubmitting(false);
+    }
+  };
+
+  const handleAddMaterial = async () => {
     if (!currentMaterial.title) {
       alert("Please provide a title for the material");
       return;
@@ -254,12 +308,7 @@ export default function EditCoursePage() {
         alert("Please enter a valid YouTube link (youtube.com or youtu.be).");
         return;
       }
-      if (!youtubeRightsConfirmed) {
-        alert(
-          "Please confirm this is your own original content before adding a YouTube link.",
-        );
-        return;
-      }
+      if (!(await ensureYouTubeRightsDeclaration())) return;
     } else if (!currentMaterial.file) {
       alert("Please provide a title and file for the material");
       return;
@@ -326,6 +375,7 @@ export default function EditCoursePage() {
                 url: material.videoUrl,
                 order: materials.indexOf(material),
                 duration: material.duration,
+                youtubeRightsConfirmed: true,
               }),
             },
           );
@@ -1012,34 +1062,14 @@ export default function EditCoursePage() {
                         />
                       </div>
 
-                      <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900">
-                        <p className="font-semibold mb-1">⚠️ Before you add a YouTube link</p>
-                        <p>
-                          Only link videos that are your own original content, or that you
-                          have full rights/permission to use. UniHub does not host or
-                          review externally linked videos. Any copyright claims, takedown
-                          notices, or other legal issues arising from content you link are
-                          entirely your responsibility as the publisher.
-                        </p>
-                      </div>
-
-                      <div className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                        <input
-                          type="checkbox"
-                          id="youtubeRightsConfirmedEdit"
-                          checked={youtubeRightsConfirmed}
-                          onChange={(e) => setYoutubeRightsConfirmed(e.target.checked)}
-                          className="w-5 h-5 mt-0.5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                        />
-                        <label
-                          htmlFor="youtubeRightsConfirmedEdit"
-                          className="text-sm font-semibold text-gray-700 cursor-pointer"
-                        >
-                          I confirm this is my own original content (or I hold full rights
-                          to it), and I accept sole responsibility for any copyright or
-                          legal issues that may arise from it.
-                        </label>
-                      </div>
+                      <YouTubeRightsDeclarationForm
+                        status={youtubeDeclarationStatus}
+                        isLoading={youtubeDeclarationLoading}
+                        signature={youtubeSignature}
+                        confirmed={youtubeRightsConfirmed}
+                        onSignatureChange={setYoutubeSignature}
+                        onConfirmedChange={setYoutubeRightsConfirmed}
+                      />
                     </div>
                   )}
 
@@ -1086,9 +1116,10 @@ export default function EditCoursePage() {
                 <button
                   type="button"
                   onClick={handleAddMaterial}
-                  className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors"
+                  disabled={youtubeDeclarationSubmitting}
+                  className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add to Materials List
+                  {youtubeDeclarationSubmitting ? "Saving declaration…" : "Add to Materials List"}
                 </button>
               </div>
             </div>
