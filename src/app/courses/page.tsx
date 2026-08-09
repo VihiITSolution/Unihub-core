@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { HoverCard } from "@/components/ui";
 import type { Course } from "@/types";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { TOKEN_KEY } from "@/lib/constants";
@@ -481,7 +482,29 @@ function CourseCard({
   const facultyLabel = course.faculty?.name || course.categoryObj?.name || (course as any).category || "";
   const isOwner      = user && course.tutorId === user.id;
 
-  return (
+  const detailsHref = isOwner
+    ? `/tutor/edit-course/${course.id}`
+    : (course as any).isEnrolled
+      ? `/student/learn/${course.id}`
+      : `/courses/${course.id}`;
+  const detailsLabel = isOwner
+    ? "Manage Course"
+    : (course as any).isEnrolled
+      ? "Continue Learning"
+      : course.isUpcoming
+        ? "View Course"
+        : priceLabel === "FREE"
+          ? "Enrol Free"
+          : "View Course";
+  const descriptionLines = (
+    course.shortDescription || course.aboutCourse || course.description || ""
+  )
+    .split(/[.\n]/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 12)
+    .slice(0, 3);
+
+  const cardTrigger = (
     <article
       style={{
         background: "var(--white)", border: "1px solid var(--line)",
@@ -569,6 +592,79 @@ function CourseCard({
       </div>
     </article>
   );
+
+  const popup = (
+    <div style={{ padding: 18 }}>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+        {course.level && (
+          <span style={{ padding: "3px 8px", background: "#dbeafe", color: "#1e40af", fontSize: 11, fontWeight: 700, borderRadius: 3, textTransform: "capitalize" }}>
+            {course.level}
+          </span>
+        )}
+        {facultyLabel && (
+          <span style={{ padding: "3px 8px", background: "#e8f6f1", color: "var(--brand-dark)", fontSize: 11, fontWeight: 700, borderRadius: 3 }}>
+            {facultyLabel}
+          </span>
+        )}
+        {course.isUpcoming && (
+          <span style={{ padding: "3px 8px", background: "#ffedd5", color: "#c2410c", fontSize: 11, fontWeight: 700, borderRadius: 3 }}>
+            Upcoming
+          </span>
+        )}
+      </div>
+
+      <h4 style={{ margin: "0 0 5px", fontSize: 15, fontWeight: 800, lineHeight: 1.3, color: "#111" }}>
+        {course.title}
+      </h4>
+      <p style={{ margin: "0 0 10px", fontSize: 12, color: "#64748b" }}>
+        By {tutorName}{course.year ? ` · Year ${course.year}` : ""}
+      </p>
+
+      {course.rating && Number(course.rating) > 0 ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 10, fontSize: 13 }}>
+          <span style={{ color: "#f59e0b", fontWeight: 800 }}>
+            {"★".repeat(Math.round(Number(course.rating)))}
+          </span>
+          <span style={{ fontWeight: 700 }}>{Number(course.rating).toFixed(1)}</span>
+          <span style={{ color: "#94a3b8", fontSize: 12 }}>
+            ({(course.enrollmentCount || 0).toLocaleString()} students)
+          </span>
+        </div>
+      ) : (
+        <p style={{ margin: "0 0 10px", color: "#64748b", fontSize: 12 }}>
+          {(course.enrollmentCount || 0).toLocaleString()} students enrolled
+        </p>
+      )}
+
+      {descriptionLines.length > 0 && (
+        <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none" }}>
+          {descriptionLines.map((line, index) => (
+            <li key={index} style={{ display: "flex", gap: 7, fontSize: 12.5, color: "#374151", marginBottom: 5 }}>
+              <span style={{ color: "var(--brand)", flexShrink: 0 }}>✓</span>
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div style={{ fontSize: 22, fontWeight: 800, color: "#111", marginBottom: 14 }}>
+        {priceLabel}
+      </div>
+
+      <Link
+        href={detailsHref}
+        style={{
+          display: "block", width: "100%", textAlign: "center",
+          padding: "11px 0", background: "var(--brand)", color: "#fff",
+          fontWeight: 800, fontSize: 14, borderRadius: 5, textDecoration: "none",
+        }}
+      >
+        {detailsLabel}
+      </Link>
+    </div>
+  );
+
+  return <HoverCard trigger={cardTrigger} popup={popup} />;
 }
 
 // ── Default export wrapped in Suspense for useSearchParams ────────────────────
