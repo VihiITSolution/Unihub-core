@@ -12,7 +12,7 @@ COPY . .
 
 EXPOSE 5001
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
-  CMD node -e "require('http').get('http://localhost:5001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=5 \
+  CMD node -e "const request=require('http').get('http://127.0.0.1:5001/health',(response)=>{response.resume();process.exit(response.statusCode===200?0:1)});request.on('error',()=>process.exit(1));request.setTimeout(3000,()=>{request.destroy();process.exit(1)})"
 
 CMD ["node", "src/server.js"]

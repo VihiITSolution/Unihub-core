@@ -111,6 +111,7 @@ jobs:
               fi
               if [ "${attempt}" -eq 40 ]; then
                 echo "Social container did not become healthy"
+                docker inspect --format='{{json .State.Health}}' unihub-social || true
                 docker logs --tail 150 unihub-social
                 exit 1
               fi
