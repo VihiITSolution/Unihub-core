@@ -1,281 +1,87 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { liveSessionService } from "@/services/live-session.service";
-import type { LiveSession, LiveSessionStatus } from "@/types";
+import { liveSessionService, MeetingIdentity } from "@/services/live-session.service";
+import type { LiveSession } from "@/types";
 import { TOKEN_KEY } from "@/lib/constants";
 
 export default function TutorLiveSessionsPage() {
-  const router = useRouter();
   const [sessions, setSessions] = useState<LiveSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [identity, setIdentity] = useState<MeetingIdentity | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "upcoming" | "live" | "ended">(
-    "all",
-  );
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadSessions();
-  }, [filter]);
-
-  const loadSessions = async () => {
+  const load = async () => {
     try {
       const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) {
-        router.push("/auth/login");
-        return;
-      }
-
-      const filters: any = {};
-      if (filter === "upcoming") {
-        filters.upcoming = true;
-      } else if (filter !== "all") {
-        filters.status = filter;
-      }
-
-      const response = await liveSessionService.getSessions(filters, token);
-      const sessionsData = Array.isArray(response.data)
-        ? response.data
-        : (response.data as any)?.sessions || [];
-      setSessions(sessionsData);
-    } catch (err: any) {
-      setError(err.message || "Failed to load sessions");
-    } finally {
-      setIsLoading(false);
-    }
+      if (!token) throw new Error("Please log in");
+      const [sessionResponse, identityResponse] = await Promise.all([
+        liveSessionService.getMySessions(token),
+        liveSessionService.getMeetingIdentity(token),
+      ]);
+      setSessions(sessionResponse.data.sessions || []);
+      setIdentity(identityResponse.data.identity);
+    } catch (err: any) { setError(err.message || "Failed to load sessions"); }
+    finally { setLoading(false); }
   };
+  useEffect(() => { load(); }, []);
 
-  const handleStartSession = async (id: string) => {
+  const act = async (session: LiveSession, action: "start" | "end" | "cancel") => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
     try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) return;
-
-      await liveSessionService.startSession(id, token);
-      loadSessions();
-    } catch (err: any) {
-      alert(err.message || "Failed to start session");
-    }
+      if (action === "cancel" && !confirm("Cancel this session?")) return;
+      if (action === "end" && !confirm("Mark this session ended and import Teams artifacts?")) return;
+      const response = action === "start"
+        ? await liveSessionService.startSession(session.id, token)
+        : action === "end"
+          ? await liveSessionService.endSession(session.id, token)
+          : await liveSessionService.cancelSession(session.id, token);
+      const joinUrl = (response as any).data?.joinUrl;
+      if (joinUrl) window.open(joinUrl, "_blank", "noopener,noreferrer");
+      await load();
+    } catch (err: any) { setError(err.message || `Failed to ${action} session`); }
   };
 
-  const handleEndSession = async (id: string) => {
-    try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) return;
-
-      if (confirm("Are you sure you want to end this session?")) {
-        await liveSessionService.endSession(id, token);
-        loadSessions();
-      }
-    } catch (err: any) {
-      alert(err.message || "Failed to end session");
-    }
-  };
-
-  const handleCancelSession = async (id: string) => {
-    try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) return;
-
-      if (confirm("Are you sure you want to cancel this session?")) {
-        await liveSessionService.cancelSession(id, token);
-        loadSessions();
-      }
-    } catch (err: any) {
-      alert(err.message || "Failed to cancel session");
-    }
-  };
-
-  const getStatusBadge = (status: LiveSessionStatus) => {
-    const styles = {
-      scheduled: "bg-blue-100 text-blue-800",
-      live: "bg-green-100 text-green-800 animate-pulse",
-      ended: "bg-gray-100 text-gray-800",
-      cancelled: "bg-red-100 text-red-800",
-      recorded: "bg-purple-100 text-purple-800",
-    };
-
-    return (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status]}`}
-      >
-        {status.toUpperCase()}
-      </span>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
+  if (loading) return <div className="p-10 text-center">Loading live sessions…</div>;
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-        <h1 className="text-3xl font-bold">My Live Sessions</h1>
-        <Link
-          href="/tutor/live-sessions/create"
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 font-medium"
-        >
-          + Schedule New Session
-        </Link>
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><h1 className="text-3xl font-bold">My live sessions</h1><p className="mt-1 text-gray-600">Teams requests, approvals, and attendance in one place.</p></div>
+        <Link href="/tutor/live-sessions/create" className="rounded-lg bg-blue-600 px-5 py-2.5 text-white">Request session</Link>
       </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-          {error}
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {["all", "upcoming", "live", "ended"].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f as any)}
-            className={`px-4 py-2 rounded-md font-medium ${
-              filter === f
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
+      {identity && <div className={`mt-5 rounded-lg border p-4 ${identity.invitationStatus === "accepted" ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>Microsoft identity: <strong>{identity.email}</strong> · {identity.invitationStatus}{identity.invitationRedeemUrl && identity.invitationStatus !== "accepted" && <a className="ml-3 underline" href={identity.invitationRedeemUrl} target="_blank" rel="noreferrer">Accept invitation</a>}</div>}
+      {error && <div className="mt-5 rounded-lg bg-red-50 p-4 text-red-700">{error}</div>}
+      <div className="mt-6 space-y-4">
+        {sessions.length === 0 && <div className="rounded-xl bg-gray-50 p-10 text-center text-gray-600">No live-session requests yet.</div>}
+        {sessions.map((session) => (
+          <article key={session.id} className="rounded-xl border bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">{session.title}</h2>
+                <p className="mt-1 text-gray-600">{session.description}</p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  <span className="rounded-full bg-gray-100 px-3 py-1">{session.provider.toUpperCase()}</span>
+                  <span className="rounded-full bg-blue-100 px-3 py-1">Approval: {session.approvalStatus}</span>
+                  <span className="rounded-full bg-purple-100 px-3 py-1">Provider: {session.providerStatus}</span>
+                  <span className="rounded-full bg-green-100 px-3 py-1">Session: {session.status}</span>
+                </div>
+                <p className="mt-3 text-sm text-gray-500">{new Date(session.scheduledStartTime).toLocaleString("en-LK", { timeZone: "Asia/Colombo" })} – {new Date(session.scheduledEndTime).toLocaleTimeString("en-LK", { timeZone: "Asia/Colombo" })}</p>
+                {session.rejectionReason && <p className="mt-2 text-sm text-red-700">Changes requested: {session.rejectionReason}</p>}
+              </div>
+              <div className="flex flex-wrap items-start gap-2">
+                {session.status === "scheduled" && session.approvalStatus === "approved" && session.providerStatus === "ready" && <button onClick={() => act(session, "start")} className="rounded bg-green-600 px-4 py-2 text-white">Start in Teams</button>}
+                {session.status === "scheduled" && <Link href={`/tutor/live-sessions/${session.id}/edit`} className="rounded border px-4 py-2">Reschedule</Link>}
+                {session.status === "live" && <button onClick={() => act(session, "end")} className="rounded bg-red-600 px-4 py-2 text-white">End</button>}
+                {session.status === "scheduled" && <button onClick={() => act(session, "cancel")} className="rounded border border-red-300 px-4 py-2 text-red-700">Cancel</button>}
+                {session.recordingUrl && <a href={session.recordingUrl} target="_blank" rel="noreferrer" className="rounded bg-purple-600 px-4 py-2 text-white">Recording</a>}
+                <Link href={`/tutor/live-sessions/${session.id}/enrollments`} className="rounded bg-gray-100 px-4 py-2">Enrollments</Link>
+              </div>
+            </div>
+          </article>
         ))}
       </div>
-
-      {/* Sessions List */}
-      {sessions.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-600 mb-4">No live sessions found</p>
-          <Link
-            href="/tutor/live-sessions/create"
-            className="text-blue-600 hover:underline"
-          >
-            Create your first live session
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {sessions.map((session) => (
-            <div
-              key={session.id}
-              className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-semibold">{session.title}</h3>
-                    {getStatusBadge(session.status)}
-                  </div>
-                  <p className="text-gray-600 mb-2">{session.description}</p>
-                  <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-                    <span>📅 {formatDate(session.scheduledStartTime)}</span>
-                    <span>
-                      {session.isFree ? "🆓 Free" : `💰 Rs. ${session.price}`}
-                    </span>
-                    <span>👥 {session.totalAttendees} attendees</span>
-                    {!session.isFree && (
-                      <span>
-                        💵 Revenue: Rs. {session.totalRevenue.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-wrap gap-2 ml-4">
-                  {session.status === "scheduled" && (
-                    <>
-                      <button
-                        onClick={() => handleStartSession(session.id)}
-                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                      >
-                        Start Session
-                      </button>
-                      <button
-                        onClick={() =>
-                          router.push(`/tutor/live-sessions/${session.id}/edit`)
-                        }
-                        className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleCancelSession(session.id)}
-                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  )}
-
-                  {session.status === "live" && (
-                    <>
-                      <a
-                        href={`https://www.youtube.com/watch?v=${session.youtubeVideoId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                      >
-                        Watch Stream
-                      </a>
-                      <button
-                        onClick={() => handleEndSession(session.id)}
-                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                      >
-                        End Session
-                      </button>
-                    </>
-                  )}
-
-                  {(session.status === "ended" ||
-                    session.status === "recorded") &&
-                    session.recordingUrl && (
-                      <a
-                        href={session.recordingUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-                      >
-                        View Recording
-                      </a>
-                    )}
-
-                  <Link
-                    href={`/tutor/live-sessions/${session.id}/enrollments`}
-                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200"
-                  >
-                    View Enrollments
-                  </Link>
-                </div>
-              </div>
-
-              {/* Session Details */}
-              {session.youtubeVideoId && (
-                <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-                  <span className="font-medium">YouTube Video ID:</span>{" "}
-                  {session.youtubeVideoId}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

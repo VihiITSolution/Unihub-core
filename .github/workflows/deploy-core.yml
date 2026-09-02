@@ -8,6 +8,10 @@ on:
       - "Unihub-social/**"
       - ".github/workflows/deploy-social.yml"
 
+concurrency:
+  group: unihub-production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Build and Deploy Core
@@ -52,7 +56,14 @@ jobs:
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
-            set -e
+            set -euo pipefail
+
+            sudo -n systemctl is-active --quiet nginx
+            if [ "$(docker inspect --format='{{.State.Running}}' unihub-nginx 2>/dev/null || echo false)" = "true" ]; then
+              echo "Deployment aborted: host Nginx and the legacy Docker Nginx cannot run together"
+              exit 1
+            fi
+
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
             docker stop unihub-core || true
             docker rm unihub-core || true
@@ -67,7 +78,18 @@ jobs:
               -e NEXT_PUBLIC_BACKEND_URL=${{ secrets.BACKEND_URL }} \
               ${{ secrets.DOCKER_USERNAME }}/unihub-core:${{ github.sha }}
 
-            sleep 5
+            for attempt in $(seq 1 30); do
+              if docker exec unihub-core node -e "const http=require('http');const request=http.get('http://127.0.0.1:3001/',response=>process.exit(response.statusCode<500?0:1));request.on('error',()=>process.exit(1));request.setTimeout(3000,()=>{request.destroy();process.exit(1)});"; then
+                break
+              fi
+              if [ "${attempt}" -eq 30 ]; then
+                echo "Core container did not become ready"
+                docker logs --tail 100 unihub-core
+                exit 1
+              fi
+              sleep 2
+            done
+
             RUNNING_IMAGE=$(docker inspect --format='{{.Config.Image}}' unihub-core)
             EXPECTED_IMAGE='${{ secrets.DOCKER_USERNAME }}/unihub-core:${{ github.sha }}'
 
@@ -78,6 +100,27 @@ jobs:
               echo "Deployment verification failed: container is not using the expected image"
               exit 1
             fi
+
+            # Host Nginx resolves Docker service names through /etc/hosts.
+            # Container recreation changes the IP, so every deploy must refresh
+            # the mapping before Nginx is reloaded.
+            test -x /usr/local/bin/update-docker-hosts.sh
+            sudo -n /usr/local/bin/update-docker-hosts.sh
+            sudo -n nginx -t
+            sudo -n systemctl reload nginx
+
+            for attempt in $(seq 1 15); do
+              if curl --fail --silent --show-error --max-time 15 --insecure \
+                --resolve unihub.lk:443:127.0.0.1 https://unihub.lk/ >/dev/null; then
+                break
+              fi
+              if [ "${attempt}" -eq 15 ]; then
+                echo "Origin smoke test failed after Core deployment"
+                sudo -n tail -n 100 /var/log/nginx/error.log || true
+                exit 1
+              fi
+              sleep 2
+            done
 
             docker ps --filter name=unihub-core --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
             docker image prune -a -f

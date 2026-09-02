@@ -7,6 +7,7 @@ interface Props {
   confirmed: boolean;
   onSignatureChange: (value: string) => void;
   onConfirmedChange: (value: boolean) => void;
+  idPrefix?: string;
 }
 
 export default function YouTubeRightsDeclarationForm({
@@ -16,6 +17,7 @@ export default function YouTubeRightsDeclarationForm({
   confirmed,
   onSignatureChange,
   onConfirmedChange,
+  idPrefix = "youtubeRights",
 }: Props) {
   if (isLoading) {
     return (
@@ -70,11 +72,11 @@ export default function YouTubeRightsDeclarationForm({
           <p className="font-semibold mb-2">YouTube video ownership and rights declaration</p>
           <p className="whitespace-pre-line leading-6">{status.agreement.text}</p>
           <p className="mt-3 text-xs font-medium">Declaration version {status.agreement.version}</p>
-          <label className="block mt-4 font-semibold" htmlFor="youtubeDeclarationSignature">
+          <label className="block mt-4 font-semibold" htmlFor={`${idPrefix}DeclarationSignature`}>
             Type your full account name to sign: {status.expectedSignatoryName}
           </label>
           <input
-            id="youtubeDeclarationSignature"
+            id={`${idPrefix}DeclarationSignature`}
             type="text"
             value={signature}
             onChange={(event) => onSignatureChange(event.target.value)}
@@ -88,12 +90,12 @@ export default function YouTubeRightsDeclarationForm({
       <div className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
         <input
           type="checkbox"
-          id="youtubeRightsConfirmed"
+          id={`${idPrefix}Confirmed`}
           checked={confirmed}
           onChange={(event) => onConfirmedChange(event.target.checked)}
           className="w-5 h-5 mt-0.5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
         />
-        <label htmlFor="youtubeRightsConfirmed" className="text-sm font-semibold text-gray-700 cursor-pointer">
+        <label htmlFor={`${idPrefix}Confirmed`} className="text-sm font-semibold text-gray-700 cursor-pointer">
           {declaration
             ? "I confirm this YouTube video is mine or I have all permissions required to use it, and it is covered by my signed declaration."
             : "I have read and accept this declaration, confirm this video is mine or properly licensed, and understand that UniHub will retain my signed record for legal and administrative requirements."}

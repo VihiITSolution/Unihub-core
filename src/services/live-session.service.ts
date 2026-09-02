@@ -20,7 +20,10 @@ export interface JoinSessionResponse {
   success: boolean;
   message: string;
   data: {
-    embedUrl: string;
+    provider: "youtube" | "teams";
+    launchMode: "embed" | "external";
+    joinUrl?: string;
+    embedUrl?: string;
     chatUrl?: string;
     session: LiveSession;
   };
@@ -31,13 +34,16 @@ export interface CreateSessionResponse {
   message: string;
   data: {
     session: LiveSession;
-    streaming: {
-      watchUrl: string;
-      embedUrl: string;
-      streamUrl: string;
-      streamKey: string;
-    };
+    identity: MeetingIdentity;
   };
+}
+
+export interface MeetingIdentity {
+  email: string;
+  invitationStatus: "not_invited" | "pending" | "accepted" | "failed";
+  invitationRedeemUrl?: string;
+  lastSyncedAt?: string;
+  lastError?: string;
 }
 
 export const liveSessionService = {
@@ -59,6 +65,18 @@ export const liveSessionService = {
       `/live-sessions${query}`,
       { token }
     );
+  },
+
+  async getMySessions(token: string): Promise<{ success: boolean; data: { sessions: LiveSession[] } }> {
+    return apiClient.get("/live-sessions/mine", { token });
+  },
+
+  async getMeetingIdentity(token: string): Promise<{ success: boolean; data: { identity: MeetingIdentity | null } }> {
+    return apiClient.get("/live-sessions/meeting-identity", { token });
+  },
+
+  async setMeetingIdentity(teamsEmail: string, token: string, resend = false): Promise<{ success: boolean; data: { identity: MeetingIdentity } }> {
+    return apiClient.post("/live-sessions/meeting-identity", { teamsEmail, resend }, { token });
   },
 
   // Get session by ID

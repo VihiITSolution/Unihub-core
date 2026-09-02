@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
+import { Modal } from "@/components/ui/Modal";
 import YouTubeRightsDeclarationForm from "@/components/tutor/YouTubeRightsDeclarationForm";
 import { FALLBACK_FACULTIES, type Faculty, type Department } from "@/services/faculty.service";
 import {
@@ -19,12 +20,31 @@ interface CourseMaterial {
   url?: string;
   file?: File;
   videoUrl?: string;
-  duration?: number;
+  duration?: number | null;
   order?: number;
+  isPreview?: boolean;
+  youtubeVideoId?: string | null;
+  youtubeRightsDeclarationId?: number | null;
+  persisted?: boolean;
 }
 
 const isYouTubeUrl = (url: string) =>
-  /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test(url.trim());
+  /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtube-nocookie\.com|youtu\.be)\//i.test(
+    url.trim(),
+  );
+
+const mapContentToMaterial = (content: any): CourseMaterial => ({
+  id: String(content.id),
+  title: content.title,
+  type: content.type,
+  url: content.url,
+  duration: content.duration,
+  order: content.order,
+  isPreview: Boolean(content.isPreview),
+  youtubeVideoId: content.youtubeVideoId ?? null,
+  youtubeRightsDeclarationId: content.youtubeRightsDeclarationId ?? null,
+  persisted: true,
+});
 
 export default function EditCoursePage() {
   const router = useRouter();
@@ -70,6 +90,22 @@ export default function EditCoursePage() {
   const [youtubeDeclarationLoading, setYoutubeDeclarationLoading] = useState(true);
   const [youtubeDeclarationSubmitting, setYoutubeDeclarationSubmitting] = useState(false);
   const [youtubeSignature, setYoutubeSignature] = useState("");
+  const [editingMaterial, setEditingMaterial] = useState<CourseMaterial | null>(null);
+  const [materialToDelete, setMaterialToDelete] = useState<CourseMaterial | null>(null);
+  const [materialActionLoading, setMaterialActionLoading] = useState(false);
+  const [materialFeedback, setMaterialFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [editMaterialForm, setEditMaterialForm] = useState({
+    title: "",
+    duration: "",
+    order: "",
+    isPreview: false,
+    videoUrl: "",
+  });
+  const [editYoutubeRightsConfirmed, setEditYoutubeRightsConfirmed] = useState(false);
+  const [editYoutubeSignature, setEditYoutubeSignature] = useState("");
   const MAX_VIDEO_UPLOAD_MB = Number(
     process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 5000,
   );
@@ -217,14 +253,7 @@ export default function EditCoursePage() {
         const data = await response.json();
         if (data.success && data.data) {
           setMaterials(
-            data.data.contents.map((content: any) => ({
-              id: content.id,
-              title: content.title,
-              type: content.type,
-              url: content.url,
-              duration: content.duration,
-              order: content.order,
-            })),
+            data.data.contents.map(mapContentToMaterial),
           );
         }
       }
@@ -263,30 +292,34 @@ export default function EditCoursePage() {
     setCurrentMaterial((prev) => ({ ...prev, file }));
   };
 
-  const ensureYouTubeRightsDeclaration = async () => {
+  const ensureYouTubeRightsDeclaration = async (
+    confirmed = youtubeRightsConfirmed,
+    signature = youtubeSignature,
+    clearSignature: () => void = () => setYoutubeSignature(""),
+  ) => {
     if (!youtubeDeclarationStatus) {
       alert("The YouTube rights declaration is unavailable. Please refresh and try again.");
       return false;
     }
-    if (!youtubeRightsConfirmed) {
+    if (!confirmed) {
       alert("Please confirm the video ownership and rights declaration.");
       return false;
     }
     if (youtubeDeclarationStatus.hasDeclaration) return true;
-    if (!youtubeSignature.trim()) {
+    if (!signature.trim()) {
       alert(`Type your full account name to sign: ${youtubeDeclarationStatus.expectedSignatoryName}`);
       return false;
     }
 
     setYoutubeDeclarationSubmitting(true);
     try {
-      const declaration = await youtubeRightsService.sign(token!, youtubeSignature);
+      const declaration = await youtubeRightsService.sign(token!, signature);
       setYoutubeDeclarationStatus((current) => current && ({
         ...current,
         hasDeclaration: true,
         declaration,
       }));
-      setYoutubeSignature("");
+      clearSignature();
       return true;
     } catch (declarationError) {
       alert(declarationError instanceof Error ? declarationError.message : "Unable to save the declaration.");
@@ -347,8 +380,186 @@ export default function EditCoursePage() {
     setYoutubeRightsConfirmed(false);
   };
 
-  const handleRemoveMaterial = (id: string) => {
-    setMaterials(materials.filter((m) => m.id !== id));
+  const openMaterialEditor = (material: CourseMaterial) => {
+    setEditingMaterial(material);
+    setEditMaterialForm({
+      title: material.title,
+      duration: material.duration != null ? String(material.duration) : "",
+      order: material.order != null ? String(material.order) : "0",
+      isPreview: Boolean(material.isPreview),
+      videoUrl: material.type === "video" ? material.url || material.videoUrl || "" : "",
+    });
+    setEditYoutubeRightsConfirmed(false);
+    setEditYoutubeSignature("");
+    setMaterialFeedback(null);
+  };
+
+  const closeMaterialEditor = () => {
+    if (materialActionLoading) return;
+    setEditingMaterial(null);
+    setEditYoutubeRightsConfirmed(false);
+    setEditYoutubeSignature("");
+  };
+
+  const handleUpdateMaterial = async () => {
+    if (!editingMaterial || !token) return;
+
+    const title = editMaterialForm.title.trim();
+    const order = Number(editMaterialForm.order);
+    const duration = editMaterialForm.duration.trim()
+      ? Number(editMaterialForm.duration)
+      : null;
+
+    if (!title) {
+      setMaterialFeedback({ type: "error", message: "Material title is required." });
+      return;
+    }
+    if (!Number.isInteger(order) || order < 0) {
+      setMaterialFeedback({
+        type: "error",
+        message: "Display order must be zero or a positive whole number.",
+      });
+      return;
+    }
+    if (duration !== null && (!Number.isInteger(duration) || duration <= 0)) {
+      setMaterialFeedback({
+        type: "error",
+        message: "Duration must be a positive whole number of minutes.",
+      });
+      return;
+    }
+
+    const nextVideoUrl = editMaterialForm.videoUrl.trim();
+    const currentVideoUrl = (editingMaterial.url || editingMaterial.videoUrl || "").trim();
+    const videoUrlChanged =
+      editingMaterial.type === "video" && nextVideoUrl !== currentVideoUrl;
+
+    if (videoUrlChanged) {
+      if (!nextVideoUrl || !isYouTubeUrl(nextVideoUrl)) {
+        setMaterialFeedback({
+          type: "error",
+          message: "Please enter a valid YouTube link before saving.",
+        });
+        return;
+      }
+      if (
+        !(await ensureYouTubeRightsDeclaration(
+          editYoutubeRightsConfirmed,
+          editYoutubeSignature,
+          () => setEditYoutubeSignature(""),
+        ))
+      ) {
+        return;
+      }
+    }
+
+    setMaterialActionLoading(true);
+    setMaterialFeedback(null);
+    try {
+      if (!editingMaterial.persisted) {
+        setMaterials((current) =>
+          current.map((material) =>
+            material.id === editingMaterial.id
+              ? {
+                  ...material,
+                  title,
+                  duration,
+                  order,
+                  isPreview: editMaterialForm.isPreview,
+                  videoUrl: videoUrlChanged ? nextVideoUrl : material.videoUrl,
+                }
+              : material,
+          ),
+        );
+      } else {
+        const response = await fetch(
+          `${API_BASE_URL}/content/${editingMaterial.id}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              title,
+              duration,
+              order,
+              isPreview: editMaterialForm.isPreview,
+              ...(videoUrlChanged
+                ? { url: nextVideoUrl, youtubeRightsConfirmed: true }
+                : {}),
+            }),
+          },
+        );
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(body?.message || "Unable to update the material.");
+        }
+        const updated = mapContentToMaterial(body.data.content);
+        setMaterials((current) =>
+          current.map((material) =>
+            material.id === editingMaterial.id ? updated : material,
+          ),
+        );
+      }
+
+      setEditingMaterial(null);
+      setMaterialFeedback({
+        type: "success",
+        message: `“${title}” was updated successfully.`,
+      });
+    } catch (updateError) {
+      setMaterialFeedback({
+        type: "error",
+        message:
+          updateError instanceof Error
+            ? updateError.message
+            : "Unable to update the material.",
+      });
+    } finally {
+      setMaterialActionLoading(false);
+    }
+  };
+
+  const handleDeleteMaterial = async () => {
+    if (!materialToDelete || !token) return;
+
+    setMaterialActionLoading(true);
+    setMaterialFeedback(null);
+    try {
+      if (materialToDelete.persisted) {
+        const response = await fetch(
+          `${API_BASE_URL}/content/${materialToDelete.id}`,
+          {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(body?.message || "Unable to delete the material.");
+        }
+      }
+
+      setMaterials((current) =>
+        current.filter((material) => material.id !== materialToDelete.id),
+      );
+      setMaterialFeedback({
+        type: "success",
+        message: `“${materialToDelete.title}” was deleted successfully.`,
+      });
+      setMaterialToDelete(null);
+    } catch (deleteError) {
+      setMaterialFeedback({
+        type: "error",
+        message:
+          deleteError instanceof Error
+            ? deleteError.message
+            : "Unable to delete the material.",
+      });
+    } finally {
+      setMaterialActionLoading(false);
+    }
   };
 
   const handleSaveMaterials = async () => {
@@ -373,8 +584,9 @@ export default function EditCoursePage() {
                 title: material.title,
                 type: "video",
                 url: material.videoUrl,
-                order: materials.indexOf(material),
+                order: material.order ?? materials.indexOf(material),
                 duration: material.duration,
+                isPreview: Boolean(material.isPreview),
                 youtubeRightsConfirmed: true,
               }),
             },
@@ -396,8 +608,10 @@ export default function EditCoursePage() {
         materialFormData.append("type", material.type);
         materialFormData.append(
           "order",
-          materials.indexOf(material).toString(),
+          String(material.order ?? materials.indexOf(material)),
         );
+
+        materialFormData.append("isPreview", String(Boolean(material.isPreview)));
 
         if (material.duration) {
           materialFormData.append("duration", material.duration.toString());
@@ -449,6 +663,11 @@ export default function EditCoursePage() {
   const hasUnsavedMaterials = materials.some(
     (material) =>
       (Boolean(material.file) || Boolean(material.videoUrl)) && !material.url,
+  );
+  const editingVideoSourceChanged = Boolean(
+    editingMaterial?.type === "video" &&
+      editMaterialForm.videoUrl.trim() !==
+        (editingMaterial.url || editingMaterial.videoUrl || "").trim(),
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -828,6 +1047,19 @@ export default function EditCoursePage() {
         {/* Course Materials Tab */}
         {activeTab === "materials" && (
           <div className="space-y-6">
+            {materialFeedback && (
+              <div
+                role="status"
+                className={`rounded-lg border px-4 py-3 text-sm font-medium ${
+                  materialFeedback.type === "success"
+                    ? "border-green-200 bg-green-50 text-green-800"
+                    : "border-red-200 bg-red-50 text-red-800"
+                }`}
+              >
+                {materialFeedback.message}
+              </div>
+            )}
+
             {/* Existing Materials */}
             {materials.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
@@ -838,7 +1070,7 @@ export default function EditCoursePage() {
                   {materials.map((material, index) => (
                     <div
                       key={material.id || index}
-                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors"
+                      className="flex flex-col gap-4 p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex items-center gap-4 flex-1">
                         <div className="flex-shrink-0">
@@ -892,6 +1124,14 @@ export default function EditCoursePage() {
                             <span className="text-sm text-gray-500">
                               Order: {material.order}
                             </span>
+                            {material.isPreview && (
+                              <>
+                                <span className="text-gray-300">•</span>
+                                <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                                  Free preview
+                                </span>
+                              </>
+                            )}
                             {material.videoUrl && !material.url && (
                               <>
                                 <span className="text-gray-300">•</span>
@@ -903,26 +1143,52 @@ export default function EditCoursePage() {
                           </div>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveMaterial(material.id!)}
-                        className="ml-4 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remove material"
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      <div className="flex items-center gap-2 self-end sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => openMaterialEditor(material)}
+                          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50"
+                          title="Edit material details"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMaterialFeedback(null);
+                            setMaterialToDelete(material);
+                          }}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete material"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1145,6 +1411,256 @@ export default function EditCoursePage() {
           </div>
         )}
       </form>
+
+      <Modal
+        isOpen={Boolean(editingMaterial)}
+        onClose={closeMaterialEditor}
+        title="Edit Material Details"
+        size="lg"
+      >
+        {editingMaterial && (
+          <div className="space-y-5">
+            {materialFeedback?.type === "error" && (
+              <div
+                role="alert"
+                className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+              >
+                {materialFeedback.message}
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+              <span className="rounded-full bg-gray-100 px-3 py-1 font-semibold capitalize text-gray-700">
+                {editingMaterial.type}
+              </span>
+              <span>
+                Edit the lesson information shown to students.
+              </span>
+            </div>
+
+            <div>
+              <label
+                htmlFor="editMaterialTitle"
+                className="mb-2 block text-sm font-semibold text-gray-700"
+              >
+                Material Title *
+              </label>
+              <input
+                id="editMaterialTitle"
+                type="text"
+                maxLength={255}
+                value={editMaterialForm.title}
+                onChange={(event) =>
+                  setEditMaterialForm((current) => ({
+                    ...current,
+                    title: event.target.value,
+                  }))
+                }
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              {editingMaterial.type === "video" && (
+                <div>
+                  <label
+                    htmlFor="editMaterialDuration"
+                    className="mb-2 block text-sm font-semibold text-gray-700"
+                  >
+                    Duration (minutes)
+                  </label>
+                  <input
+                    id="editMaterialDuration"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={editMaterialForm.duration}
+                    onChange={(event) =>
+                      setEditMaterialForm((current) => ({
+                        ...current,
+                        duration: event.target.value,
+                      }))
+                    }
+                    placeholder="e.g., 15"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label
+                  htmlFor="editMaterialOrder"
+                  className="mb-2 block text-sm font-semibold text-gray-700"
+                >
+                  Display Order *
+                </label>
+                <input
+                  id="editMaterialOrder"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={editMaterialForm.order}
+                  onChange={(event) =>
+                    setEditMaterialForm((current) => ({
+                      ...current,
+                      order: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <input
+                type="checkbox"
+                checked={editMaterialForm.isPreview}
+                onChange={(event) =>
+                  setEditMaterialForm((current) => ({
+                    ...current,
+                    isPreview: event.target.checked,
+                  }))
+                }
+                className="mt-0.5 h-5 w-5 rounded text-blue-600 focus:ring-blue-500"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-gray-800">
+                  Allow free preview
+                </span>
+                <span className="mt-1 block text-sm text-gray-600">
+                  Anyone can open this material without enrolling in the course.
+                </span>
+              </span>
+            </label>
+
+            {editingMaterial.type === "video" ? (
+              <div className="space-y-3">
+                <div>
+                  <label
+                    htmlFor="editMaterialVideoUrl"
+                    className="mb-2 block text-sm font-semibold text-gray-700"
+                  >
+                    YouTube Video URL
+                  </label>
+                  <input
+                    id="editMaterialVideoUrl"
+                    type="url"
+                    value={editMaterialForm.videoUrl}
+                    onChange={(event) => {
+                      setEditMaterialForm((current) => ({
+                        ...current,
+                        videoUrl: event.target.value,
+                      }));
+                      setEditYoutubeRightsConfirmed(false);
+                    }}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="mt-2 text-xs leading-5 text-gray-500">
+                    Change this only to replace the video source. A replacement
+                    must be a valid YouTube video covered by your rights declaration.
+                  </p>
+                </div>
+
+                {editingVideoSourceChanged && (
+                  <YouTubeRightsDeclarationForm
+                    idPrefix="editYoutubeRights"
+                    status={youtubeDeclarationStatus}
+                    isLoading={youtubeDeclarationLoading}
+                    signature={editYoutubeSignature}
+                    confirmed={editYoutubeRightsConfirmed}
+                    onSignatureChange={setEditYoutubeSignature}
+                    onConfirmedChange={setEditYoutubeRightsConfirmed}
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                <p className="font-semibold">PDF file replacement</p>
+                <p className="mt-1 leading-6">
+                  To replace the PDF file, delete this material and add the new
+                  file below. Its title, order, and preview access can be edited here.
+                </p>
+                {editingMaterial.url && (
+                  <a
+                    href={editingMaterial.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-block font-semibold underline"
+                  >
+                    Open current PDF
+                  </a>
+                )}
+              </div>
+            )}
+
+            <div className="flex flex-wrap justify-end gap-3 border-t border-gray-200 pt-5">
+              <button
+                type="button"
+                onClick={closeMaterialEditor}
+                disabled={materialActionLoading}
+                className="rounded-lg border border-gray-300 px-5 py-2.5 font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleUpdateMaterial}
+                disabled={materialActionLoading || youtubeDeclarationSubmitting}
+                className="rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {materialActionLoading || youtubeDeclarationSubmitting
+                  ? "Saving…"
+                  : "Save Material"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(materialToDelete)}
+        onClose={() => {
+          if (!materialActionLoading) setMaterialToDelete(null);
+        }}
+        title="Delete Material?"
+        size="sm"
+      >
+        {materialToDelete && (
+          <div className="space-y-5">
+            {materialFeedback?.type === "error" && (
+              <div
+                role="alert"
+                className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+              >
+                {materialFeedback.message}
+              </div>
+            )}
+            <p className="leading-6 text-gray-700">
+              Delete <strong>“{materialToDelete.title}”</strong> from this course?
+              Students will no longer be able to access it. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setMaterialToDelete(null)}
+                disabled={materialActionLoading}
+                className="rounded-lg border border-gray-300 px-5 py-2.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteMaterial}
+                disabled={materialActionLoading}
+                className="rounded-lg bg-red-600 px-5 py-2.5 font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {materialActionLoading ? "Deleting…" : "Delete Material"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

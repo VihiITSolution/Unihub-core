@@ -327,6 +327,15 @@ export type LiveSessionStatus =
   | "recorded";
 export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
 export type InvitationStatus = "pending" | "accepted" | "declined";
+export type LiveSessionProvider = "youtube" | "teams";
+export type LiveSessionApprovalStatus = "pending" | "approved" | "rejected";
+export type LiveSessionProviderStatus =
+  | "not_provisioned"
+  | "provisioning"
+  | "ready"
+  | "syncing"
+  | "failed"
+  | "cancelled";
 
 export interface LiveSession {
   id: string;
@@ -352,6 +361,11 @@ export interface LiveSession {
   platformCommission: number;
   totalAttendees: number;
   allowRecording: boolean;
+  provider: LiveSessionProvider;
+  approvalStatus: LiveSessionApprovalStatus;
+  providerStatus: LiveSessionProviderStatus;
+  rejectionReason?: string;
+  approvedAt?: string;
   recordingUrl?: string;
   enableChat: boolean;
   privacyStatus: "public" | "unlisted" | "private";
@@ -380,6 +394,15 @@ export interface SessionEnrollment {
   attendanceDuration: number;
   invitedBy?: string;
   invitationStatus?: InvitationStatus;
+  joinLaunchedAt?: string;
+  attended?: boolean;
+  attendanceIntervals?: Array<{
+    joinDateTime: string;
+    leaveDateTime: string;
+    durationInSeconds: number;
+  }>;
+  attendanceSource?: "unihub" | "teams";
+  attendanceSyncStatus?: "pending" | "synced" | "unmatched" | "failed";
   createdAt: string;
   updatedAt: string;
   session?: LiveSession;
@@ -406,6 +429,7 @@ export interface CreateLiveSessionData {
   enableChat?: boolean;
   privacyStatus?: "public" | "unlisted" | "private";
   tags?: string[];
+  teamsEmail: string;
 }
 
 export interface LiveSessionFilters {

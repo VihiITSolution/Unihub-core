@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { liveSessionService } from "@/services/live-session.service";
+import { liveSessionService, MeetingIdentity } from "@/services/live-session.service";
 import type { SessionEnrollment } from "@/types";
 import { TOKEN_KEY } from "@/lib/constants";
 
@@ -13,6 +13,7 @@ export default function MySessionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "upcoming">("all");
+  const [identity, setIdentity] = useState<MeetingIdentity | null>(null);
 
   useEffect(() => {
     loadEnrollments();
@@ -27,8 +28,15 @@ export default function MySessionsPage() {
       }
 
       const filters = filter === "upcoming" ? { upcoming: true } : undefined;
-      const response = await liveSessionService.getMyEnrollments(filters, token);
-      setEnrollments(response.data || []);
+      const [response, identityResponse] = await Promise.all([
+        liveSessionService.getMyEnrollments(filters, token),
+        liveSessionService.getMeetingIdentity(token),
+      ]);
+      const enrollmentData = Array.isArray(response.data)
+        ? response.data
+        : (response.data as any)?.enrollments || [];
+      setEnrollments(enrollmentData);
+      setIdentity(identityResponse.data.identity);
     } catch (err: any) {
       setError(err.message || "Failed to load enrollments");
     } finally {
@@ -46,9 +54,9 @@ export default function MySessionsPage() {
     });
   };
 
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+  const formatDuration = (minutesTotal: number) => {
+    const hours = Math.floor(minutesTotal / 60);
+    const minutes = minutesTotal % 60;
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   };
 
@@ -75,6 +83,14 @@ export default function MySessionsPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
           {error}
+        </div>
+      )}
+      {identity && (
+        <div className={`mb-6 rounded-lg border p-4 ${identity.invitationStatus === "accepted" ? "border-green-200 bg-green-50 text-green-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
+          Microsoft Teams identity: <strong>{identity.email}</strong> · {identity.invitationStatus}
+          {identity.invitationRedeemUrl && identity.invitationStatus !== "accepted" && (
+            <a href={identity.invitationRedeemUrl} target="_blank" rel="noreferrer" className="ml-3 underline">Accept Microsoft invitation</a>
+          )}
         </div>
       )}
 
@@ -130,7 +146,7 @@ export default function MySessionsPage() {
                       )}
                     </div>
 
-                    {enrollment.joinedAt && (
+                    {(enrollment.attended || enrollment.joinedAt) && (
                       <div className="text-sm text-gray-600">
                         <span>⏱️ Attended: {formatDuration(enrollment.attendanceDuration)}</span>
                       </div>

@@ -8,361 +8,93 @@ import { Loading } from "@/components/ui";
 import type { CreateLiveSessionData } from "@/types";
 import { TOKEN_KEY } from "@/lib/constants";
 
+const colomboToUtc = (value: string) =>
+  new Date(`${value.length === 16 ? value + ":00" : value}+05:30`).toISOString();
+
 export default function CreateLiveSessionPage() {
   const router = useRouter();
-  const { isChecking } = useRoleCheck({
-    requiredRole: "tutor",
-    requireApproval: true,
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  const { isChecking } = useRoleCheck({ requiredRole: "tutor", requireApproval: true });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [streamInfo, setStreamInfo] = useState<{
-    streamUrl: string;
-    streamKey: string;
-    watchUrl: string;
-  } | null>(null);
-
-  const [formData, setFormData] = useState<CreateLiveSessionData>({
-    title: "",
-    description: "",
-    scheduledStartTime: "",
-    scheduledEndTime: "",
-    isFree: true,
-    price: 0,
-    maxAttendees: undefined,
-    allowRecording: true,
-    enableChat: true,
-    privacyStatus: "unlisted",
-    tags: [],
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState<CreateLiveSessionData>({
+    title: "", description: "", scheduledStartTime: "", scheduledEndTime: "",
+    isFree: true, price: 0, maxAttendees: undefined, allowRecording: true,
+    tags: [], teamsEmail: "",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+  const change = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = event.target;
+    const next = type === "checkbox" ? (event.target as HTMLInputElement).checked
+      : name === "maxAttendees" ? (value ? Number(value) : undefined)
+      : name === "tags" ? value.split(",").map((tag) => tag.trim()).filter(Boolean)
+      : value;
+    setForm((current) => ({ ...current, [name]: next }));
+  };
 
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
     try {
       const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) {
-        throw new Error("Please log in to create a live session");
-      }
-
-      const response = await liveSessionService.createSession(formData, token);
-
-      setStreamInfo({
-        streamUrl: response.data.streaming.streamUrl,
-        streamKey: response.data.streaming.streamKey,
-        watchUrl: response.data.streaming.watchUrl,
-      });
-
-      // Optionally redirect after a delay to show stream info
-      setTimeout(() => {
-        router.push("/tutor/live-sessions");
-      }, 5000);
+      if (!token) throw new Error("Please log in to request a session");
+      await liveSessionService.createSession({
+        ...form,
+        scheduledStartTime: colomboToUtc(form.scheduledStartTime),
+        scheduledEndTime: colomboToUtc(form.scheduledEndTime),
+        isFree: true,
+        price: 0,
+      }, token);
+      setSubmitted(true);
     } catch (err: any) {
-      setError(err.message || "Failed to create live session");
+      setError(err.message || "Failed to submit live-session request");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-    const { name, value, type } = e.target;
-
-    if (type === "checkbox") {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData((prev) => ({ ...prev, [name]: checked }));
-    } else if (name === "tags") {
-      setFormData((prev) => ({
-        ...prev,
-        tags: value.split(",").map((t) => t.trim()),
-      }));
-    } else if (name === "price" || name === "maxAttendees") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value ? Number(value) : undefined,
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  if (streamInfo) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold text-green-800 mb-4">
-            ✅ Live Session Created Successfully!
-          </h2>
-
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-2">
-                Stream Settings for OBS/Streamlabs:
-              </h3>
-              <div className="bg-white p-4 rounded border">
-                <p className="text-sm text-gray-600 mb-2">Stream URL:</p>
-                <code className="block bg-gray-100 p-2 rounded text-sm break-all">
-                  {streamInfo.streamUrl}
-                </code>
-              </div>
-              <div className="bg-white p-4 rounded border mt-2">
-                <p className="text-sm text-gray-600 mb-2">Stream Key:</p>
-                <code className="block bg-gray-100 p-2 rounded text-sm break-all">
-                  {streamInfo.streamKey}
-                </code>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-2">Watch URL:</h3>
-              <a
-                href={streamInfo.watchUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline break-all"
-              >
-                {streamInfo.watchUrl}
-              </a>
-            </div>
-
-            <div className="bg-blue-50 p-4 rounded border border-blue-200">
-              <h4 className="font-semibold text-blue-800 mb-2">Next Steps:</h4>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-900">
-                <li>
-                  Configure your streaming software (OBS/Streamlabs) with the
-                  above settings
-                </li>
-                <li>Start streaming in your software</li>
-                <li>
-                  Click "Start Session" in the dashboard when ready to go live
-                </li>
-                <li>Students can join and watch your live stream</li>
-              </ol>
-            </div>
-          </div>
-
-          <button
-            onClick={() => router.push("/tutor/live-sessions")}
-            className="mt-6 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-          >
-            Go to Live Sessions Dashboard
-          </button>
-        </div>
+  if (isChecking) return <div className="min-h-[50vh] flex items-center justify-center"><Loading /></div>;
+  if (submitted) return (
+    <div className="max-w-2xl mx-auto p-6">
+      <div className="rounded-xl border border-green-200 bg-green-50 p-8">
+        <h1 className="text-2xl font-bold text-green-900">Request submitted</h1>
+        <p className="mt-3 text-green-800">An administrator will approve the schedule after your Microsoft invitation is accepted. You no longer need OBS or a stream key.</p>
+        <button onClick={() => router.push("/tutor/live-sessions")} className="mt-6 rounded-lg bg-green-700 px-5 py-2.5 text-white">View my sessions</button>
       </div>
-    );
-  }
-
-  if (isChecking) {
-    return (
-      <div className="max-w-4xl mx-auto p-6 flex items-center justify-center min-h-screen">
-        <Loading />
-      </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Schedule Live Session</h1>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-          {error}
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-3xl font-bold">Request a Teams live session</h1>
+      <p className="mt-2 text-gray-600">Times are entered in Asia/Colombo. All sessions are free during this rollout.</p>
+      {error && <div className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
+      <form onSubmit={submit} className="mt-6 space-y-5 rounded-xl bg-white p-6 shadow">
+        <label className="block">
+          <span className="text-sm font-medium">Session title</span>
+          <input name="title" required value={form.title} onChange={change} className="mt-1 w-full rounded-lg border px-3 py-2" />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium">Description</span>
+          <textarea name="description" rows={4} value={form.description} onChange={change} className="mt-1 w-full rounded-lg border px-3 py-2" />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium">Your Microsoft Teams email</span>
+          <input name="teamsEmail" type="email" required value={form.teamsEmail} onChange={change} className="mt-1 w-full rounded-lg border px-3 py-2" />
+          <span className="mt-1 block text-xs text-gray-500">We will invite this account into UniHub&apos;s Microsoft tenant. Accept that invitation before admin approval.</span>
+        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label><span className="text-sm font-medium">Starts (Colombo)</span><input name="scheduledStartTime" type="datetime-local" required value={form.scheduledStartTime} onChange={change} className="mt-1 w-full rounded-lg border px-3 py-2" /></label>
+          <label><span className="text-sm font-medium">Ends (Colombo)</span><input name="scheduledEndTime" type="datetime-local" required value={form.scheduledEndTime} onChange={change} className="mt-1 w-full rounded-lg border px-3 py-2" /></label>
         </div>
-      )}
-
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 bg-white p-6 rounded-lg shadow"
-      >
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Session Title *
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Introduction to React Hooks"
-          />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label><span className="text-sm font-medium">Maximum attendees</span><input name="maxAttendees" type="number" min={1} value={form.maxAttendees || ""} onChange={change} className="mt-1 w-full rounded-lg border px-3 py-2" placeholder="No limit" /></label>
+          <label><span className="text-sm font-medium">Tags</span><input name="tags" value={form.tags?.join(", ") || ""} onChange={change} className="mt-1 w-full rounded-lg border px-3 py-2" placeholder="math, revision" /></label>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Detailed description of what will be covered..."
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Start Time *
-            </label>
-            <input
-              type="datetime-local"
-              name="scheduledStartTime"
-              value={formData.scheduledStartTime}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              End Time *
-            </label>
-            <input
-              type="datetime-local"
-              name="scheduledEndTime"
-              value={formData.scheduledEndTime}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="isFree"
-                checked={formData.isFree}
-                onChange={handleChange}
-                className="w-4 h-4 text-blue-600"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Free Session
-              </span>
-            </label>
-          </div>
-
-          {!formData.isFree && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price (LKR)
-              </label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price || ""}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Max Attendees (Optional)
-            </label>
-            <input
-              type="number"
-              name="maxAttendees"
-              value={formData.maxAttendees || ""}
-              onChange={handleChange}
-              min="1"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Unlimited"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Privacy Status
-            </label>
-            <select
-              name="privacyStatus"
-              value={formData.privacyStatus}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="unlisted">Unlisted (default)</option>
-              <option value="private">Private</option>
-              <option value="public">Public</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tags (comma separated)
-          </label>
-          <input
-            type="text"
-            name="tags"
-            value={formData.tags?.join(", ") || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="react, javascript, web-development"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="allowRecording"
-              checked={formData.allowRecording}
-              onChange={handleChange}
-              className="w-4 h-4 text-blue-600"
-            />
-            <span className="text-sm font-medium text-gray-700">
-              Allow Recording
-            </span>
-          </label>
-
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="enableChat"
-              checked={formData.enableChat}
-              onChange={handleChange}
-              className="w-4 h-4 text-blue-600"
-            />
-            <span className="text-sm font-medium text-gray-700">
-              Enable Live Chat
-            </span>
-          </label>
-        </div>
-
-        <div className="flex flex-wrap gap-4">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex-1 bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
-          >
-            {isLoading ? "Creating..." : "Create Live Session"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-6 py-3 border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-        </div>
+        <label className="flex items-center gap-2"><input name="allowRecording" type="checkbox" checked={form.allowRecording} onChange={change} /><span className="text-sm">Automatically record this session</span></label>
+        <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-900">Microsoft sign-in is required for tutors and students. The organizer account is shared, so approved sessions must have a 15-minute buffer.</div>
+        <button disabled={loading} className="rounded-lg bg-blue-600 px-6 py-2.5 font-medium text-white disabled:opacity-50">{loading ? "Submitting..." : "Submit for approval"}</button>
       </form>
     </div>
   );

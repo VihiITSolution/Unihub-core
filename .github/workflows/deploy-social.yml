@@ -8,6 +8,10 @@ on:
       - "Unihub-social/**"
       - ".github/workflows/deploy-social.yml"
 
+concurrency:
+  group: unihub-production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Build and Deploy Social Service
@@ -42,6 +46,14 @@ jobs:
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
+            set -euo pipefail
+
+            sudo -n systemctl is-active --quiet nginx
+            if [ "$(docker inspect --format='{{.State.Running}}' unihub-nginx 2>/dev/null || echo false)" = "true" ]; then
+              echo "Deployment aborted: host Nginx and the legacy Docker Nginx cannot run together"
+              exit 1
+            fi
+
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
             # Shared with Unihub-backend so both containers see the same
@@ -72,5 +84,43 @@ jobs:
               -e ALLOWED_FRONTEND_ORIGINS=${{ secrets.ALLOWED_FRONTEND_ORIGINS }} \
               -e DO_HOST=${{ secrets.DO_HOST }} \
               ${{ secrets.DOCKER_USERNAME }}/unihub-social:latest
+
+            for attempt in $(seq 1 40); do
+              if [ "$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' unihub-social)" = "healthy" ]; then
+                break
+              fi
+              if [ "${attempt}" -eq 40 ]; then
+                echo "Social container did not become healthy"
+                docker logs --tail 150 unihub-social
+                exit 1
+              fi
+              sleep 2
+            done
+
+            test -x /usr/local/bin/update-docker-hosts.sh
+            sudo -n /usr/local/bin/update-docker-hosts.sh
+            sudo -n nginx -t
+            sudo -n systemctl reload nginx
+
+            if ! curl --fail --silent --show-error --max-time 15 http://127.0.0.1:5001/health >/dev/null; then
+              echo "Social service host-port health check failed"
+              docker logs --tail 150 unihub-social
+              exit 1
+            fi
+
+            for attempt in $(seq 1 15); do
+              if curl --fail --silent --show-error --max-time 15 --insecure \
+                --resolve unihub.lk:443:127.0.0.1 https://unihub.lk/ >/dev/null; then
+                break
+              fi
+              if [ "${attempt}" -eq 15 ]; then
+                echo "Origin smoke test failed after Social deployment"
+                sudo -n tail -n 100 /var/log/nginx/error.log || true
+                exit 1
+              fi
+              sleep 2
+            done
+
+            docker ps --filter name=unihub-social --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
 
             docker image prune -a -f

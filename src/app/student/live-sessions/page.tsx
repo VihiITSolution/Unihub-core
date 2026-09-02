@@ -12,7 +12,7 @@ export default function StudentLiveSessionsPage() {
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "free" | "paid" | "upcoming">(
+  const [filter, setFilter] = useState<"all" | "free" | "upcoming">(
     "all",
   );
 
@@ -29,8 +29,6 @@ export default function StudentLiveSessionsPage() {
         filters.upcoming = true;
       } else if (filter === "free") {
         filters.isFree = true;
-      } else if (filter === "paid") {
-        filters.isFree = false;
       }
 
       const response = await liveSessionService.getSessions(
@@ -56,8 +54,11 @@ export default function StudentLiveSessionsPage() {
         return;
       }
 
-      await liveSessionService.enrollInSession(sessionId, {}, token);
-      alert("Successfully enrolled in the session!");
+      const response = await liveSessionService.enrollInSession(sessionId, {}, token);
+      const identity = (response.data as any)?.identity;
+      alert(identity?.invitationStatus === "accepted"
+        ? "Successfully enrolled in the session!"
+        : "Enrolled. Check your email and accept the Microsoft invitation before joining.");
       loadSessions();
     } catch (err: any) {
       alert(err.message || "Failed to enroll in session");
@@ -120,7 +121,7 @@ export default function StudentLiveSessionsPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-6">
-        {["all", "upcoming", "free", "paid"].map((f) => (
+        {["all", "upcoming", "free"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f as any)}
