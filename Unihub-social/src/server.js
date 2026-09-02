@@ -9,6 +9,27 @@ const HOST = process.env.HOST || "0.0.0.0";
 
 const startServer = async () => {
   try {
+    if (process.env.NODE_ENV === "production") {
+      const requiredVariables = [
+        "DB_HOST",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "JWT_SECRET",
+      ];
+      const missingVariables = requiredVariables.filter(
+        (name) => !process.env[name],
+      );
+
+      if (missingVariables.length > 0) {
+        throw new Error(
+          `Missing required production environment variables: ${missingVariables.join(
+            ", ",
+          )}`,
+        );
+      }
+    }
+
     await sequelize.authenticate();
     console.log("✓ Database connection has been established successfully.");
 

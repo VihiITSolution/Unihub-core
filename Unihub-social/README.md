@@ -44,6 +44,12 @@ With the standard layout (`Unihub-backend`, `Unihub-core` as siblings, this serv
 
 `Unihub-backend` and `Unihub-social` run as separate containers, so a shared **named Docker volume** is required for the local-disk hand-off to work:
 
+The production deployment expects a running `unihub-backend` container on the
+same host and Docker network. The Social workflow copies `DB_HOST`, `DB_PORT`,
+`DB_USER`, `DB_PASSWORD`, `DB_NAME`, and `JWT_SECRET` from that container after
+validating the required values. This keeps the shared credentials synchronized
+without duplicating them as secrets in the Core repository.
+
 ```bash
 docker volume create unihub-uploads
 

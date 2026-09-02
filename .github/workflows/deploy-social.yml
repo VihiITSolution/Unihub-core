@@ -60,6 +60,30 @@ jobs:
             # uploaded files (avatars/post images).
             docker volume create unihub-uploads || true
 
+            # Social uses the backend database and must validate tokens with the
+            # same JWT secret. Read those shared values from the running backend
+            # container instead of duplicating repository-scoped GitHub secrets.
+            if [ "$(docker inspect --format='{{.State.Running}}' unihub-backend 2>/dev/null || echo false)" != "true" ]; then
+              echo "Deployment aborted: unihub-backend must be running before Social is deployed"
+              exit 1
+            fi
+            BACKEND_ENV_FILE=$(mktemp)
+            SOCIAL_SHARED_ENV_FILE=$(mktemp)
+            trap 'rm -f "${BACKEND_ENV_FILE}" "${SOCIAL_SHARED_ENV_FILE}"' EXIT
+
+            docker inspect --format='{{range .Config.Env}}{{println .}}{{end}}' unihub-backend > "${BACKEND_ENV_FILE}"
+            grep -E '^(DB_HOST|DB_PORT|DB_USER|DB_PASSWORD|DB_NAME|JWT_SECRET)=' "${BACKEND_ENV_FILE}" > "${SOCIAL_SHARED_ENV_FILE}" || true
+
+            for required_variable in DB_HOST DB_USER DB_PASSWORD DB_NAME JWT_SECRET; do
+              if ! grep -q "^${required_variable}=." "${SOCIAL_SHARED_ENV_FILE}"; then
+                echo "Deployment aborted: unihub-backend does not expose ${required_variable}"
+                exit 1
+              fi
+            done
+
+            BACKEND_CORS_ORIGIN=$(sed -n 's/^CORS_ORIGIN=//p' "${BACKEND_ENV_FILE}" | head -n 1)
+            SOCIAL_ALLOWED_ORIGINS="${BACKEND_CORS_ORIGIN:-https://unihub.lk}"
+
             docker stop unihub-social || true
             docker rm unihub-social || true
 
@@ -71,17 +95,13 @@ jobs:
               --restart unless-stopped \
               -p 5001:5001 \
               -v unihub-uploads:/app/uploads \
+              --env-file "${SOCIAL_SHARED_ENV_FILE}" \
               -e NODE_ENV=production \
               -e HOST=0.0.0.0 \
               -e PORT=5001 \
               -e UPLOADS_DIR=/app/uploads \
-              -e UPLOADS_PUBLIC_BASE_URL=${{ secrets.UPLOADS_PUBLIC_BASE_URL }} \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e ALLOWED_FRONTEND_ORIGINS=${{ secrets.ALLOWED_FRONTEND_ORIGINS }} \
+              -e UPLOADS_PUBLIC_BASE_URL=https://unihub.lk \
+              -e ALLOWED_FRONTEND_ORIGINS="${SOCIAL_ALLOWED_ORIGINS}" \
               -e DO_HOST=${{ secrets.DO_HOST }} \
               ${{ secrets.DOCKER_USERNAME }}/unihub-social:latest
 
