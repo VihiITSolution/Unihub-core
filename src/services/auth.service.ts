@@ -32,12 +32,19 @@ export interface RegisterData {
   roles: ("student" | "tutor" | "vendor" | "admin")[];
   primaryRole?: "student" | "tutor" | "vendor" | "admin";
   phoneNumber?: string;
+  studentEmail?: string;
   studentProfile?: StudentProfileData;
 }
 
 export interface AuthResponse {
   user: User;
   token: string;
+}
+
+export interface VerificationChallengeResponse {
+  challengeId: string;
+  expiresAt: string;
+  resendAvailableAt: string;
 }
 
 export const authService = {
@@ -50,8 +57,32 @@ export const authService = {
     );
   },
 
-  async register(data: RegisterData): Promise<ApiResponse<AuthResponse>> {
-    return apiClient.post<ApiResponse<AuthResponse>>("/auth/register", data);
+  async startRegistrationPhoneVerification(data: RegisterData): Promise<ApiResponse<VerificationChallengeResponse>> {
+    return apiClient.post<ApiResponse<VerificationChallengeResponse>>("/auth/registration/phone/start", data);
+  },
+
+  async resendRegistrationPhoneVerification(challengeId: string): Promise<ApiResponse<VerificationChallengeResponse>> {
+    return apiClient.post<ApiResponse<VerificationChallengeResponse>>("/auth/registration/phone/resend", { challengeId });
+  },
+
+  async verifyRegistrationPhone(challengeId: string, code: string): Promise<ApiResponse<AuthResponse>> {
+    return apiClient.post<ApiResponse<AuthResponse>>("/auth/registration/phone/verify", { challengeId, code });
+  },
+
+  async startPhoneChange(token: string, phoneNumber: string): Promise<ApiResponse<VerificationChallengeResponse>> {
+    return apiClient.post<ApiResponse<VerificationChallengeResponse>>("/auth/phone/start", { phoneNumber }, { token });
+  },
+
+  async verifyPhoneChange(token: string, challengeId: string, code: string): Promise<ApiResponse<{ user: User }>> {
+    return apiClient.post<ApiResponse<{ user: User }>>("/auth/phone/verify", { challengeId, code }, { token });
+  },
+
+  async startStudentEmailVerification(token: string, studentEmail: string): Promise<ApiResponse<VerificationChallengeResponse>> {
+    return apiClient.post<ApiResponse<VerificationChallengeResponse>>("/auth/student-email/start", { studentEmail }, { token });
+  },
+
+  async verifyStudentEmail(token: string, challengeId: string, code: string): Promise<ApiResponse<{ user: User }>> {
+    return apiClient.post<ApiResponse<{ user: User }>>("/auth/student-email/verify", { challengeId, code }, { token });
   },
 
   async forgotPassword(

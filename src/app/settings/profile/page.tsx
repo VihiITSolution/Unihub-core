@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/services/auth.service";
 import { socialProfileService } from "@/services/social.service";
-import { isValidPhone, isNameLike } from "@/lib/validation";
+import { isValidPhone, isSriLankanMobile, isNameLike } from "@/lib/validation";
 import { Avatar } from "@/components/ui";
 
 const BIO_MAX = 500;
@@ -27,6 +27,14 @@ export default function ProfileSettings() {
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [photoMsg, setPhotoMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [phoneChallengeId, setPhoneChallengeId] = useState<string | null>(null);
+  const [phoneCode, setPhoneCode] = useState("");
+  const [phoneToVerify, setPhoneToVerify] = useState("");
+  const [phoneVerificationMsg, setPhoneVerificationMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [studentEmail, setStudentEmail] = useState("");
+  const [studentEmailChallengeId, setStudentEmailChallengeId] = useState<string | null>(null);
+  const [studentEmailCode, setStudentEmailCode] = useState("");
+  const [studentEmailMsg, setStudentEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -36,6 +44,8 @@ export default function ProfileSettings() {
         phoneNumber: user.phoneNumber || "",
         bio: user.bio || "",
       });
+      setPhoneToVerify(user.phoneNumber || "");
+      setStudentEmail(user.studentProfile?.studentEmail || "");
     }
   }, [user]);
 
@@ -92,6 +102,37 @@ export default function ProfileSettings() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const startPhoneVerification = async () => {
+    if (!token) return;
+    if (!isSriLankanMobile(phoneToVerify)) { setPhoneVerificationMsg({ type: "error", text: "Enter a valid Sri Lankan mobile number" }); return; }
+    setPhoneVerificationMsg(null);
+    const res = await authService.startPhoneChange(token, phoneToVerify);
+    if (res.success && res.data) { setPhoneChallengeId(res.data.challengeId); setPhoneVerificationMsg({ type: "success", text: "Code sent to your mobile." }); }
+    else setPhoneVerificationMsg({ type: "error", text: res.message || "Unable to send a code" });
+  };
+
+  const verifyPhone = async () => {
+    if (!token || !phoneChallengeId) return;
+    const res = await authService.verifyPhoneChange(token, phoneChallengeId, phoneCode);
+    if (res.success && res.data?.user) { updateUser(res.data.user); setForm((p) => ({ ...p, phoneNumber: res.data!.user.phoneNumber || "" })); setPhoneChallengeId(null); setPhoneCode(""); setPhoneVerificationMsg({ type: "success", text: "Mobile number verified." }); }
+    else setPhoneVerificationMsg({ type: "error", text: res.message || "Invalid or expired code" });
+  };
+
+  const startStudentEmailVerification = async () => {
+    if (!token) return;
+    setStudentEmailMsg(null);
+    const res = await authService.startStudentEmailVerification(token, studentEmail);
+    if (res.success && res.data) { setStudentEmailChallengeId(res.data.challengeId); setStudentEmailMsg({ type: "success", text: "Code sent to your student email." }); }
+    else setStudentEmailMsg({ type: "error", text: res.message || "Unable to send a code" });
+  };
+
+  const verifyStudentEmail = async () => {
+    if (!token || !studentEmailChallengeId) return;
+    const res = await authService.verifyStudentEmail(token, studentEmailChallengeId, studentEmailCode);
+    if (res.success && res.data?.user) { updateUser(res.data.user); setStudentEmailChallengeId(null); setStudentEmailCode(""); setStudentEmailMsg({ type: "success", text: "Student email confirmed." }); }
+    else setStudentEmailMsg({ type: "error", text: res.message || "Invalid or expired code" });
   };
 
   const avatar = preview || user?.profileImage;
@@ -152,7 +193,8 @@ export default function ProfileSettings() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-            <input type="tel" value={form.phoneNumber} onChange={e => setForm(p => ({ ...p, phoneNumber: e.target.value }))} placeholder="+94 77 123 4567" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            <input type="tel" value={form.phoneNumber} readOnly className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500" />
+            <p className="text-xs text-gray-400 mt-1">Change or verify your mobile number below.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
@@ -166,6 +208,34 @@ export default function ProfileSettings() {
           </div>
         </form>
       </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">Mobile verification</h2>
+        <p className="text-sm text-gray-500 mb-4">{user?.phoneVerifiedAt ? "Your mobile number is verified." : "Verify your mobile number to secure your account."}</p>
+        {phoneVerificationMsg && <Alert {...phoneVerificationMsg} />}
+        <div className="flex flex-col gap-3 max-w-md">
+          <input type="tel" value={phoneToVerify} onChange={e => setPhoneToVerify(e.target.value)} placeholder="+94 77 123 4567" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
+          {phoneChallengeId ? <>
+            <input inputMode="numeric" maxLength={6} value={phoneCode} onChange={e => setPhoneCode(e.target.value.replace(/\D/g, ""))} placeholder="Six-digit code" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
+            <button type="button" onClick={verifyPhone} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Verify mobile</button>
+          </> : <button type="button" onClick={startPhoneVerification} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Send verification code</button>}
+        </div>
+      </div>
+
+      {user?.studentProfile && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Student email confirmation</h2>
+          <p className="text-sm text-gray-500 mb-4">{user.studentProfile.studentEmailVerifiedAt ? "Student email confirmed." : "Confirm control of a student or university email. This is not proof of enrolment."}</p>
+          {studentEmailMsg && <Alert {...studentEmailMsg} />}
+          <div className="flex flex-col gap-3 max-w-md">
+            <input type="email" value={studentEmail} onChange={e => setStudentEmail(e.target.value)} placeholder="name@university.edu" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
+            {studentEmailChallengeId ? <>
+              <input inputMode="numeric" maxLength={6} value={studentEmailCode} onChange={e => setStudentEmailCode(e.target.value.replace(/\D/g, ""))} placeholder="Six-digit code" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
+              <button type="button" onClick={verifyStudentEmail} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Confirm email</button>
+            </> : <button type="button" onClick={startStudentEmailVerification} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Send email code</button>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

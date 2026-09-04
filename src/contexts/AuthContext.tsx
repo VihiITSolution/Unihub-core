@@ -16,6 +16,7 @@ interface AuthContextType {
   register: (
     data: RegisterData,
   ) => Promise<{ success: boolean; error?: string }>;
+  completeRegistration: (auth: AuthResponse) => void;
   logout: () => void;
   hasRole: (role: UserRole) => boolean;
   refreshUser: () => Promise<void>;
@@ -114,35 +115,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (data: RegisterData) => {
-    try {
-      setIsLoading(true);
-      const response = await authService.register(data);
+  // Kept temporarily for callers outside the registration page. New accounts
+  // must be created by the mobile-verification flow, never by a direct call.
+  const register = useCallback(async (_data: RegisterData) => (
+    { success: false, error: "Verify your mobile number to complete registration." }
+  ), []);
 
-      if (response.success && response.data) {
-        const { user, token } = response.data;
-
-        // Update state and storage atomically
-        setToken(token);
-        setUser(user);
-        localStorage.setItem(TOKEN_KEY, token);
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-
-        setIsLoading(false);
-        return { success: true };
-      }
-
-      setIsLoading(false);
-      return {
-        success: false,
-        error: response.message || "Registration failed",
-      };
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      setIsLoading(false);
-      const errorMessage = error?.message || "An unexpected error occurred";
-      return { success: false, error: errorMessage };
-    }
+  const completeRegistration = useCallback((auth: AuthResponse) => {
+    setToken(auth.token);
+    setUser(auth.user);
+    localStorage.setItem(TOKEN_KEY, auth.token);
+    localStorage.setItem(USER_KEY, JSON.stringify(auth.user));
   }, []);
 
   const logout = useCallback(() => {
@@ -219,6 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     login,
     register,
+    completeRegistration,
     logout,
     hasRole,
     refreshUser,

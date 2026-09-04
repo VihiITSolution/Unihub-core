@@ -4,6 +4,10 @@ export function isValidPhone(value: string): boolean {
   return PHONE_REGEX.test(value.trim());
 }
 
+export function isSriLankanMobile(value: string): boolean {
+  return /^(?:\+94|94|0)7\d{8}$/.test(value.trim().replace(/[\s\-()]/g, ""));
+}
+
 /** Rejects numeric-only input (e.g. "11111") - requires at least one letter. */
 export function hasLetters(value: string): boolean {
   return /[a-zA-Z]/.test(value);

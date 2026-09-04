@@ -13,6 +13,8 @@ export interface StudentProfile {
   studentIdNumber?: string;
   currentAddress?: string;
   phoneNumber?: string;
+  studentEmail?: string;
+  studentEmailVerifiedAt?: string;
   dateOfBirth?: string;
   isProfileComplete: boolean;
 }
@@ -41,6 +43,8 @@ export interface User {
   roles: UserRole[];
   primaryRole: UserRole;
   phoneNumber?: string;
+  verifiedPhoneNumber?: string;
+  phoneVerifiedAt?: string;
   bio?: string;
   profileImage?: string;
   isVerified: boolean;

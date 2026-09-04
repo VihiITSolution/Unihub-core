@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useDashboardPath } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
-import { isValidPhone, hasLetters } from "@/lib/validation";
+import { isSriLankanMobile, hasLetters } from "@/lib/validation";
 import { FALLBACK_FACULTIES } from "@/services/faculty.service";
+import { authService } from "@/services/auth.service";
 
 const UNIVERSITIES = [
   "University of Colombo",
@@ -38,6 +39,7 @@ interface FormData {
   password: string;
   confirmPassword: string;
   phoneNumber: string;
+  studentEmail: string;
   accountType: "student" | "vendor";
   universityName: string;
   department: string;
@@ -54,6 +56,7 @@ const initialFormData: FormData = {
   password: "",
   confirmPassword: "",
   phoneNumber: "",
+  studentEmail: "",
   accountType: "student",
   universityName: "",
   department: "",
@@ -86,7 +89,7 @@ function Field({ label, optional, children }: { label: string; optional?: boolea
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register } = useAuth();
+  const { completeRegistration } = useAuth();
   const dashboardPath = useDashboardPath();
 
   const [step, setStep] = useState(1);
@@ -102,12 +105,14 @@ export default function RegisterPage() {
   const [customUniversity, setCustomUniversity] = useState("");
   const [customFaculty, setCustomFaculty] = useState("");
   const [customDepartment, setCustomDepartment] = useState("");
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [verificationCode, setVerificationCode] = useState("");
 
   // Departments for the selected faculty
   const activeFaculty = FALLBACK_FACULTIES.find((f) => String(f.id) === selectedFacultyId);
   const deptOptions = activeFaculty?.departments?.filter((d) => d.isActive) ?? [];
 
-  const totalSteps = 3;
+  const totalSteps = 4;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
@@ -130,8 +135,8 @@ export default function RegisterPage() {
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match"); return false;
     }
-    if (formData.phoneNumber.trim() && !isValidPhone(formData.phoneNumber)) {
-      setError("Please enter a valid phone number"); return false;
+    if (!isSriLankanMobile(formData.phoneNumber)) {
+      setError("Enter a valid Sri Lankan mobile number"); return false;
     }
     return true;
   };
@@ -171,7 +176,7 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      const result = await register({
+      const result = await authService.startRegistrationPhoneVerification({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -179,6 +184,7 @@ export default function RegisterPage() {
         roles: ["student"] as UserRole[],
         primaryRole: "student" as UserRole,
         phoneNumber: formData.phoneNumber || undefined,
+        studentEmail: formData.accountType === "student" ? formData.studentEmail || undefined : undefined,
         studentProfile:
           formData.accountType === "student"
             ? {
@@ -208,17 +214,11 @@ export default function RegisterPage() {
             : undefined,
       });
 
-      if (result.success) {
-        if (formData.accountType === "vendor") {
-          router.push("/student/become-vendor");
-        } else {
-          const redirectPath =
-            sessionStorage.getItem("redirectAfterLogin") || dashboardPath;
-          sessionStorage.removeItem("redirectAfterLogin");
-          router.push(redirectPath);
-        }
+      if (result.success && result.data) {
+        setChallengeId(result.data.challengeId);
+        setStep(4);
       } else {
-        setError(result.error || "Registration failed. Please try again.");
+        setError(result.message || "Registration failed. Please try again.");
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");
@@ -227,7 +227,52 @@ export default function RegisterPage() {
     }
   };
 
-  const stepLabels = ["Account", "Type", "Confirm"];
+  const handleVerifyPhone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!challengeId || !/^\d{6}$/.test(verificationCode)) {
+      setError("Enter the six-digit code sent to your mobile number");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await authService.verifyRegistrationPhone(challengeId, verificationCode);
+      if (!result.success || !result.data) {
+        setError(result.message || "The verification code is invalid or expired.");
+        return;
+      }
+      completeRegistration(result.data);
+      if (formData.accountType === "vendor") {
+        router.push("/student/become-vendor");
+      } else if (formData.studentEmail) {
+        // The profile screen immediately presents the optional Resend code flow.
+        router.push("/settings/profile");
+      } else {
+        const redirectPath = sessionStorage.getItem("redirectAfterLogin") || dashboardPath;
+        sessionStorage.removeItem("redirectAfterLogin");
+        router.push(redirectPath);
+      }
+    } catch {
+      setError("The verification code is invalid or expired.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!challengeId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await authService.resendRegistrationPhoneVerification(challengeId);
+      if (result.success && result.data) setChallengeId(result.data.challengeId);
+      else setError(result.message || "Unable to send another code yet.");
+    } catch {
+      setError("Unable to send another code yet.");
+    } finally { setLoading(false); }
+  };
+
+  const stepLabels = ["Account", "Type", "Profile", "Verify"];
 
   return (
     <div
@@ -263,7 +308,7 @@ export default function RegisterPage() {
 
         {/* Step progress bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div key={s} style={{ display: "flex", alignItems: "center" }}>
               <div
                 style={{
@@ -288,7 +333,7 @@ export default function RegisterPage() {
                   s
                 )}
               </div>
-              {s < 3 && (
+              {s < 4 && (
                 <div
                   style={{
                     width: 72, height: 2, margin: "0 2px",
@@ -309,7 +354,7 @@ export default function RegisterPage() {
               style={{
                 fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
                 color: i + 1 <= step ? "var(--brand-dark)" : "var(--muted)",
-                flex: 1, textAlign: i === 0 ? "left" : i === 2 ? "right" : "center",
+                flex: 1, textAlign: i === 0 ? "left" : i === 3 ? "right" : "center",
               }}
             >
               {label}
@@ -333,12 +378,14 @@ export default function RegisterPage() {
             {step === 2 && "Choose account type"}
             {step === 3 && formData.accountType === "student" && "Complete student profile"}
             {step === 3 && formData.accountType === "vendor" && "Review & create account"}
+            {step === 4 && "Verify your mobile"}
           </h1>
           <p style={{ margin: "0 0 24px", fontSize: 14, color: "var(--muted)" }}>
             {step === 1 && "Enter your basic information to get started"}
             {step === 2 && "Select whether you're a student or vendor"}
             {step === 3 && formData.accountType === "student" && "Tell us about your university studies"}
             {step === 3 && formData.accountType === "vendor" && "You'll set up your shop after registration"}
+            {step === 4 && "Enter the six-digit code we sent to your mobile number"}
           </p>
 
           {error && (
@@ -354,11 +401,11 @@ export default function RegisterPage() {
           )}
 
           <form
-            onSubmit={
-              step === totalSteps
-                ? handleSubmit
-                : (e) => { e.preventDefault(); handleNext(); }
-            }
+            onSubmit={(e) => {
+              if (step === 3) handleSubmit(e);
+              else if (step === 4) handleVerifyPhone(e);
+              else { e.preventDefault(); handleNext(); }
+            }}
           >
             {/* ── Step 1 ── */}
             {step === 1 && (
@@ -394,7 +441,7 @@ export default function RegisterPage() {
                   />
                 </Field>
 
-                <Field label="Phone number" optional>
+                <Field label="Sri Lankan mobile number">
                   <input
                     name="phoneNumber" type="tel"
                     value={formData.phoneNumber} onChange={handleChange}
@@ -658,6 +705,17 @@ export default function RegisterPage() {
                       />
                     </Field>
 
+                    <Field label="Student / university email" optional>
+                      <input
+                        name="studentEmail" type="email"
+                        value={formData.studentEmail} onChange={handleChange}
+                        placeholder="name@university.edu" style={inputStyle}
+                      />
+                      <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--muted)" }}>
+                        We can confirm that you control this email; it does not independently prove enrolment.
+                      </p>
+                    </Field>
+
                     <div className="reg-2col-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                       <Field label="Current year">
                         <select
@@ -720,6 +778,25 @@ export default function RegisterPage() {
               </div>
             )}
 
+            {step === 4 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <p style={{ margin: 0, fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>
+                  A code was sent to {formData.phoneNumber}. Your account will be created only after it is confirmed.
+                </p>
+                <Field label="Verification code">
+                  <input
+                    inputMode="numeric" autoComplete="one-time-code" maxLength={6}
+                    value={verificationCode}
+                    onChange={(e) => { setVerificationCode(e.target.value.replace(/\D/g, "")); setError(null); }}
+                    placeholder="123456" style={{ ...inputStyle, letterSpacing: "0.35em", textAlign: "center", fontWeight: 800 }}
+                  />
+                </Field>
+                <button type="button" onClick={handleResendCode} disabled={loading} style={{ border: "none", background: "none", color: "var(--brand)", fontWeight: 700, cursor: "pointer", padding: 0 }}>
+                  Send another code
+                </button>
+              </div>
+            )}
+
             {/* Navigation buttons */}
             <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
               {step > 1 && (
@@ -761,7 +838,7 @@ export default function RegisterPage() {
                     </svg>
                     Creating account…
                   </>
-                ) : step === totalSteps ? "Create account" : "Continue"}
+                ) : step === 3 ? "Send verification code" : step === 4 ? "Verify mobile" : "Continue"}
               </button>
             </div>
           </form>
