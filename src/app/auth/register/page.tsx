@@ -107,6 +107,8 @@ export default function RegisterPage() {
   const [customDepartment, setCustomDepartment] = useState("");
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   // Departments for the selected faculty
   const activeFaculty = FALLBACK_FACULTIES.find((f) => String(f.id) === selectedFacultyId);
@@ -119,7 +121,32 @@ export default function RegisterPage() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
     setError(null);
+  };
+
+  const checkAvailability = async (fields: { email?: boolean; phoneNumber?: boolean }) => {
+    const email = fields.email ? formData.email.trim() : undefined;
+    const phoneNumber = fields.phoneNumber ? formData.phoneNumber.trim() : undefined;
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
+    if (phoneNumber && !isSriLankanMobile(phoneNumber)) return false;
+    if (!email && !phoneNumber) return true;
+    setCheckingAvailability(true);
+    try {
+      const result = await authService.checkRegistrationAvailability(email, phoneNumber);
+      const nextErrors: Record<string, string> = {};
+      if (fields.email && result.data?.email && !result.data.email.available) nextErrors.email = result.data.email.message || "This email is unavailable";
+      if (fields.phoneNumber && result.data?.phoneNumber && !result.data.phoneNumber.available) nextErrors.phoneNumber = result.data.phoneNumber.message || "This mobile number is unavailable";
+      setFieldErrors((previous) => ({ ...previous, ...nextErrors }));
+      return Object.keys(nextErrors).length === 0;
+    } catch (requestError: any) {
+      // Availability is helpful feedback; final server-side registration still
+      // validates uniqueness if this pre-check is temporarily unavailable.
+      setError(requestError?.message || "Unable to check account availability. Please try again.");
+      return false;
+    } finally {
+      setCheckingAvailability(false);
+    }
   };
 
   const validateStep1 = () => {
@@ -158,9 +185,10 @@ export default function RegisterPage() {
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setError(null);
     if (step === 1 && !validateStep1()) return;
+    if (step === 1 && !(await checkAvailability({ email: true, phoneNumber: true }))) return;
     setStep((prev) => Math.min(prev + 1, totalSteps));
   };
 
@@ -220,8 +248,8 @@ export default function RegisterPage() {
       } else {
         setError(result.message || "Registration failed. Please try again.");
       }
-    } catch {
-      setError("An unexpected error occurred. Please try again.");
+    } catch (requestError: any) {
+      setError(requestError?.message || "Unable to start mobile verification. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -252,8 +280,8 @@ export default function RegisterPage() {
         sessionStorage.removeItem("redirectAfterLogin");
         router.push(redirectPath);
       }
-    } catch {
-      setError("The verification code is invalid or expired.");
+    } catch (requestError: any) {
+      setError(requestError?.message || "The verification code is invalid or expired.");
     } finally {
       setLoading(false);
     }
@@ -267,8 +295,8 @@ export default function RegisterPage() {
       const result = await authService.resendRegistrationPhoneVerification(challengeId);
       if (result.success && result.data) setChallengeId(result.data.challengeId);
       else setError(result.message || "Unable to send another code yet.");
-    } catch {
-      setError("Unable to send another code yet.");
+    } catch (requestError: any) {
+      setError(requestError?.message || "Unable to send another code yet.");
     } finally { setLoading(false); }
   };
 
@@ -436,9 +464,10 @@ export default function RegisterPage() {
                     name="email" type="email" autoComplete="email" required
                     value={formData.email} onChange={handleChange}
                     placeholder="you@example.com" style={inputStyle}
+                    onBlur={(e) => { e.target.style.borderColor = "var(--line)"; if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) checkAvailability({ email: true }); }}
                     onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
-                    onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
                   />
+                  {fieldErrors.email && <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{fieldErrors.email}</p>}
                 </Field>
 
                 <Field label="Sri Lankan mobile number">
@@ -446,9 +475,10 @@ export default function RegisterPage() {
                     name="phoneNumber" type="tel"
                     value={formData.phoneNumber} onChange={handleChange}
                     placeholder="+94 77 123 4567" style={inputStyle}
+                    onBlur={(e) => { e.target.style.borderColor = "var(--line)"; if (isSriLankanMobile(formData.phoneNumber)) checkAvailability({ phoneNumber: true }); }}
                     onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
-                    onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
                   />
+                  {fieldErrors.phoneNumber && <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{fieldErrors.phoneNumber}</p>}
                 </Field>
 
                 <Field label="Password">
@@ -816,18 +846,18 @@ export default function RegisterPage() {
               )}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || checkingAvailability}
                 style={{
                   flex: 1, height: 46,
-                  background: loading ? "#94a3b8" : "var(--ink)",
+                  background: loading || checkingAvailability ? "#94a3b8" : "var(--ink)",
                   color: "#fff", border: "none", borderRadius: 7,
                   fontSize: 14, fontWeight: 800,
-                  cursor: loading ? "not-allowed" : "pointer",
+                  cursor: loading || checkingAvailability ? "not-allowed" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   transition: "background .15s",
                 }}
               >
-                {loading ? (
+                {loading || checkingAvailability ? (
                   <>
                     <svg
                       width="16" height="16" viewBox="0 0 24 24"
@@ -836,7 +866,7 @@ export default function RegisterPage() {
                     >
                       <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                     </svg>
-                    Creating account…
+                    {checkingAvailability ? "Checking availability…" : "Creating account…"}
                   </>
                 ) : step === 3 ? "Send verification code" : step === 4 ? "Verify mobile" : "Continue"}
               </button>

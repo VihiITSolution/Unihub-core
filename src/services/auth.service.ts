@@ -47,6 +47,11 @@ export interface VerificationChallengeResponse {
   resendAvailableAt: string;
 }
 
+export interface RegistrationAvailability {
+  email?: { available: boolean; message?: string };
+  phoneNumber?: { available: boolean; message?: string };
+}
+
 export const authService = {
   async login(
     credentials: LoginCredentials,
@@ -59,6 +64,13 @@ export const authService = {
 
   async startRegistrationPhoneVerification(data: RegisterData): Promise<ApiResponse<VerificationChallengeResponse>> {
     return apiClient.post<ApiResponse<VerificationChallengeResponse>>("/auth/registration/phone/start", data);
+  },
+
+  async checkRegistrationAvailability(email?: string, phoneNumber?: string): Promise<ApiResponse<RegistrationAvailability>> {
+    const params = new URLSearchParams();
+    if (email) params.set("email", email);
+    if (phoneNumber) params.set("phoneNumber", phoneNumber);
+    return apiClient.get<ApiResponse<RegistrationAvailability>>(`/auth/registration/availability?${params.toString()}`);
   },
 
   async resendRegistrationPhoneVerification(challengeId: string): Promise<ApiResponse<VerificationChallengeResponse>> {
