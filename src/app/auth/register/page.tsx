@@ -87,6 +87,11 @@ function Field({ label, optional, children }: { label: string; optional?: boolea
   );
 }
 
+function apiErrorMessage(error: unknown, fallback: string) {
+  const candidate = error as { message?: string; response?: { data?: { message?: string; error?: string } } };
+  return candidate?.response?.data?.message || candidate?.response?.data?.error || candidate?.message || fallback;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const { completeRegistration } = useAuth();
@@ -139,10 +144,10 @@ export default function RegisterPage() {
       if (fields.phoneNumber && result.data?.phoneNumber && !result.data.phoneNumber.available) nextErrors.phoneNumber = result.data.phoneNumber.message || "This mobile number is unavailable";
       setFieldErrors((previous) => ({ ...previous, ...nextErrors }));
       return Object.keys(nextErrors).length === 0;
-    } catch (requestError: any) {
+    } catch (requestError: unknown) {
       // Availability is helpful feedback; final server-side registration still
       // validates uniqueness if this pre-check is temporarily unavailable.
-      setError(requestError?.message || "Unable to check account availability. Please try again.");
+      setError(apiErrorMessage(requestError, "Unable to check account availability. Please try again."));
       return false;
     } finally {
       setCheckingAvailability(false);
@@ -248,8 +253,8 @@ export default function RegisterPage() {
       } else {
         setError(result.message || "Registration failed. Please try again.");
       }
-    } catch (requestError: any) {
-      setError(requestError?.message || "Unable to start mobile verification. Please try again.");
+    } catch (requestError: unknown) {
+      setError(apiErrorMessage(requestError, "Unable to start mobile verification. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -280,8 +285,8 @@ export default function RegisterPage() {
         sessionStorage.removeItem("redirectAfterLogin");
         router.push(redirectPath);
       }
-    } catch (requestError: any) {
-      setError(requestError?.message || "The verification code is invalid or expired.");
+    } catch (requestError: unknown) {
+      setError(apiErrorMessage(requestError, "The verification code is invalid or expired."));
     } finally {
       setLoading(false);
     }
@@ -295,8 +300,8 @@ export default function RegisterPage() {
       const result = await authService.resendRegistrationPhoneVerification(challengeId);
       if (result.success && result.data) setChallengeId(result.data.challengeId);
       else setError(result.message || "Unable to send another code yet.");
-    } catch (requestError: any) {
-      setError(requestError?.message || "Unable to send another code yet.");
+    } catch (requestError: unknown) {
+      setError(apiErrorMessage(requestError, "Unable to send another code yet."));
     } finally { setLoading(false); }
   };
 
