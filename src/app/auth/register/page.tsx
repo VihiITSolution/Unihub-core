@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth, useDashboardPath } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
 import { isSriLankanMobile, hasLetters } from "@/lib/validation";
@@ -96,7 +96,6 @@ function apiErrorMessage(error: unknown, fallback: string) {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { completeRegistration } = useAuth();
   const dashboardPath = useDashboardPath();
 
@@ -119,9 +118,9 @@ export default function RegisterPage() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   useEffect(() => {
-    const code = searchParams.get("ref");
+    const code = new URLSearchParams(window.location.search).get("ref");
     if (code) setFormData((previous) => ({ ...previous, referralCode: code.trim().toUpperCase() }));
-  }, [searchParams]);
+  }, []);
 
   // Departments for the selected faculty
   const activeFaculty = FALLBACK_FACULTIES.find((f) => String(f.id) === selectedFacultyId);
