@@ -30,10 +30,12 @@ export default function ProfileSettings() {
   const [phoneChallengeId, setPhoneChallengeId] = useState<string | null>(null);
   const [phoneCode, setPhoneCode] = useState("");
   const [phoneToVerify, setPhoneToVerify] = useState("");
+  const [showPhoneChange, setShowPhoneChange] = useState(false);
   const [phoneVerificationMsg, setPhoneVerificationMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [studentEmail, setStudentEmail] = useState("");
   const [studentEmailChallengeId, setStudentEmailChallengeId] = useState<string | null>(null);
   const [studentEmailCode, setStudentEmailCode] = useState("");
+  const [showStudentEmailChange, setShowStudentEmailChange] = useState(false);
   const [studentEmailMsg, setStudentEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -116,7 +118,7 @@ export default function ProfileSettings() {
   const verifyPhone = async () => {
     if (!token || !phoneChallengeId) return;
     const res = await authService.verifyPhoneChange(token, phoneChallengeId, phoneCode);
-    if (res.success && res.data?.user) { updateUser(res.data.user); setForm((p) => ({ ...p, phoneNumber: res.data!.user.phoneNumber || "" })); setPhoneChallengeId(null); setPhoneCode(""); setPhoneVerificationMsg({ type: "success", text: "Mobile number verified." }); }
+    if (res.success && res.data?.user) { updateUser(res.data.user); setForm((p) => ({ ...p, phoneNumber: res.data!.user.phoneNumber || "" })); setPhoneChallengeId(null); setPhoneCode(""); setShowPhoneChange(false); setPhoneVerificationMsg({ type: "success", text: "Mobile number verified." }); }
     else setPhoneVerificationMsg({ type: "error", text: res.message || "Invalid or expired code" });
   };
 
@@ -131,11 +133,13 @@ export default function ProfileSettings() {
   const verifyStudentEmail = async () => {
     if (!token || !studentEmailChallengeId) return;
     const res = await authService.verifyStudentEmail(token, studentEmailChallengeId, studentEmailCode);
-    if (res.success && res.data?.user) { updateUser(res.data.user); setStudentEmailChallengeId(null); setStudentEmailCode(""); setStudentEmailMsg({ type: "success", text: "Student email confirmed." }); }
+    if (res.success && res.data?.user) { updateUser(res.data.user); setStudentEmailChallengeId(null); setStudentEmailCode(""); setShowStudentEmailChange(false); setStudentEmailMsg({ type: "success", text: "Student email confirmed." }); }
     else setStudentEmailMsg({ type: "error", text: res.message || "Invalid or expired code" });
   };
 
   const avatar = preview || user?.profileImage;
+  const mobileVerified = Boolean(user?.phoneVerifiedAt || user?.verifiedPhoneNumber);
+  const studentEmailVerified = Boolean(user?.studentProfile?.studentEmailVerifiedAt);
 
   return (
     <div className="space-y-6">
@@ -211,29 +215,47 @@ export default function ProfileSettings() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-1">Mobile verification</h2>
-        <p className="text-sm text-gray-500 mb-4">{user?.phoneVerifiedAt ? "Your mobile number is verified." : "Verify your mobile number to secure your account."}</p>
+        <p className="text-sm text-gray-500 mb-4">{mobileVerified ? "Your mobile number is verified." : "Verify your mobile number to secure your account."}</p>
         {phoneVerificationMsg && <Alert {...phoneVerificationMsg} />}
-        <div className="flex flex-col gap-3 max-w-md">
-          <input type="tel" value={phoneToVerify} onChange={e => setPhoneToVerify(e.target.value)} placeholder="+94 77 123 4567" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
-          {phoneChallengeId ? <>
-            <input inputMode="numeric" maxLength={6} value={phoneCode} onChange={e => setPhoneCode(e.target.value.replace(/\D/g, ""))} placeholder="Six-digit code" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
-            <button type="button" onClick={verifyPhone} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Verify mobile</button>
-          </> : <button type="button" onClick={startPhoneVerification} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Send verification code</button>}
-        </div>
+        {mobileVerified && !showPhoneChange ? (
+          <div className="flex flex-wrap items-center gap-3 max-w-md rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">✓</span>
+            <div className="flex-1"><p className="text-sm font-semibold text-emerald-900">Verified mobile number</p><p className="text-xs text-emerald-700">{user?.verifiedPhoneNumber || user?.phoneNumber}</p></div>
+            <button type="button" onClick={() => { setShowPhoneChange(true); setPhoneVerificationMsg(null); }} className="text-xs font-semibold text-emerald-800 underline underline-offset-2">Change number</button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 max-w-md">
+            {mobileVerified && <button type="button" onClick={() => { setShowPhoneChange(false); setPhoneChallengeId(null); setPhoneCode(""); setPhoneVerificationMsg(null); }} className="w-fit text-xs font-semibold text-gray-600 underline">Keep verified number</button>}
+            <input type="tel" value={phoneToVerify} onChange={e => setPhoneToVerify(e.target.value)} placeholder="+94 77 123 4567" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
+            {phoneChallengeId ? <>
+              <input inputMode="numeric" maxLength={6} value={phoneCode} onChange={e => setPhoneCode(e.target.value.replace(/\D/g, ""))} placeholder="Six-digit code" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
+              <button type="button" onClick={verifyPhone} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Verify mobile</button>
+            </> : <button type="button" onClick={startPhoneVerification} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Send verification code</button>}
+          </div>
+        )}
       </div>
 
       {user?.studentProfile && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-1">Student email confirmation</h2>
-          <p className="text-sm text-gray-500 mb-4">{user.studentProfile.studentEmailVerifiedAt ? "Student email confirmed." : "Confirm control of a student or university email. This is not proof of enrolment."}</p>
+          <p className="text-sm text-gray-500 mb-4">{studentEmailVerified ? "Student email confirmed." : "Confirm control of a student or university email. This is not proof of enrolment."}</p>
           {studentEmailMsg && <Alert {...studentEmailMsg} />}
-          <div className="flex flex-col gap-3 max-w-md">
-            <input type="email" value={studentEmail} onChange={e => setStudentEmail(e.target.value)} placeholder="name@university.edu" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
-            {studentEmailChallengeId ? <>
-              <input inputMode="numeric" maxLength={6} value={studentEmailCode} onChange={e => setStudentEmailCode(e.target.value.replace(/\D/g, ""))} placeholder="Six-digit code" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
-              <button type="button" onClick={verifyStudentEmail} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Confirm email</button>
-            </> : <button type="button" onClick={startStudentEmailVerification} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Send email code</button>}
-          </div>
+          {studentEmailVerified && !showStudentEmailChange ? (
+            <div className="flex flex-wrap items-center gap-3 max-w-md rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">✓</span>
+              <div className="flex-1"><p className="text-sm font-semibold text-emerald-900">Confirmed student email</p><p className="text-xs text-emerald-700">{user.studentProfile.studentEmail}</p></div>
+              <button type="button" onClick={() => { setShowStudentEmailChange(true); setStudentEmailMsg(null); }} className="text-xs font-semibold text-emerald-800 underline underline-offset-2">Change email</button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 max-w-md">
+              {studentEmailVerified && <button type="button" onClick={() => { setShowStudentEmailChange(false); setStudentEmailChallengeId(null); setStudentEmailCode(""); setStudentEmailMsg(null); }} className="w-fit text-xs font-semibold text-gray-600 underline">Keep confirmed email</button>}
+              <input type="email" value={studentEmail} onChange={e => setStudentEmail(e.target.value)} placeholder="name@university.edu" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
+              {studentEmailChallengeId ? <>
+                <input inputMode="numeric" maxLength={6} value={studentEmailCode} onChange={e => setStudentEmailCode(e.target.value.replace(/\D/g, ""))} placeholder="Six-digit code" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
+                <button type="button" onClick={verifyStudentEmail} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Confirm email</button>
+              </> : <button type="button" onClick={startStudentEmailVerification} className="w-fit px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Send email code</button>}
+            </div>
+          )}
         </div>
       )}
     </div>
