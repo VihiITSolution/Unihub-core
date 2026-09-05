@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { socialProfileService } from "@/services/social.service";
-import { isValidPhone, isNameLike } from "@/lib/validation";
+import { isValidPhone, isSriLankanMobile, isNameLike } from "@/lib/validation";
 import { API_BASE_URL } from "@/lib/constants";
 import { Avatar } from "@/components/ui";
 
@@ -147,9 +147,23 @@ function EditProfile() {
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [photoMsg, setPhotoMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [phoneChallengeId, setPhoneChallengeId] = useState<string | null>(null);
+  const [phoneCode, setPhoneCode] = useState("");
+  const [phoneToVerify, setPhoneToVerify] = useState("");
+  const [showPhoneChange, setShowPhoneChange] = useState(false);
+  const [phoneVerificationMsg, setPhoneVerificationMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [studentEmail, setStudentEmail] = useState("");
+  const [studentEmailChallengeId, setStudentEmailChallengeId] = useState<string | null>(null);
+  const [studentEmailCode, setStudentEmailCode] = useState("");
+  const [showStudentEmailChange, setShowStudentEmailChange] = useState(false);
+  const [studentEmailMsg, setStudentEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
-    if (user) setForm({ firstName: user.firstName || "", lastName: user.lastName || "", phoneNumber: user.phoneNumber || "", bio: user.bio || "" });
+    if (user) {
+      setForm({ firstName: user.firstName || "", lastName: user.lastName || "", phoneNumber: user.phoneNumber || "", bio: user.bio || "" });
+      setPhoneToVerify(user.phoneNumber || "");
+      setStudentEmail(user.studentProfile?.studentEmail || "");
+    }
   }, [user]);
 
   const avatar = preview || user?.profileImage;
@@ -193,6 +207,55 @@ function EditProfile() {
       } else { setMsg({ type: "error", text: res.message || "Save failed" }); }
     } catch { setMsg({ type: "error", text: "Save failed. Try again." }); }
     finally { setSaving(false); }
+  };
+
+  const startPhoneVerification = async () => {
+    if (!token) return;
+    if (!isSriLankanMobile(phoneToVerify)) {
+      setPhoneVerificationMsg({ type: "error", text: "Enter a valid Sri Lankan mobile number" });
+      return;
+    }
+    setPhoneVerificationMsg(null);
+    const res = await authService.startPhoneChange(token, phoneToVerify);
+    if (res.success && res.data) {
+      setPhoneChallengeId(res.data.challengeId);
+      setPhoneVerificationMsg({ type: "success", text: "Code sent to your mobile." });
+    } else setPhoneVerificationMsg({ type: "error", text: res.message || "Unable to send a code" });
+  };
+
+  const verifyPhone = async () => {
+    if (!token || !phoneChallengeId) return;
+    const res = await authService.verifyPhoneChange(token, phoneChallengeId, phoneCode);
+    if (res.success && res.data?.user) {
+      updateUser(res.data.user);
+      setForm((current) => ({ ...current, phoneNumber: res.data!.user.phoneNumber || "" }));
+      setPhoneChallengeId(null);
+      setPhoneCode("");
+      setShowPhoneChange(false);
+      setPhoneVerificationMsg({ type: "success", text: "Mobile number verified." });
+    } else setPhoneVerificationMsg({ type: "error", text: res.message || "Invalid or expired code" });
+  };
+
+  const startStudentEmailVerification = async () => {
+    if (!token) return;
+    setStudentEmailMsg(null);
+    const res = await authService.startStudentEmailVerification(token, studentEmail);
+    if (res.success && res.data) {
+      setStudentEmailChallengeId(res.data.challengeId);
+      setStudentEmailMsg({ type: "success", text: "Code sent to your student email." });
+    } else setStudentEmailMsg({ type: "error", text: res.message || "Unable to send a code" });
+  };
+
+  const verifyStudentEmail = async () => {
+    if (!token || !studentEmailChallengeId) return;
+    const res = await authService.verifyStudentEmail(token, studentEmailChallengeId, studentEmailCode);
+    if (res.success && res.data?.user) {
+      updateUser(res.data.user);
+      setStudentEmailChallengeId(null);
+      setStudentEmailCode("");
+      setShowStudentEmailChange(false);
+      setStudentEmailMsg({ type: "success", text: "Student email confirmed." });
+    } else setStudentEmailMsg({ type: "error", text: res.message || "Invalid or expired code" });
   };
 
   return (
@@ -239,7 +302,8 @@ function EditProfile() {
           <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>Email cannot be changed</div>
         </Field>
         <Field label="Phone Number">
-          <Input value={form.phoneNumber} onChange={e => setForm(p => ({ ...p, phoneNumber: e.target.value }))} placeholder="+94 77 123 4567" type="tel" />
+          <Input value={form.phoneNumber} readOnly placeholder="+94 77 123 4567" type="tel" />
+          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>Change or verify your mobile number below.</div>
         </Field>
         <Field label={`Bio (${form.bio.length}/${BIO_MAX})`}>
           <textarea
@@ -252,6 +316,48 @@ function EditProfile() {
           <Btn type="submit" disabled={saving}>{saving ? "Saving…" : "Save Changes"}</Btn>
         </div>
       </form>
+
+      <div style={{ marginTop: 22, paddingTop: 20, borderTop: "1px solid var(--line, #e5e7eb)" }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink, #111)" }}>Mobile verification</div>
+        <p style={{ margin: "4px 0 12px", fontSize: 12, color: "var(--muted, #6b7280)" }}>
+          {Boolean(user?.phoneVerifiedAt || user?.verifiedPhoneNumber) ? "Your mobile number is verified." : "Verify your mobile number to secure your account."}
+        </p>
+        {phoneVerificationMsg && <Msg {...phoneVerificationMsg} />}
+        {Boolean(user?.phoneVerifiedAt || user?.verifiedPhoneNumber) && !showPhoneChange ? (
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, maxWidth: 460, padding: "11px 12px", border: "1px solid #bbf7d0", borderRadius: 8, background: "#f0fdf4" }}>
+            <span style={{ display: "inline-flex", width: 22, height: 22, alignItems: "center", justifyContent: "center", borderRadius: "50%", color: "#fff", background: "#16a34a", fontWeight: 800 }}>✓</span>
+            <div style={{ flex: 1, fontSize: 12, color: "#166534" }}><strong style={{ display: "block" }}>Verified mobile number</strong>{user?.verifiedPhoneNumber || user?.phoneNumber}</div>
+            <button type="button" onClick={() => { setShowPhoneChange(true); setPhoneVerificationMsg(null); }} style={{ border: "none", background: "none", cursor: "pointer", color: "#166534", fontSize: 12, fontWeight: 700, textDecoration: "underline" }}>Change number</button>
+          </div>
+        ) : (
+          <div style={{ maxWidth: 400 }}>
+            {Boolean(user?.phoneVerifiedAt || user?.verifiedPhoneNumber) && <button type="button" onClick={() => { setShowPhoneChange(false); setPhoneChallengeId(null); setPhoneCode(""); setPhoneVerificationMsg(null); }} style={{ marginBottom: 10, border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: 12, fontWeight: 700, textDecoration: "underline" }}>Keep verified number</button>}
+            <Input value={phoneToVerify} onChange={e => setPhoneToVerify(e.target.value)} placeholder="+94 77 123 4567" type="tel" />
+            {phoneChallengeId ? <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}><Input inputMode="numeric" maxLength={6} value={phoneCode} onChange={e => setPhoneCode(e.target.value.replace(/\D/g, ""))} placeholder="Six-digit code" style={{ maxWidth: 170 }} /><Btn onClick={verifyPhone}>Verify mobile</Btn></div> : <div style={{ marginTop: 10 }}><Btn onClick={startPhoneVerification}>Send verification code</Btn></div>}
+          </div>
+        )}
+      </div>
+
+      {user?.studentProfile && <div style={{ marginTop: 22, paddingTop: 20, borderTop: "1px solid var(--line, #e5e7eb)" }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink, #111)" }}>Student email confirmation</div>
+        <p style={{ margin: "4px 0 12px", fontSize: 12, color: "var(--muted, #6b7280)" }}>
+          {Boolean(user.studentProfile.studentEmailVerifiedAt) ? "Student email confirmed." : "Confirm control of a student or university email. This is not proof of enrolment."}
+        </p>
+        {studentEmailMsg && <Msg {...studentEmailMsg} />}
+        {Boolean(user.studentProfile.studentEmailVerifiedAt) && !showStudentEmailChange ? (
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, maxWidth: 460, padding: "11px 12px", border: "1px solid #bbf7d0", borderRadius: 8, background: "#f0fdf4" }}>
+            <span style={{ display: "inline-flex", width: 22, height: 22, alignItems: "center", justifyContent: "center", borderRadius: "50%", color: "#fff", background: "#16a34a", fontWeight: 800 }}>✓</span>
+            <div style={{ flex: 1, fontSize: 12, color: "#166534" }}><strong style={{ display: "block" }}>Confirmed student email</strong>{user.studentProfile.studentEmail}</div>
+            <button type="button" onClick={() => { setShowStudentEmailChange(true); setStudentEmailMsg(null); }} style={{ border: "none", background: "none", cursor: "pointer", color: "#166534", fontSize: 12, fontWeight: 700, textDecoration: "underline" }}>Change email</button>
+          </div>
+        ) : (
+          <div style={{ maxWidth: 400 }}>
+            {Boolean(user.studentProfile.studentEmailVerifiedAt) && <button type="button" onClick={() => { setShowStudentEmailChange(false); setStudentEmailChallengeId(null); setStudentEmailCode(""); setStudentEmailMsg(null); }} style={{ marginBottom: 10, border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: 12, fontWeight: 700, textDecoration: "underline" }}>Keep confirmed email</button>}
+            <Input type="email" value={studentEmail} onChange={e => setStudentEmail(e.target.value)} placeholder="name@university.edu" />
+            {studentEmailChallengeId ? <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}><Input inputMode="numeric" maxLength={6} value={studentEmailCode} onChange={e => setStudentEmailCode(e.target.value.replace(/\D/g, ""))} placeholder="Six-digit code" style={{ maxWidth: 170 }} /><Btn onClick={verifyStudentEmail}>Confirm email</Btn></div> : <div style={{ marginTop: 10 }}><Btn onClick={startStudentEmailVerification}>Send email code</Btn></div>}
+          </div>
+        )}
+      </div>}
     </div>
   );
 }
@@ -496,8 +602,12 @@ const ITEMS = [
   { id: "danger",        label: "Delete account",           desc: "Permanently remove your UniHub account",                Component: DeleteAccount, danger: true },
 ];
 
-export default function InlineSettings() {
-  const [open, setOpen] = useState<string | null>(null);
+export default function InlineSettings({ initialOpen }: { initialOpen?: string }) {
+  const [open, setOpen] = useState<string | null>(initialOpen || null);
+
+  useEffect(() => {
+    if (initialOpen) setOpen(initialOpen);
+  }, [initialOpen]);
 
   const toggle = (id: string) => setOpen(prev => prev === id ? null : id);
 

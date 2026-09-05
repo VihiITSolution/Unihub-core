@@ -327,7 +327,7 @@ export default function Header() {
                   )}
 
                   <Link
-                    href="/settings"
+                    href="/student/dashboard?section=settings&setting=profile"
                     onClick={() => setIsProfileOpen(false)}
                     style={{ display: "block", padding: "9px 14px", fontSize: 14, color: "var(--ink)", textDecoration: "none" }}
                     className="hover:bg-soft"

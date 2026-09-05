@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/settings/profile",       label: "Edit Profile" },
-  { href: "/settings/security",      label: "Security" },
-  { href: "/settings/notifications", label: "Notifications" },
-  { href: "/settings/privacy",       label: "Privacy" },
-  { href: "/settings/accounts",      label: "Linked Accounts" },
-  { href: "/settings/danger",        label: "Delete Account", danger: true },
+  { href: "/student/dashboard?section=settings&setting=profile",       label: "Edit Profile" },
+  { href: "/student/dashboard?section=settings&setting=password",      label: "Security" },
+  { href: "/student/dashboard?section=settings&setting=notifications", label: "Notifications" },
+  { href: "/student/dashboard?section=settings&setting=privacy",       label: "Privacy" },
+  { href: "/student/dashboard?section=settings&setting=accounts",      label: "Linked Accounts" },
+  { href: "/student/dashboard?section=settings&setting=danger",        label: "Delete Account", danger: true },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

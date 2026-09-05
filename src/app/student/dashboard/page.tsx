@@ -107,6 +107,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [completedCount, setCompletedCount] = useState(0);
   const [activeSection, setActiveSection] = useState("courses");
+  const [settingsPanel, setSettingsPanel] = useState<string | undefined>();
 
   useEffect(() => {
     loadEnrollments();
@@ -168,6 +169,16 @@ export default function StudentDashboard() {
     setActiveSection(id);
     sectionRefs[id]?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("section") !== "settings") return;
+    const requestedPanel = params.get("setting");
+    const allowedPanels = ["profile", "password", "notifications", "privacy", "accounts", "danger"];
+    setActiveSection("settings");
+    setSettingsPanel(requestedPanel && allowedPanels.includes(requestedPanel) ? requestedPanel : "profile");
+    window.requestAnimationFrame(() => settingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }, []);
 
   return (
     <div style={{ display: "flex", gap: 24, alignItems: "flex-start", maxWidth: 1100, margin: "0 auto", padding: "0 8px" }} className="ml-outer">
@@ -339,7 +350,7 @@ export default function StudentDashboard() {
           <Section
             title="Profile, certificates, and account"
             subtitle="Your account can hold student details, faculty, year, certificates, payment history, tutor bookings, and privacy settings."
-            cta={{ label: "Edit profile", href: "/settings" }}
+            cta={{ label: "Edit profile", href: "/student/dashboard?section=settings&setting=profile" }}
           >
             {completedCount === 0 ? (
               <div style={{ padding: "8px 0", color: "var(--muted)", fontSize: 13, textAlign: "center" }}>
@@ -380,7 +391,7 @@ export default function StudentDashboard() {
             title="Settings"
             subtitle="Manage your account preferences, security, and notifications."
           >
-            <InlineSettings />
+            <InlineSettings initialOpen={settingsPanel} />
           </Section>
         </div>
 

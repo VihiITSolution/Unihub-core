@@ -285,9 +285,9 @@ export default function RegisterPage() {
       completeRegistration(result.data);
       if (formData.accountType === "vendor") {
         router.push("/student/become-vendor");
-      } else if (formData.studentEmail) {
-        // The profile screen immediately presents the optional Resend code flow.
-        router.push("/settings/profile");
+      } else if (formData.accountType === "student") {
+        // New students complete their profile from the consolidated dashboard settings area.
+        router.push("/student/dashboard?section=settings&setting=profile");
       } else {
         const redirectPath = sessionStorage.getItem("redirectAfterLogin") || dashboardPath;
         sessionStorage.removeItem("redirectAfterLogin");
