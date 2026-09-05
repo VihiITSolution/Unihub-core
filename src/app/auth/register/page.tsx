@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, useDashboardPath } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
 import { isSriLankanMobile, hasLetters } from "@/lib/validation";
@@ -41,6 +41,7 @@ interface FormData {
   phoneNumber: string;
   studentEmail: string;
   accountType: "student" | "vendor";
+  referralCode: string;
   universityName: string;
   department: string;
   degreeOrCourse: string;
@@ -58,6 +59,7 @@ const initialFormData: FormData = {
   phoneNumber: "",
   studentEmail: "",
   accountType: "student",
+  referralCode: "",
   universityName: "",
   department: "",
   degreeOrCourse: "",
@@ -94,6 +96,7 @@ function apiErrorMessage(error: unknown, fallback: string) {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { completeRegistration } = useAuth();
   const dashboardPath = useDashboardPath();
 
@@ -114,6 +117,11 @@ export default function RegisterPage() {
   const [verificationCode, setVerificationCode] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [checkingAvailability, setCheckingAvailability] = useState(false);
+
+  useEffect(() => {
+    const code = searchParams.get("ref");
+    if (code) setFormData((previous) => ({ ...previous, referralCode: code.trim().toUpperCase() }));
+  }, [searchParams]);
 
   // Departments for the selected faculty
   const activeFaculty = FALLBACK_FACULTIES.find((f) => String(f.id) === selectedFacultyId);
@@ -217,6 +225,7 @@ export default function RegisterPage() {
         roles: ["student"] as UserRole[],
         primaryRole: "student" as UserRole,
         phoneNumber: formData.phoneNumber || undefined,
+        referralCode: formData.referralCode.trim() || undefined,
         studentEmail: formData.accountType === "student" ? formData.studentEmail || undefined : undefined,
         studentProfile:
           formData.accountType === "student"
@@ -484,6 +493,10 @@ export default function RegisterPage() {
                     onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
                   />
                   {fieldErrors.phoneNumber && <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{fieldErrors.phoneNumber}</p>}
+                </Field>
+
+                <Field label="Referral code" optional>
+                  <input name="referralCode" type="text" value={formData.referralCode} onChange={handleChange} placeholder="UH..." style={inputStyle} />
                 </Field>
 
                 <Field label="Password">

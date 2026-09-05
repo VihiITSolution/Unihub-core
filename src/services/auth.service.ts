@@ -34,6 +34,7 @@ export interface RegisterData {
   phoneNumber?: string;
   studentEmail?: string;
   studentProfile?: StudentProfileData;
+  referralCode?: string;
 }
 
 export interface AuthResponse {

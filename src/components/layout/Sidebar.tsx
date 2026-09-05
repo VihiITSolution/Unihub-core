@@ -49,6 +49,7 @@ const studentLinks = [
   { href: "/courses",              label: "Browse Courses", icon: Icons.bookOpen },
   { href: "/student/my-courses",   label: "My Courses",     icon: Icons.clipboard },
   { href: "/student/live-sessions",label: "Live Sessions",  icon: Icons.video },
+  { href: "/student/affiliate",    label: "Affiliate",      icon: Icons.currency },
   { href: "/boarding",             label: "Boarding",       icon: Icons.building },
   { href: "/marketplace",          label: "Marketplace",    icon: Icons.shoppingBag },
 ];
