@@ -59,7 +59,8 @@ export default function AffiliatePage() {
   if (error) return <main className="affiliate-shell"><section className="affiliate-error"><ShieldCheck size={28} /><h1>Affiliate programme</h1><p>{error}</p><button onClick={() => { setError(""); load(); }}>Try again</button></section></main>;
   if (!data) return <main className="affiliate-shell"><section className="affiliate-loading"><div className="affiliate-spinner" /> Loading your affiliate dashboard…</section></main>;
 
-  const hasAvailableBalance = data.balances.available >= 5000;
+  const redemptionMinimum = data.campaign?.minimumRedemption || 2000;
+  const hasAvailableBalance = data.balances.available >= redemptionMinimum;
   const referralCount = data.referrals.length;
 
   return <main className="affiliate-shell">
@@ -87,7 +88,7 @@ export default function AffiliatePage() {
       {notice && <div className="affiliate-notice"><Check size={16} /> {notice}</div>}
 
       <section className="affiliate-stat-grid">
-        <article className="affiliate-stat stat-primary"><span><CircleDollarSign size={19} /> Available now</span><strong>{lkr(data.balances.available)}</strong><small>{hasAvailableBalance ? "Ready to redeem" : `${lkr(5000 - data.balances.available)} to your first cash-out`}</small></article>
+        <article className="affiliate-stat stat-primary"><span><CircleDollarSign size={19} /> Available now</span><strong>{lkr(data.balances.available)}</strong><small>{hasAvailableBalance ? "Ready to redeem" : `${lkr(redemptionMinimum - data.balances.available)} to your first cash-out`}</small></article>
         <article className="affiliate-stat"><span><Clock3 size={18} /> In review</span><strong>{lkr(data.balances.reserved)}</strong><small>Requested or processing payout</small></article>
         <article className="affiliate-stat"><span><Users size={18} /> Your network</span><strong>{referralCount}</strong><small>{referralCount === 1 ? "student invited" : "students invited"}</small></article>
       </section>
@@ -130,10 +131,10 @@ export default function AffiliatePage() {
           <article className="affiliate-card payout-card">
             <div className="payout-icon"><Landmark size={21} /></div>
             <span className="section-kicker">Cash out</span><h2>Turn rewards into LKR</h2>
-            <p>Redeem from <strong>LKR 5,000</strong>. Your request is checked manually before bank transfer.</p>
-            <div className="payout-meter"><div style={{ width: `${Math.min(100, (data.balances.available / 5000) * 100)}%` }} /></div>
-            <small>{lkr(data.balances.available)} of LKR 5,000 available</small>
-            <form onSubmit={redeem} className="redeem-form"><label>How much would you like to redeem?</label><div><span>LKR</span><input required min={5000} step={1} type="number" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="5,000" /><button disabled={!hasAvailableBalance}>Request</button></div></form>
+            <p>Redeem from <strong>{lkr(redemptionMinimum)}</strong>. Your request is checked manually before bank transfer.</p>
+            <div className="payout-meter"><div style={{ width: `${Math.min(100, (data.balances.available / redemptionMinimum) * 100)}%` }} /></div>
+            <small>{lkr(data.balances.available)} of {lkr(redemptionMinimum)} available</small>
+            <form onSubmit={redeem} className="redeem-form"><label>How much would you like to redeem?</label><div><span>LKR</span><input required min={redemptionMinimum} step={1} type="number" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={redemptionMinimum.toLocaleString("en-LK")} /><button disabled={!hasAvailableBalance}>Request</button></div></form>
           </article>
 
           <article className="affiliate-card bank-card">
