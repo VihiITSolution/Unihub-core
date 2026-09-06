@@ -201,13 +201,13 @@ export const NotificationBell: React.FC = () => {
       {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-full transition-colors cursor-pointer z-40"
+        className="relative inline-flex h-[38px] w-[38px] items-center justify-center p-0 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-full transition-colors cursor-pointer z-40"
         aria-label="Notifications"
         title="Notifications"
       >
         <Bell size={24} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 px-1 text-xs font-bold leading-none text-white bg-amber-500 rounded-full transform translate-x-1/2 -translate-y-1/2 animate-pulse shadow-lg">
+          <span className="absolute -top-1 -right-1 inline-flex h-[18px] min-w-[18px] items-center justify-center px-1 text-[10px] font-bold leading-none text-white bg-amber-500 rounded-full animate-pulse shadow-md">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
