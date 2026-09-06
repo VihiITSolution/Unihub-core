@@ -6,7 +6,7 @@ export interface AffiliateStatus {
   campaign: { name: string; startsAt: string; signupEndsAt: string; minimumRedemption: number; tierRules: Array<{ through: number | null; amount: number }> } | null;
   balances: { available: number; reserved: number; paid: number };
   payoutProfile: { accountMask: string } | null;
-  referrals: Array<{ id: number; status: string; rewardAmount?: number; tierSequence?: number; activityType?: string; referred: { firstName: string; lastName: string }; createdAt: string }>;
+  referrals: Array<{ id: number; status: string; rewardAmount?: number; tierSequence?: number; activityType?: string; referred: { firstName: string; lastName: string } | null; createdAt: string }>;
   payouts: Array<{ id: number; amount: number; status: string; accountMask: string; createdAt: string }>;
 }
 export const affiliateService = {

@@ -117,7 +117,12 @@ export default function AffiliatePage() {
 
           <article className="affiliate-card referral-card">
             <div className="section-heading"><div><span className="section-kicker">Activity</span><h2>Your referrals</h2></div><span className="referral-count">{referralCount} total</span></div>
-            {data.referrals.length ? <div className="referral-list">{data.referrals.map((referral) => <div className="referral-row" key={referral.id}><div className="referral-avatar">{referral.referred.firstName.charAt(0)}{referral.referred.lastName.charAt(0)}</div><div><strong>{referral.referred.firstName} {referral.referred.lastName}</strong><p>{referral.activityType ? `${referral.activityType} activity` : "Invite accepted"} · {new Date(referral.createdAt).toLocaleDateString("en-LK")}</p></div><div className="referral-reward"><span className={`status-${referral.status}`}>{referral.status.replace("_", " ")}</span>{referral.rewardAmount && <strong>+{lkr(referral.rewardAmount)}</strong>}</div></div>)}</div> : <div className="affiliate-empty"><Users size={25} /><h3>Your first reward is one invite away</h3><p>Share your link above with a student friend to get started.</p></div>}
+            {data.referrals.length ? <div className="referral-list">{data.referrals.map((referral) => {
+              const referred = referral.referred;
+              const initials = `${referred?.firstName?.charAt(0) || ""}${referred?.lastName?.charAt(0) || ""}` || "S";
+              const name = referred ? `${referred.firstName} ${referred.lastName}` : "Referred student";
+              return <div className="referral-row" key={referral.id}><div className="referral-avatar">{initials}</div><div><strong>{name}</strong><p>{referral.activityType ? `${referral.activityType} activity` : "Invite accepted"} · {new Date(referral.createdAt).toLocaleDateString("en-LK")}</p></div><div className="referral-reward"><span className={`status-${referral.status}`}>{referral.status.replace("_", " ")}</span>{referral.rewardAmount && <strong>+{lkr(referral.rewardAmount)}</strong>}</div></div>;
+            })}</div> : <div className="affiliate-empty"><Users size={25} /><h3>Your first reward is one invite away</h3><p>Share your link above with a student friend to get started.</p></div>}
           </article>
         </div>
 
