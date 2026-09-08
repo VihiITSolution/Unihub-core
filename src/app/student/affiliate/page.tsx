@@ -106,13 +106,13 @@ export default function AffiliatePage() {
               <ChevronRight className="tier-arrow" size={21} />
               <div className="reward-tier tier-three"><span>101 +</span><strong>LKR 40</strong><small>per qualified student</small></div>
             </div>
-            <p className="reward-note">Your reward is confirmed only when your referred student completes an approved UniHub activity.</p>
+            <p className="reward-note">A reward is confirmed when a referred student completes one approved qualifying activity.</p>
           </article>
 
           <article className="affiliate-card how-card">
             <div className="section-heading"><div><span className="section-kicker">How it works</span><h2>Three small steps</h2></div></div>
             <div className="how-steps">
-              {[['01', 'Share your link', 'Send your personal invite to student friends.'], ['02', 'They get active', 'They verify their profile and add real value on UniHub.'], ['03', 'You earn rewards', 'We confirm the activity and add the reward to your balance.']].map(([number, title, copy]) => <div className="how-step" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></div>)}
+              {[['01', 'Share your link', 'Send your personal invite to student friends.'], ['02', 'They complete one activity', 'List a marketplace item or boarding place, or upload a course video longer than 20 minutes.'], ['03', 'You earn rewards', 'After UniHub approves the listing or course, we add the reward to your balance.']].map(([number, title, copy]) => <div className="how-step" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></div>)}
             </div>
           </article>
 
