@@ -150,6 +150,11 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
 export default function MarketplacePage() {
   const { user } = useAuth();
   const showVendorCTA = !user?.isVendorProfileComplete;
+  // Non-vendors must create a vendor profile before they can create listings.
+  // Keep every marketplace selling CTA on the same, status-aware route.
+  const sellItemHref = user?.isVendorProfileComplete
+    ? "/vendor/listings/create"
+    : "/student/become-vendor";
 
   const [items, setItems] = useState<MarketplaceItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -268,7 +273,7 @@ export default function MarketplacePage() {
               </div>
             </div>
             <Link
-              href="/student/become-vendor"
+              href={sellItemHref}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 height: 42, padding: "0 20px",
@@ -398,7 +403,7 @@ export default function MarketplacePage() {
                   Post your ad free for 3 months.
                 </p>
                 <Link
-                  href="/vendor/listings/create"
+                  href={sellItemHref}
                   style={{
                     display: "block", textAlign: "center", height: 36, lineHeight: "36px",
                     background: "var(--ink)", color: "#fff", fontSize: 13, fontWeight: 800,
