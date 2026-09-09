@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { marketplaceService } from "@/services/marketplace.service";
 import { HoverCard } from "@/components/ui";
+import VendorInvitation from "@/components/marketplace/VendorInvitation";
 import type { MarketplaceItem } from "@/types";
 import type { MarketplaceFilters } from "@/services/marketplace.service";
 
@@ -148,8 +149,8 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
 }
 
 export default function MarketplacePage() {
-  const { user } = useAuth();
-  const showVendorCTA = !user?.isVendorProfileComplete;
+  const { user, isLoading: authLoading } = useAuth();
+  const showVendorCTA = !authLoading && !user?.isVendorProfileComplete;
   // Non-vendors must create a vendor profile before they can create listings.
   // Keep every marketplace selling CTA on the same, status-aware route.
   const sellItemHref = user?.isVendorProfileComplete
@@ -248,48 +249,7 @@ export default function MarketplacePage() {
         </div>
       </section>
 
-      {/* Become a Vendor banner — shown to non-vendors only */}
-      {showVendorCTA && (
-        <section style={{ background: "linear-gradient(90deg,#1c1c1c,#2d2400)", borderBottom: "1px solid rgba(245,158,11,.25)" }}>
-          <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "22px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 10, flexShrink: 0,
-                background: "linear-gradient(135deg,#f59e0b,#d97706)",
-                display: "grid", placeItems: "center",
-              }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L9.568 3z"/>
-                  <path d="M6 6h.008v.008H6V6z"/>
-                </svg>
-              </div>
-              <div>
-                <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#fff" }}>
-                  Start selling on UniHub Marketplace
-                </p>
-                <p style={{ margin: "2px 0 0", fontSize: 13, color: "#d1d5db" }}>
-                  List your books, electronics, lab gear, and more — free for 3 months.
-                </p>
-              </div>
-            </div>
-            <Link
-              href={sellItemHref}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                height: 42, padding: "0 20px",
-                background: "linear-gradient(135deg,#f59e0b,#d97706)",
-                color: "#fff", fontWeight: 800, fontSize: 14,
-                borderRadius: 6, textDecoration: "none", flexShrink: 0,
-              }}
-            >
-              Become a Vendor
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M9 18l6-6-6-6"/>
-              </svg>
-            </Link>
-          </div>
-        </section>
-      )}
+      {showVendorCTA && <VendorInvitation href={sellItemHref} />}
 
       {/* Listings */}
       <section id="listings" style={{ padding: "34px 0" }}>
@@ -397,19 +357,22 @@ export default function MarketplacePage() {
                 />
               </div>
 
-              <div style={{ marginTop: 16, padding: 16, background: "#fff8ec", border: "1px solid #f0dfc4", borderRadius: 6 }}>
-                <p style={{ margin: "0 0 6px", fontWeight: 800, color: "#92400e", fontSize: 14 }}>Have something to sell?</p>
-                <p style={{ margin: "0 0 10px", fontSize: 13, color: "#b45309", lineHeight: 1.4 }}>
-                  Post your ad free for 3 months.
+              <div style={{ marginTop: 20, padding: 20, background: "#edf4ed", border: "1px solid #d4e2d2", borderRadius: 12 }}>
+                <span style={{ display: "block", marginBottom: 12, color: "#53654e", fontSize: 10, fontWeight: 800, letterSpacing: ".1em" }}>MAKE ROOM FOR WHAT'S NEXT</span>
+                <p style={{ margin: "0 0 8px", fontWeight: 800, color: "#214b38", fontSize: 20, lineHeight: 1.2 }}>
+                  {showVendorCTA ? "Your shelf has potential." : "Ready for your next sale?"}
+                </p>
+                <p style={{ margin: "0 0 16px", fontSize: 13, color: "#586b52", lineHeight: 1.6 }}>
+                  {showVendorCTA ? "Start with one thing you no longer use. Give it a new home with another student." : "Add your next find and help another student get what they need."}
                 </p>
                 <Link
                   href={sellItemHref}
                   style={{
-                    display: "block", textAlign: "center", height: 36, lineHeight: "36px",
-                    background: "var(--ink)", color: "#fff", fontSize: 13, fontWeight: 800,
+                    display: "block", textAlign: "center", padding: "12px 8px", borderRadius: 7,
+                    background: "#174c3c", color: "#fff", fontSize: 13, fontWeight: 800,
                   }}
                 >
-                  Sell item
+                  {showVendorCTA ? "Become a Vendor →" : "Sell item →"}
                 </Link>
               </div>
             </aside>
@@ -442,6 +405,11 @@ export default function MarketplacePage() {
                   <p style={{ margin: 0, color: "var(--muted)" }}>
                     {hasActiveFilters ? "Try adjusting your filters." : "Be the first to list something!"}
                   </p>
+                  {showVendorCTA && !hasActiveFilters && (
+                    <Link href={sellItemHref} style={{ display: "inline-block", marginTop: 20, padding: "12px 20px", background: "#174c3c", color: "#fff", borderRadius: 7, fontSize: 14, fontWeight: 800 }}>
+                      Start your seller story →
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <>
