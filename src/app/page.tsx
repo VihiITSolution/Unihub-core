@@ -46,7 +46,7 @@ const TESTIMONIALS = [
 const TRUST_LABELS = ["Public Universities", "Private Institutes", "External Degrees", "A/L Leavers", "Student Clubs", "Internship Prep"];
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [stats, setStats] = useState(FALLBACK_STATS);
 
@@ -71,6 +71,37 @@ export default function Home() {
     <div style={{ minHeight: "100vh", background: "var(--white)" }}>
       {/* Hero */}
       <HeroSection />
+
+      {!isLoading && !user?.isTutorProfileComplete && (
+        <section style={{ background: "linear-gradient(115deg, #053f38 0%, #0b665a 58%, #18786b 100%)", color: "#fff", borderBottom: "1px solid rgba(255,255,255,.18)" }}>
+          <div
+            style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "28px 0", display: "grid", gridTemplateColumns: "1.2fr repeat(2, minmax(190px, .72fr)) auto", gap: 18, alignItems: "center" }}
+            className="tutor-reward-banner"
+          >
+            <div>
+              <span style={{ display: "inline-block", marginBottom: 8, color: "#a9f0df", fontSize: 11, fontWeight: 800, letterSpacing: ".12em" }}>TUTOR VIDEO REWARDS · UNTIL FURTHER NOTICE</span>
+              <h2 style={{ margin: "0 0 7px", fontSize: "clamp(24px, 3vw, 34px)", lineHeight: 1.1, fontWeight: 800 }}>Your knowledge could help students — and pay you back.</h2>
+              <p style={{ margin: 0, color: "#d7f4ec", fontSize: 14, lineHeight: 1.45 }}>Become a UniHub tutor and share lessons students can learn from.</p>
+            </div>
+            <div style={{ padding: "14px 16px", border: "1px solid rgba(255,255,255,.3)", borderRadius: 8, background: "rgba(255,255,255,.1)" }}>
+              <span style={{ display: "block", color: "#a9f0df", fontSize: 10, fontWeight: 800, letterSpacing: ".08em" }}>YOUTUBE · 20+ MINUTES</span>
+              <strong style={{ display: "block", margin: "5px 0", fontSize: 25 }}>LKR 300</strong>
+              <span style={{ fontSize: 12, color: "#e4faf4", lineHeight: 1.35 }}>for an eligible existing teaching video</span>
+            </div>
+            <div style={{ padding: "14px 16px", border: "1px solid rgba(255,222,155,.6)", borderRadius: 8, background: "rgba(245,158,11,.18)" }}>
+              <span style={{ display: "block", color: "#ffe2a0", fontSize: 10, fontWeight: 800, letterSpacing: ".08em" }}>UPLOAD TO UNIHUB</span>
+              <strong style={{ display: "block", margin: "5px 0", fontSize: 25 }}>LKR 500</strong>
+              <span style={{ fontSize: 12, color: "#fff5dc", lineHeight: 1.35 }}>for each eligible video</span>
+            </div>
+            <div style={{ minWidth: 150 }}>
+              <Link href={isAuthenticated ? "/student/become-tutor" : "/auth/register"} style={{ display: "inline-flex", minHeight: 46, alignItems: "center", justifyContent: "center", width: "100%", padding: "0 16px", background: "#fff", color: "#08483f", borderRadius: 6, textDecoration: "none", fontSize: 13, fontWeight: 800 }}>
+                Become a Tutor →
+              </Link>
+              <p style={{ margin: "9px 0 0", color: "#c7eee5", fontSize: 10, lineHeight: 1.35, textAlign: "center" }}>Payment follows video review and approval.</p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Stats band */}
       <section style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "#f2fbf8" }}>
@@ -303,12 +334,14 @@ export default function Home() {
           .career-grid-responsive { grid-template-columns: 1fr !important; }
           .trust-grid-responsive { grid-template-columns: repeat(3, 1fr) !important; }
           .testimonials-responsive { grid-template-columns: 1fr !important; }
+          .tutor-reward-banner { grid-template-columns: 1fr 1fr !important; }
         }
         @media (max-width: 640px) {
           .stats-grid-responsive { grid-template-columns: 1fr !important; }
           .promise-grid-responsive { grid-template-columns: 1fr !important; }
           .trust-grid-responsive { grid-template-columns: repeat(2, 1fr) !important; }
           .campus-areas-grid { grid-template-columns: 1fr !important; }
+          .tutor-reward-banner { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>

@@ -222,6 +222,32 @@ export default function BecomeTutorPage() {
           </p>
         </div>
 
+        <section className="mb-8 overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-950 via-emerald-800 to-teal-700 p-6 text-white shadow-xl sm:p-8" aria-labelledby="tutor-rewards-title">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-xl">
+              <p className="mb-2 text-xs font-bold tracking-[0.16em] text-emerald-200">TUTOR VIDEO REWARDS · UNTIL FURTHER NOTICE</p>
+              <h2 id="tutor-rewards-title" className="mb-2 text-2xl font-bold sm:text-3xl">Teach what you know. Get rewarded for it.</h2>
+              <p className="text-sm leading-6 text-emerald-50">Share knowledge students can use while building your UniHub tutor profile.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:w-[480px]">
+              <article className="rounded-xl border border-white/25 bg-white/10 p-4 backdrop-blur-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200">Existing YouTube video</p>
+                <p className="mt-1 text-2xl font-bold">LKR 300</p>
+                <p className="mt-1 text-xs leading-5 text-emerald-50">For an eligible teaching video already on YouTube, 20 minutes or longer.</p>
+              </article>
+              <article className="rounded-xl border border-amber-200/60 bg-amber-300/15 p-4 backdrop-blur-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-amber-100">Upload to UniHub</p>
+                <p className="mt-1 text-2xl font-bold">LKR 500 <span className="text-sm">per video</span></p>
+                <p className="mt-1 text-xs leading-5 text-emerald-50">For each eligible video you upload to UniHub.</p>
+              </article>
+            </div>
+          </div>
+          <div className="mt-5 flex items-start gap-2 border-t border-white/15 pt-4 text-xs leading-5 text-emerald-100">
+            <span aria-hidden="true">✓</span>
+            <span>All rewards are given only after UniHub reviews and approves the submitted video.</span>
+          </div>
+        </section>
+
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-r-lg mb-8 shadow-sm">
             <p className="font-medium">Error</p>
@@ -373,10 +399,9 @@ export default function BecomeTutorPage() {
                   </div>
                   <div className="ml-3">
                     <p className="text-sm text-blue-700">
-                      <strong>Recommended*:</strong> Create a 2-minute
-                      self-introduction video about yourself and publish it on
-                      YouTube. Add the link below to help us understand you
-                      better.
+                      <strong>Recommended:</strong> Add a YouTube teaching video
+                      to show your teaching style. Videos that are 20 minutes or
+                      longer may qualify for the LKR 300 reward after review.
                     </p>
                   </div>
                 </div>

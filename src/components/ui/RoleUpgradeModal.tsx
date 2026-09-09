@@ -25,6 +25,10 @@ const ROLE_CONFIG = {
       "Earn from your courses",
       "Build your student community",
     ],
+    rewards: [
+      "LKR 300 for an existing YouTube teaching video that is 20 minutes or longer",
+      "LKR 500 for each eligible video you upload to UniHub",
+    ],
     route: "/student/become-tutor",
     buttonText: "Apply as Tutor",
     requiresApproval: true,
@@ -40,6 +44,7 @@ const ROLE_CONFIG = {
       "Track sales and revenue",
       "Build your customer base",
     ],
+    rewards: [],
     route: "/student/become-vendor",
     buttonText: "Become a Vendor",
     requiresApproval: false,
@@ -116,6 +121,25 @@ export const RoleUpgradeModal: React.FC<RoleUpgradeModalProps> = ({
             ))}
           </ul>
         </div>
+
+        {roleType === "tutor" && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6 text-left">
+            <p className="font-semibold text-emerald-900 mb-2">
+              Tutor video rewards — until further notice
+            </p>
+            <ul className="space-y-2">
+              {config.rewards.map((reward) => (
+                <li key={reward} className="flex items-start gap-2 text-sm text-emerald-800">
+                  <span className="font-bold">•</span>
+                  <span>{reward}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-emerald-800">
+              Rewards are paid after UniHub reviews and approves the video.
+            </p>
+          </div>
+        )}
 
         {config.requiresApproval && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6 text-left">
