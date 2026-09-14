@@ -1,0 +1,51 @@
+"use client";
+
+import Link from "next/link";
+import { getPromotionActions } from "./PromotionBannerContent";
+
+export default function CombinedPromotionBanner({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const actions = getPromotionActions(isAuthenticated);
+
+  return (
+    <section className="combined-promotion" aria-label="UniHub student promotions">
+      <div className="combined-promotion__inner">
+        <div className="combined-promotion__intro">
+          <span className="combined-promotion__eyebrow">UniHub student benefits</span>
+          <h2>Make your UniHub time work harder for you.</h2>
+          <p>Invite active student friends, or list what students need. Both offers are simple, student-first ways to earn and grow on UniHub.</p>
+        </div>
+
+        <article className="promotion-card promotion-card--affiliate">
+          <span className="promotion-card__label">Student affiliate</span>
+          <h3>Invite friends. Earn rewards.</h3>
+          <p>Share your personal link and earn LKR 20–40 when a referred student becomes active on UniHub.</p>
+          <div className="promotion-card__tier-row" aria-label="Affiliate reward tiers">
+            <span>1–20 <strong>LKR 20</strong></span><span>21–100 <strong>LKR 30</strong></span><span>101+ <strong>LKR 40</strong></span>
+          </div>
+          <Link href={actions.affiliate} className="promotion-card__button promotion-card__button--light">
+            {isAuthenticated ? "Open affiliate hub" : "Start earning"} <span aria-hidden="true">→</span>
+          </Link>
+        </article>
+
+        <article className="promotion-card promotion-card--listings">
+          <span className="promotion-card__label">Free listings</span>
+          <h3>List free for 3 months.</h3>
+          <p>Sell useful student items or advertise a boarding place during UniHub’s promotional period.</p>
+          <div className="promotion-card__listing-links">
+            <Link href={actions.marketplace}>List on Marketplace <span aria-hidden="true">→</span></Link>
+            <Link href={actions.boarding}>List a Boarding Place <span aria-hidden="true">→</span></Link>
+          </div>
+        </article>
+      </div>
+
+      <style jsx>{`
+        .combined-promotion { background: linear-gradient(115deg, #053f38 0%, #0b665a 58%, #18786b 100%); color: #fff; border-bottom: 1px solid rgba(255,255,255,.18); }
+        .combined-promotion__inner { width: min(1180px, calc(100% - 40px)); margin: 0 auto; display: grid; grid-template-columns: 1.08fr .96fr .96fr; gap: 16px; padding: 28px 0; align-items: stretch; }
+        .combined-promotion__intro { display: flex; flex-direction: column; justify-content: center; padding: 6px 10px 6px 0; }.combined-promotion__eyebrow, .promotion-card__label { display: inline-flex; align-self: flex-start; margin-bottom: 9px; font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }.combined-promotion__eyebrow { color: #a9f0df; }.combined-promotion h2 { margin: 0; max-width: 440px; font-size: clamp(25px, 3vw, 35px); line-height: 1.08; font-weight: 800; letter-spacing: -.025em; }.combined-promotion__intro p { margin: 10px 0 0; max-width: 470px; color: #d7f4ec; font-size: 14px; line-height: 1.5; }
+        .promotion-card { display: flex; flex-direction: column; min-width: 0; padding: 19px; border-radius: 12px; }.promotion-card--affiliate { border: 1px solid rgba(255,255,255,.27); background: rgba(255,255,255,.11); }.promotion-card--listings { color: #17322e; border: 1px solid rgba(255,223,157,.72); background: #fff1d5; }.promotion-card--affiliate .promotion-card__label { color: #a9f0df; }.promotion-card--listings .promotion-card__label { color: #9a5a00; }.promotion-card h3 { margin: 0; font-size: 20px; line-height: 1.2; font-weight: 800; }.promotion-card p { margin: 8px 0 0; font-size: 13px; line-height: 1.48; }.promotion-card--affiliate p { color: #e2f7f0; }.promotion-card--listings p { color: #5d5547; }
+        .promotion-card__tier-row { display: flex; gap: 7px; margin: 15px 0; }.promotion-card__tier-row span { flex: 1; padding: 7px 5px; color: #dff9ef; border-radius: 7px; background: rgba(0,0,0,.13); text-align: center; font-size: 10px; font-weight: 700; }.promotion-card__tier-row strong { display: block; margin-top: 2px; color: #fff; font-size: 12px; }.promotion-card__button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 41px; margin-top: auto; padding: 0 12px; border-radius: 7px; text-decoration: none; font-size: 12px; font-weight: 800; }.promotion-card__button--light { color: #08483f; background: #fff; }.promotion-card__button--light:hover { background: #e6fff6; }.promotion-card__listing-links { display: grid; gap: 8px; margin-top: 16px; }.promotion-card__listing-links a { display: flex; align-items: center; justify-content: space-between; padding: 9px 10px; border: 1px solid #dbbd82; border-radius: 7px; color: #543900; background: rgba(255,255,255,.43); text-decoration: none; font-size: 12px; font-weight: 800; }.promotion-card__listing-links a:hover { background: #fff9ed; }
+        @media (max-width: 980px) { .combined-promotion__inner { grid-template-columns: 1fr 1fr; } .combined-promotion__intro { grid-column: 1 / -1; padding-right: 0; } } @media (max-width: 640px) { .combined-promotion__inner { width: min(100% - 28px, 1180px); grid-template-columns: 1fr; padding: 22px 0; } .combined-promotion__intro { grid-column: auto; } .promotion-card { padding: 17px; } }
+      `}</style>
+    </section>
+  );
+}

@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 import FeaturedCoursesCarousel from "@/components/FeaturedCoursesCarousel";
 import HeroSection from "@/components/HeroSection";
+import CombinedPromotionBanner from "@/components/CombinedPromotionBanner";
 import { statsService } from "@/services/stats.service";
 
 // Fallback shown until the real platform stats load (or if the request fails).
@@ -72,7 +73,9 @@ export default function Home() {
       {/* Hero */}
       <HeroSection />
 
-      {!isLoading && !user?.isTutorProfileComplete && (
+      <CombinedPromotionBanner isAuthenticated={isAuthenticated} />
+
+      {false && !isLoading && !user?.isTutorProfileComplete && (
         <section style={{ background: "linear-gradient(115deg, #053f38 0%, #0b665a 58%, #18786b 100%)", color: "#fff", borderBottom: "1px solid rgba(255,255,255,.18)" }}>
           <div
             style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "28px 0", display: "grid", gridTemplateColumns: "1.2fr repeat(2, minmax(190px, .72fr)) auto", gap: 18, alignItems: "center" }}
