@@ -7,6 +7,7 @@ import enrollmentService, { Enrollment } from "@/services/enrollment.service";
 import { BACKEND_URL } from "@/lib/constants";
 import InlineSettings from "@/components/settings/InlineSettings";
 import { Avatar } from "@/components/ui";
+import { isVerifiedStudent, shouldShowStudentVerificationBanner } from "@/lib/studentVerification";
 
 // ── Progress bar ─────────────────────────────────────────────────────────────
 function ProgressBar({ value }: { value: number }) {
@@ -103,6 +104,8 @@ function CourseRow({ enrollment }: { enrollment: Enrollment }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const verifiedStudent = isVerifiedStudent(user);
+  const showStudentVerificationPrompt = shouldShowStudentVerificationBanner(user);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [completedCount, setCompletedCount] = useState(0);
@@ -200,6 +203,7 @@ export default function StudentDashboard() {
             firstName={user?.firstName || "S"}
             lastName={user?.lastName}
             size={52}
+            verifiedStudent={verifiedStudent}
             style={{ marginBottom: 12 }}
           />
           <div style={{ fontSize: 15, fontWeight: 800, color: "var(--ink)", marginBottom: 4 }}>
@@ -252,6 +256,33 @@ export default function StudentDashboard() {
             My Learning is your student home base: course progress, completed certificates, marketplace orders, boarding shortlists, and profile details in one place.
           </p>
         </div>
+
+        {showStudentVerificationPrompt && (
+          <section
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18,
+              background: "#ecfdf5", border: "1px solid #99f6d0", borderRadius: 8,
+              padding: "18px 20px", marginBottom: 16,
+            }}
+            className="ml-verification-prompt"
+          >
+            <div>
+              <div style={{ color: "#0f766e", fontSize: 12, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 5 }}>
+                Student verification
+              </div>
+              <div style={{ color: "var(--ink)", fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Verify your student email</div>
+              <p style={{ color: "#475569", fontSize: 13, lineHeight: 1.55, margin: 0 }}>
+                Confirm your university email to show a verified-student check beside your profile photo.
+              </p>
+            </div>
+            <Link
+              href="/student/dashboard?section=settings&setting=profile"
+              style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 40, padding: "0 16px", borderRadius: 5, background: "var(--brand)", color: "#fff", fontSize: 13, fontWeight: 800, textDecoration: "none" }}
+            >
+              Verify email
+            </Link>
+          </section>
+        )}
 
         {/* Stats row */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }} className="ml-stat-grid">
@@ -402,6 +433,7 @@ export default function StudentDashboard() {
           .ml-outer { padding: 0 4px !important; }
           .ml-dashboard-aside { display: none !important; }
           .ml-hero { padding: 18px 16px !important; }
+          .ml-verification-prompt { align-items: flex-start !important; flex-direction: column; }
           .ml-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .ml-two-col   { grid-template-columns: 1fr !important; }
         }

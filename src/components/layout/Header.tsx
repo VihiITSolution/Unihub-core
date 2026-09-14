@@ -7,6 +7,7 @@ import { RoleUpgradeModal, NotificationBell, ChatBadge, Avatar } from "@/compone
 import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
+import { isVerifiedStudent } from "@/lib/studentVerification";
 import FacultyNav from "./FacultyNav";
 
 export default function Header() {
@@ -21,6 +22,7 @@ export default function Header() {
   const { toggle: toggleSidebar, isOpen: sidebarOpen } = useSidebar();
   const router = useRouter();
   const profileRef = useRef<HTMLDivElement>(null);
+  const verifiedStudent = isVerifiedStudent(user);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -258,7 +260,7 @@ export default function Header() {
                 }}
                 className="hover:bg-soft"
               >
-                <Avatar src={user.profileImage} firstName={user.firstName} lastName={user.lastName} size={26} />
+                <Avatar src={user.profileImage} firstName={user.firstName} lastName={user.lastName} size={26} verifiedStudent={verifiedStudent} />
                 <span className="hidden md:block" style={{ maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {user.firstName}
                 </span>
@@ -495,7 +497,7 @@ export default function Header() {
           ) : user && (
             <div style={{ borderTop: "1px solid var(--line)", padding: 14 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <Avatar src={user.profileImage} firstName={user.firstName} lastName={user.lastName} size={36} />
+                <Avatar src={user.profileImage} firstName={user.firstName} lastName={user.lastName} size={36} verifiedStudent={verifiedStudent} />
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{user.firstName} {user.lastName}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)", textTransform: "capitalize" }}>{user.primaryRole}</div>

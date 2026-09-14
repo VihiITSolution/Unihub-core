@@ -69,7 +69,7 @@ export default function ProfilePage() {
     <div className="max-w-2xl mx-auto py-8 px-4">
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <div className="flex flex-wrap items-center gap-4">
-          <Avatar src={user.profileImage} firstName={user.firstName} lastName={user.lastName} size={80} />
+          <Avatar src={user.profileImage} firstName={user.firstName} lastName={user.lastName} size={80} verifiedStudent={user.isStudentEmailVerified} />
           <div className="flex-1">
             <h1 className="text-xl font-bold text-gray-900">
               {user.firstName} {user.lastName}

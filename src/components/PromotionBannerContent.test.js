@@ -7,6 +7,7 @@ test("sends guests to registration before promotion actions", () => {
     affiliate: "/auth/register",
     marketplace: "/auth/register",
     boarding: "/auth/register",
+    tutor: "/auth/register",
   });
 });
 
@@ -15,5 +16,6 @@ test("sends signed-in users to the affiliate and listing flows", () => {
     affiliate: "/student/affiliate",
     marketplace: "/vendor/listings/create",
     boarding: "/vendor/boarding/create",
+    tutor: "/student/become-tutor",
   });
 });

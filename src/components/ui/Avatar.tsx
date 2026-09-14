@@ -10,6 +10,8 @@ interface AvatarProps {
   /** Shows a small pencil badge in the corner (profile edit screens). */
   editable?: boolean;
   onEditClick?: () => void;
+  /** Shows the student's confirmed-email badge beside their profile photo. */
+  verifiedStudent?: boolean;
 }
 
 export function Avatar({
@@ -21,6 +23,7 @@ export function Avatar({
   style,
   editable,
   onEditClick,
+  verifiedStudent,
 }: AvatarProps) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "?";
   const alt = [firstName, lastName].filter(Boolean).join(" ") || "avatar";
@@ -54,6 +57,32 @@ export function Avatar({
         >
           {initials}
         </div>
+      )}
+
+      {verifiedStudent && (
+        <span
+          role="img"
+          aria-label="Verified student"
+          title="Verified student"
+          style={{
+            position: "absolute",
+            top: -3,
+            right: -3,
+            width: Math.max(17, Math.round(size * 0.38)),
+            height: Math.max(17, Math.round(size * 0.38)),
+            borderRadius: "50%",
+            background: "#0f766e",
+            color: "#fff",
+            border: "2px solid #fff",
+            display: "grid",
+            placeItems: "center",
+            boxShadow: "0 1px 3px rgba(15, 118, 110, .35)",
+          }}
+        >
+          <svg width="65%" height="65%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m5 12 4 4L19 6" />
+          </svg>
+        </span>
       )}
 
       {editable && (

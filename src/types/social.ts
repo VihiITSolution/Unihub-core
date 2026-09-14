@@ -54,6 +54,7 @@ export interface PublicSocialProfile {
     bio?: string | null;
     profileImage?: string | null;
     primaryRole: string;
+    isStudentEmailVerified?: boolean;
   };
   counts: { posts: number; followers: number; following: number };
   isOwnProfile: boolean;

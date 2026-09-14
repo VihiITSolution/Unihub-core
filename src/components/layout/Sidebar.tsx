@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar } from "@/components/ui";
+import { isVerifiedStudent } from "@/lib/studentVerification";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -89,6 +90,7 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const verifiedStudent = isVerifiedStudent(user);
 
   const links =
     userType === "tutor" ? tutorLinks
@@ -210,7 +212,7 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: isOpen ? "flex-start" : "center" }}>
-          <Avatar src={user?.profileImage} firstName={user?.firstName || "U"} lastName={user?.lastName} size={32} />
+          <Avatar src={user?.profileImage} firstName={user?.firstName || "U"} lastName={user?.lastName} size={32} verifiedStudent={verifiedStudent} />
           {isOpen && (
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#f9fafb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

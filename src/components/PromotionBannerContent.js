@@ -4,6 +4,7 @@ function getPromotionActions(isAuthenticated) {
       affiliate: "/auth/register",
       marketplace: "/auth/register",
       boarding: "/auth/register",
+      tutor: "/auth/register",
     };
   }
 
@@ -11,6 +12,7 @@ function getPromotionActions(isAuthenticated) {
     affiliate: "/student/affiliate",
     marketplace: "/vendor/listings/create",
     boarding: "/vendor/boarding/create",
+    tutor: "/student/become-tutor",
   };
 }
 
