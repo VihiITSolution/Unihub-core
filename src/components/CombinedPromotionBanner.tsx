@@ -22,7 +22,11 @@ export default function CombinedPromotionBanner({ isAuthenticated }: { isAuthent
           <div className="promotion-card__tier-row" aria-label="Affiliate reward tiers">
             <span>1–20 <strong>LKR 20</strong></span><span>21–100 <strong>LKR 30</strong></span><span>101+ <strong>LKR 40</strong></span>
           </div>
-          <Link href={actions.affiliate} className="promotion-card__button promotion-card__button--light">
+          <Link
+            href={actions.affiliate}
+            className="promotion-card__button promotion-card__button--light"
+            style={{ display: "flex", width: "100%", minHeight: 46, alignItems: "center", justifyContent: "center", gap: 8, padding: "0 16px", borderRadius: 8, background: "#ffffff", color: "#08483f", fontWeight: 800, textDecoration: "none", boxSizing: "border-box" }}
+          >
             {isAuthenticated ? "Open affiliate hub" : "Start earning"} <span aria-hidden="true">→</span>
           </Link>
         </article>
@@ -32,8 +36,20 @@ export default function CombinedPromotionBanner({ isAuthenticated }: { isAuthent
           <h3>List free for 3 months.</h3>
           <p>Sell useful student items or advertise a boarding place during UniHub’s promotional period.</p>
           <div className="promotion-card__listing-links">
-            <Link href={actions.marketplace}>List on Marketplace <span aria-hidden="true">→</span></Link>
-            <Link href={actions.boarding}>List a Boarding Place <span aria-hidden="true">→</span></Link>
+            <Link
+              href={actions.marketplace}
+              className="promotion-card__button promotion-card__button--listing"
+              style={{ display: "flex", width: "100%", minHeight: 46, alignItems: "center", justifyContent: "space-between", gap: 8, padding: "0 14px", border: "1px solid #b77912", borderRadius: 8, background: "#fffaf0", color: "#543900", fontWeight: 800, textDecoration: "none", boxSizing: "border-box" }}
+            >
+              <span>List on Marketplace</span><span aria-hidden="true">→</span>
+            </Link>
+            <Link
+              href={actions.boarding}
+              className="promotion-card__button promotion-card__button--listing"
+              style={{ display: "flex", width: "100%", minHeight: 46, alignItems: "center", justifyContent: "space-between", gap: 8, padding: "0 14px", border: "1px solid #b77912", borderRadius: 8, background: "#fffaf0", color: "#543900", fontWeight: 800, textDecoration: "none", boxSizing: "border-box" }}
+            >
+              <span>List a Boarding Place</span><span aria-hidden="true">→</span>
+            </Link>
           </div>
         </article>
 
@@ -41,7 +57,11 @@ export default function CombinedPromotionBanner({ isAuthenticated }: { isAuthent
           <span className="promotion-card__label">Tutor video rewards</span>
           <h3>Teach students. Earn more.</h3>
           <p>Earn LKR 300 for an eligible existing 20+ minute YouTube lesson, or LKR 500 when you upload an eligible lesson to UniHub.</p>
-          <Link href={actions.tutor} className="promotion-card__button promotion-card__button--tutor">
+          <Link
+            href={actions.tutor}
+            className="promotion-card__button promotion-card__button--tutor"
+            style={{ display: "flex", width: "100%", minHeight: 46, alignItems: "center", justifyContent: "center", gap: 8, padding: "0 16px", borderRadius: 8, background: "#bbf7d0", color: "#073f38", fontWeight: 800, textDecoration: "none", boxSizing: "border-box" }}
+          >
             {isAuthenticated ? "Become a tutor" : "Start teaching"} <span aria-hidden="true">→</span>
           </Link>
         </article>
