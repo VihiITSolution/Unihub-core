@@ -25,7 +25,7 @@ export default function CombinedPromotionBanner({ isAuthenticated }: { isAuthent
           <Link
             href={actions.affiliate}
             className="promotion-card__button promotion-card__button--light"
-            style={{ display: "flex", width: "100%", minHeight: 46, alignItems: "center", justifyContent: "center", gap: 8, padding: "0 16px", borderRadius: 8, background: "#ffffff", color: "#08483f", fontWeight: 800, textDecoration: "none", boxSizing: "border-box" }}
+            style={{ display: "flex", width: "100%", minHeight: 46, marginTop: "auto", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 16px", borderRadius: 8, background: "#ffffff", color: "#08483f", fontWeight: 800, textDecoration: "none", boxSizing: "border-box" }}
           >
             {isAuthenticated ? "Open affiliate hub" : "Start earning"} <span aria-hidden="true">→</span>
           </Link>
@@ -35,7 +35,7 @@ export default function CombinedPromotionBanner({ isAuthenticated }: { isAuthent
           <span className="promotion-card__label">Free listings</span>
           <h3>List free for 3 months.</h3>
           <p>Sell useful student items or advertise a boarding place during UniHub’s promotional period.</p>
-          <div className="promotion-card__listing-links">
+          <div className="promotion-card__listing-links" style={{ marginTop: "auto" }}>
             <Link
               href={actions.marketplace}
               className="promotion-card__button promotion-card__button--listing"
@@ -60,7 +60,7 @@ export default function CombinedPromotionBanner({ isAuthenticated }: { isAuthent
           <Link
             href={actions.tutor}
             className="promotion-card__button promotion-card__button--tutor"
-            style={{ display: "flex", width: "100%", minHeight: 46, alignItems: "center", justifyContent: "center", gap: 8, padding: "0 16px", borderRadius: 8, background: "#bbf7d0", color: "#073f38", fontWeight: 800, textDecoration: "none", boxSizing: "border-box" }}
+            style={{ display: "flex", width: "100%", minHeight: 46, marginTop: "auto", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 16px", borderRadius: 8, background: "#bbf7d0", color: "#073f38", fontWeight: 800, textDecoration: "none", boxSizing: "border-box" }}
           >
             {isAuthenticated ? "Become a tutor" : "Start teaching"} <span aria-hidden="true">→</span>
           </Link>
