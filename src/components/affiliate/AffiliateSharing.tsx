@@ -5,7 +5,7 @@ import { useState } from "react";
 
 export function AffiliateSharing({ referralLink }: { referralLink: string }) {
   const [notice, setNotice] = useState("");
-  const message = `Join me on UniHub, Sri Lanka's student community for learning, courses and marketplace listings. Use my referral link to register: ${referralLink}\n\nNew students need a verified mobile and completed student profile, then an approved UniHub activity to qualify. I may receive an affiliate reward when a referral qualifies.`;
+  const message = `Join me on UniHub, Sri Lanka's student community for learning, courses and marketplace listings. Use my referral link to register: ${referralLink}\n\nWithdraw your first 2000 LKR with our referral program!`;
   const copyMessage = async (copiedNotice = "Invite message copied — ready to paste anywhere") => {
     await navigator.clipboard.writeText(message);
     setNotice(copiedNotice);
