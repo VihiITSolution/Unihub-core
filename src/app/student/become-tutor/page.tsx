@@ -222,29 +222,105 @@ export default function BecomeTutorPage() {
           </p>
         </div>
 
-        <section className="mb-8 overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-950 via-emerald-800 to-teal-700 p-6 text-white shadow-xl sm:p-8" aria-labelledby="tutor-rewards-title">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-xl">
-              <p className="mb-2 text-xs font-bold tracking-[0.16em] text-emerald-200">TUTOR VIDEO REWARDS · UNTIL FURTHER NOTICE</p>
-              <h2 id="tutor-rewards-title" className="mb-2 text-2xl font-bold sm:text-3xl">Teach what you know. Get rewarded for it.</h2>
-              <p className="text-sm leading-6 text-emerald-50">Share knowledge students can use while building your UniHub tutor profile.</p>
+        <section className="mb-8 overflow-hidden rounded-2xl bg-white shadow-xl p-6 sm:p-8 border border-gray-200" aria-labelledby="tutor-rewards-title">
+          <div className="text-center mb-8">
+            <h2 id="tutor-rewards-title" className="text-2xl font-bold text-gray-900 tracking-wide uppercase mb-2">Tutor Video Tutorial Program</h2>
+            <p className="text-sm text-gray-500 font-medium tracking-wide">
+              Create useful tutorials &bull; Build your student base &bull; Earn during and after the promotion
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 border-2 border-teal-100 rounded-lg overflow-hidden mb-10 text-center">
+            <div className="bg-teal-50 p-4 flex items-center justify-center font-bold text-teal-800 border-b md:border-b-0 md:border-r border-teal-100">
+              WHY JOIN NOW?
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:w-[480px]">
-              <article className="rounded-xl border border-white/25 bg-white/10 p-4 backdrop-blur-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200">Existing YouTube video</p>
-                <p className="mt-1 text-2xl font-bold">LKR 300</p>
-                <p className="mt-1 text-xs leading-5 text-emerald-50">For an eligible teaching video already on YouTube, 20 minutes or longer.</p>
-              </article>
-              <article className="rounded-xl border border-amber-200/60 bg-amber-300/15 p-4 backdrop-blur-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-amber-100">Upload to UniHub</p>
-                <p className="mt-1 text-2xl font-bold">LKR 500 <span className="text-sm">per video</span></p>
-                <p className="mt-1 text-xs leading-5 text-emerald-50">For each eligible video you upload to UniHub.</p>
-              </article>
+            <div className="p-4 flex flex-col justify-center border-b md:border-b-0 md:border-r border-teal-100 bg-white">
+              <span className="font-semibold text-gray-700">Earn up to</span>
+              <span className="text-lg font-bold text-gray-900">LKR 300</span>
+              <span className="text-xs text-gray-600 font-medium">per qualifying video</span>
+            </div>
+            <div className="p-4 flex items-center justify-center font-bold text-gray-800 border-b md:border-b-0 md:border-r border-teal-100 bg-white">
+              Build your student base during promotion
+            </div>
+            <div className="p-4 flex flex-col justify-center bg-white text-gray-800 font-bold">
+              <span>Set your own price after promotion</span>
+              <span>Keep 90%</span>
             </div>
           </div>
-          <div className="mt-5 flex items-start gap-2 border-t border-white/15 pt-4 text-xs leading-5 text-emerald-100">
-            <span aria-hidden="true">✓</span>
-            <span>All rewards are given only after UniHub reviews and approves the submitted video.</span>
+
+          <div className="mb-10">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">At a glance</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="bg-[#1e293b] text-white">
+                    <th className="p-3 border border-slate-700 font-semibold w-1/4">PAYMENT / BENEFIT</th>
+                    <th className="p-3 border border-slate-700 font-semibold">HOW IT WORKS</th>
+                  </tr>
+                </thead>
+                <tbody className="text-gray-700">
+                  <tr>
+                    <td className="p-3 border font-bold bg-gray-50">LKR 150</td>
+                    <td className="p-3 border bg-white">For each UniHub-approved tutorial video longer than 20 minutes.</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 border font-bold bg-gray-50">+ LKR 150</td>
+                    <td className="p-3 border bg-white">The same video earns an additional LKR 150 if it exceeds 100 enrolments during the promotional period.</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 border font-bold bg-gray-50">Up to LKR 300</td>
+                    <td className="p-3 border bg-white">Maximum promotional reward for one qualifying video when both requirements are achieved.</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 border font-bold bg-gray-50">After promotion</td>
+                    <td className="p-3 border bg-white">Tutors can set their own selling price for their tutorials.</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 border font-bold bg-gray-50">Keep 90%</td>
+                    <td className="p-3 border bg-white">Tutor receives 90% of each completed tutorial sale; UniHub receives 10%.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Simple tutor journey</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-0 border-2 border-blue-200 rounded-lg overflow-hidden text-center bg-[#f0f7ff]">
+              <div className="p-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-blue-200">
+                <span className="text-xl font-bold text-blue-900 mb-1">1</span>
+                <span className="text-sm font-bold text-gray-800 uppercase mb-1">CREATE</span>
+                <span className="text-xs text-gray-600 font-medium">Upload useful<br/>20+ min tutorials</span>
+              </div>
+              <div className="p-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-blue-200">
+                <span className="text-xl font-bold text-blue-900 mb-1">2</span>
+                <span className="text-sm font-bold text-gray-800 uppercase mb-1">EARN</span>
+                <span className="text-xs text-gray-600 font-medium">Receive<br/>promotional payments</span>
+              </div>
+              <div className="p-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-blue-200">
+                <span className="text-xl font-bold text-blue-900 mb-1">3</span>
+                <span className="text-sm font-bold text-gray-800 uppercase mb-1">GROW</span>
+                <span className="text-xs text-gray-600 font-medium">Reach 100+<br/>enrolments</span>
+              </div>
+              <div className="p-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-blue-200">
+                <span className="text-xl font-bold text-blue-900 mb-1">4</span>
+                <span className="text-sm font-bold text-gray-800 uppercase mb-1">SELL</span>
+                <span className="text-xs text-gray-600 font-medium">Set your own<br/>price</span>
+              </div>
+              <div className="p-4 flex flex-col items-center justify-center">
+                <span className="text-xl font-bold text-blue-900 mb-1">5</span>
+                <span className="text-sm font-bold text-gray-800 uppercase mb-1">EARN LONG-TERM</span>
+                <span className="text-xs text-gray-600 font-medium">Keep 90% of each<br/>completed sale</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="border border-amber-300 bg-amber-50 p-4 rounded-lg text-sm text-gray-800 mb-6">
+            <span className="font-semibold text-gray-900">Example:</span> An approved 25-minute tutorial earns LKR 150. If it exceeds 100 enrolments during the promotion, it earns another LKR 150. Total promotional reward = LKR 300.
+          </div>
+
+          <div className="bg-gray-100 p-4 rounded-lg text-xs text-gray-600">
+            Eligibility: Videos must be longer than 20 minutes, approved by UniHub, and meet UniHub content standards. The 100+ enrolment bonus must be achieved within the promotional period.
           </div>
         </section>
 
@@ -401,7 +477,7 @@ export default function BecomeTutorPage() {
                     <p className="text-sm text-blue-700">
                       <strong>Recommended:</strong> Add a YouTube teaching video
                       to show your teaching style. Videos that are 20 minutes or
-                      longer may qualify for the LKR 300 reward after review.
+                      longer may qualify for the promotional reward after review.
                     </p>
                   </div>
                 </div>

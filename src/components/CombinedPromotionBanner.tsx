@@ -54,9 +54,9 @@ export default function CombinedPromotionBanner({ isAuthenticated }: { isAuthent
         </article>
 
         <article className="promotion-card promotion-card--tutor">
-          <span className="promotion-card__label">Tutor video rewards</span>
-          <h3>Teach students. Earn more.</h3>
-          <p>Earn LKR 300 for an eligible existing 20+ minute YouTube lesson, or LKR 500 when you upload an eligible lesson to UniHub.</p>
+          <span className="promotion-card__label">Tutor video tutorial program</span>
+          <h3>Create tutorials. Earn more.</h3>
+          <p>Earn up to LKR 300 per qualifying video and keep 90% of each completed sale after the promotion.</p>
           <Link
             href={actions.tutor}
             className="promotion-card__button promotion-card__button--tutor"
