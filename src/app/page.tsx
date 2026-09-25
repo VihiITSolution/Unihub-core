@@ -73,7 +73,7 @@ export default function Home() {
       {/* Hero */}
       <HeroSection />
 
-      <CombinedPromotionBanner isAuthenticated={isAuthenticated} />
+      <CombinedPromotionBanner isAuthenticated={isAuthenticated} isVendor={Array.isArray(user?.roles) && user.roles.includes("vendor")} />
 
       {false && !isLoading && !user?.isTutorProfileComplete && (
         <section style={{ background: "linear-gradient(115deg, #053f38 0%, #0b665a 58%, #18786b 100%)", color: "#fff", borderBottom: "1px solid rgba(255,255,255,.18)" }}>

@@ -68,9 +68,9 @@ export default function AffiliatePage() {
       <section className="affiliate-hero">
         <div className="hero-orb hero-orb-one" /><div className="hero-orb hero-orb-two" />
         <div className="hero-content">
-          <span className="hero-eyebrow"><Gift size={14} /> UniHub student affiliate</span>
+          <span className="hero-eyebrow"><Gift size={14} /> UniHub affiliate programme</span>
           <h1>Share UniHub.<br /><em>Earn together.</em></h1>
-          <p>Invite students to a more connected university life. When they become active on UniHub, your rewards start adding up.</p>
+          <p>Invite students and vendors to a more connected university life. When they become active on UniHub, your rewards start adding up.</p>
           <div className="hero-actions">
             <button className="hero-copy" onClick={() => navigator.clipboard.writeText(data.account.referralLink).then(() => setNotice("Your referral link is copied."))}><Copy size={16} /> Copy referral link</button>
             <span>Sign-ups close <strong>{closeDate}</strong></span>
@@ -90,7 +90,7 @@ export default function AffiliatePage() {
       <section className="affiliate-stat-grid">
         <article className="affiliate-stat stat-primary"><span><CircleDollarSign size={19} /> Available now</span><strong>{lkr(data.balances.available)}</strong><small>{hasAvailableBalance ? "Ready to redeem" : `${lkr(redemptionMinimum - data.balances.available)} to your first cash-out`}</small></article>
         <article className="affiliate-stat"><span><Clock3 size={18} /> In review</span><strong>{lkr(data.balances.reserved)}</strong><small>Requested or processing payout</small></article>
-        <article className="affiliate-stat"><span><Users size={18} /> Your network</span><strong>{referralCount}</strong><small>{referralCount === 1 ? "student invited" : "students invited"}</small></article>
+        <article className="affiliate-stat"><span><Users size={18} /> Your network</span><strong>{referralCount}</strong><small>{referralCount === 1 ? "user invited" : "users invited"}</small></article>
       </section>
 
       <AffiliateSharing referralLink={data.account.referralLink} />
@@ -112,7 +112,7 @@ export default function AffiliatePage() {
           <article className="affiliate-card how-card">
             <div className="section-heading"><div><span className="section-kicker">How it works</span><h2>Three small steps</h2></div></div>
             <div className="how-steps">
-              {[['01', 'Share your link', 'Send your personal invite to student friends.'], ['02', 'They complete one activity', 'List a marketplace item or boarding place, or upload a course video longer than 20 minutes.'], ['03', 'You earn rewards', 'After UniHub approves the listing or course, we add the reward to your balance.']].map(([number, title, copy]) => <div className="how-step" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></div>)}
+              {[['01', 'Share your link', 'Send your personal invite to student or vendor friends.'], ['02', 'They complete one activity', 'List a marketplace item or boarding place, create a vendor shop, or upload a course video longer than 20 minutes.'], ['03', 'You earn rewards', 'After UniHub approves the listing, vendor profile, or course, we add the reward to your balance.']].map(([number, title, copy]) => <div className="how-step" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></div>)}
             </div>
           </article>
 
@@ -121,9 +121,10 @@ export default function AffiliatePage() {
             {data.referrals.length ? <div className="referral-list">{data.referrals.map((referral) => {
               const referred = referral.referred;
               const initials = `${referred?.firstName?.charAt(0) || ""}${referred?.lastName?.charAt(0) || ""}` || "S";
-              const name = referred ? `${referred.firstName} ${referred.lastName}` : "Referred student";
-              return <div className="referral-row" key={referral.id}><div className="referral-avatar">{initials}</div><div><strong>{name}</strong><p>{referral.activityType ? `${referral.activityType} activity` : "Invite accepted"} · {new Date(referral.createdAt).toLocaleDateString("en-LK")}</p></div><div className="referral-reward"><span className={`status-${referral.status}`}>{referral.status.replace("_", " ")}</span>{referral.rewardAmount && <strong>+{lkr(referral.rewardAmount)}</strong>}</div></div>;
-            })}</div> : <div className="affiliate-empty"><Users size={25} /><h3>Your first reward is one invite away</h3><p>Share your link above with a student friend to get started.</p></div>}
+              const name = referred ? `${referred.firstName} ${referred.lastName}` : "Referred user";
+              const activityLabel = referral.activityType === "vendor" ? "vendor shop created" : referral.activityType ? `${referral.activityType} activity` : "Invite accepted";
+              return <div className="referral-row" key={referral.id}><div className="referral-avatar">{initials}</div><div><strong>{name}</strong><p>{activityLabel} · {new Date(referral.createdAt).toLocaleDateString("en-LK")}</p></div><div className="referral-reward"><span className={`status-${referral.status}`}>{referral.status.replace("_", " ")}</span>{referral.rewardAmount && <strong>+{lkr(referral.rewardAmount)}</strong>}</div></div>;
+            })}</div> : <div className="affiliate-empty"><Users size={25} /><h3>Your first reward is one invite away</h3><p>Share your link above with a student or vendor friend to get started.</p></div>}
           </article>
         </div>
 

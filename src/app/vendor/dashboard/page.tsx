@@ -155,7 +155,7 @@ export default function VendorDashboardPage() {
       {/* Quick Actions */}
       <div className="card mb-8 p-6">
         <h2 className="text-2xl font-semibold mb-6">Quick Actions</h2>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-4 gap-4">
           <Link
             href="/vendor/listings/create"
             className="p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition text-center"
@@ -183,6 +183,16 @@ export default function VendorDashboardPage() {
             <div className="font-semibold">Shop Settings</div>
             <div className="text-sm text-gray-600 mt-1">
               Update your shop info
+            </div>
+          </Link>
+
+          <Link
+            href="/vendor/affiliate"
+            className="p-6 border-2 border-dashed border-purple-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition text-center"
+          >
+            <div className="font-semibold text-purple-800">Affiliate Programme</div>
+            <div className="text-sm text-purple-600 mt-1">
+              Refer &amp; earn LKR 20–40
             </div>
           </Link>
         </div>

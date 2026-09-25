@@ -3,27 +3,27 @@
 import Link from "next/link";
 import { getPromotionActions } from "./PromotionBannerContent";
 
-export default function CombinedPromotionBanner({ isAuthenticated }: { isAuthenticated: boolean }) {
-  const actions = getPromotionActions(isAuthenticated);
+export default function CombinedPromotionBanner({ isAuthenticated, isVendor = false }: { isAuthenticated: boolean; isVendor?: boolean }) {
+  const actions = getPromotionActions(isAuthenticated, isVendor);
 
   return (
-    <section className="combined-promotion" aria-label="UniHub student promotions">
+    <section className="combined-promotion" aria-label="UniHub promotions">
       <div className="combined-promotion__inner">
         <div className="combined-promotion__intro">
-          <span className="combined-promotion__eyebrow">UniHub student benefits</span>
+          <span className="combined-promotion__eyebrow">UniHub student &amp; vendor benefits</span>
           <h2>Make your UniHub time work harder for you.</h2>
-          <p>Invite active student friends, list what students need, or teach with video. Every offer is a simple, student-first way to earn and grow on UniHub.</p>
+          <p>Invite active students or vendors, list what students need, or teach with video. Every offer is a simple way to earn and grow on UniHub.</p>
         </div>
 
         <article className="promotion-card promotion-card--affiliate">
-          <span className="promotion-card__label">Student affiliate</span>
+          <span className="promotion-card__label">Student &amp; vendor affiliate</span>
           <h3>Invite friends. Earn rewards.</h3>
-          <p>Share your personal link and earn LKR 20–40 when a referred student becomes active on UniHub.</p>
+          <p>Share your personal link and earn LKR 20–40 when a referred student or vendor becomes active on UniHub.</p>
           <div className="promotion-card__tier-row" aria-label="Affiliate reward tiers">
             <span>1–20 <strong>LKR 20</strong></span><span>21–100 <strong>LKR 30</strong></span><span>101+ <strong>LKR 40</strong></span>
           </div>
           <Link
-            href={actions.affiliate}
+            href={actions.affiliateVendor}
             className="promotion-card__button promotion-card__button--light"
             style={{ display: "flex", width: "100%", minHeight: 46, marginTop: "auto", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 16px", borderRadius: 8, background: "#ffffff", color: "#08483f", fontWeight: 800, textDecoration: "none", boxSizing: "border-box" }}
           >
