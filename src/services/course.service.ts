@@ -28,6 +28,7 @@ export interface CreateCourseData {
   category: string;
   level: "beginner" | "intermediate" | "advanced";
   duration: number;
+  durationMinutes?: number;
   facultyId?: number;
   departmentId?: number;
   year?: number;

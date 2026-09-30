@@ -381,7 +381,10 @@ export default function CourseDetailsPage() {
               <div className="flex items-center gap-2 text-gray-700">
                 <span className="text-sm">Duration:</span>
                 <span className="font-medium">
-                  {course.duration || 0} hours
+                  {[
+                    Number(course.duration) > 0 ? `${course.duration}h` : null,
+                    Number(course.durationMinutes) > 0 ? `${course.durationMinutes}m` : null,
+                  ].filter(Boolean).join(" ") || "0m"}
                 </span>
               </div>
             </div>

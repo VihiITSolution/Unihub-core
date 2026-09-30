@@ -50,7 +50,8 @@ export default function CreateCoursePage() {
     description: "",
     aboutCourse: "",
     level: "beginner" as "beginner" | "intermediate" | "advanced",
-    duration: "",
+    duration: "0",
+    durationMinutes: "0",
     facultyId: "",
     departmentId: "",
     year: "",
@@ -282,6 +283,13 @@ export default function CreateCoursePage() {
       return;
     }
 
+    const hours = Number(formData.duration);
+    const minutes = Number(formData.durationMinutes);
+    if (!Number.isInteger(hours) || hours < 0 || !Number.isInteger(minutes) || minutes < 0 || minutes > 59 || (hours === 0 && minutes === 0)) {
+      setError("Enter a duration of at least one minute. Minutes must be between 0 and 59.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -295,6 +303,7 @@ export default function CreateCoursePage() {
       formDataToSend.append("price", "0");
       formDataToSend.append("level", formData.level);
       formDataToSend.append("duration", formData.duration);
+      formDataToSend.append("durationMinutes", formData.durationMinutes);
       if (formData.facultyId) formDataToSend.append("facultyId", formData.facultyId);
       if (formData.departmentId) formDataToSend.append("departmentId", formData.departmentId);
       if (formData.year) formDataToSend.append("year", formData.year);
@@ -715,18 +724,39 @@ export default function CreateCoursePage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Total Duration (hours) <span className="text-red-500">*</span>
+                    Total course duration <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="number"
-                    name="duration"
-                    required
-                    min="1"
-                    value={formData.duration}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="20"
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="courseDurationHours" className="block text-sm text-gray-600 mb-1">Hours</label>
+                      <input
+                        id="courseDurationHours"
+                        type="number"
+                        name="duration"
+                        required
+                        min="0"
+                        step="1"
+                        value={formData.duration}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="courseDurationMinutes" className="block text-sm text-gray-600 mb-1">Minutes</label>
+                      <input
+                        id="courseDurationMinutes"
+                        type="number"
+                        name="durationMinutes"
+                        required
+                        min="0"
+                        max="59"
+                        step="1"
+                        value={formData.durationMinutes}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div>
