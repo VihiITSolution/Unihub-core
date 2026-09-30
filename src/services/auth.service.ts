@@ -100,8 +100,8 @@ export const authService = {
 
   async forgotPassword(
     email: string,
-  ): Promise<ApiResponse<{ resetToken?: string; resetUrl?: string }>> {
-    return apiClient.post<ApiResponse<{ resetToken?: string; resetUrl?: string }>>(
+  ): Promise<ApiResponse<null>> {
+    return apiClient.post<ApiResponse<null>>(
       "/auth/forgot-password",
       { email },
     );
@@ -109,12 +109,12 @@ export const authService = {
 
   async resetPassword(
     email: string,
-    token: string,
+    code: string,
     newPassword: string,
   ): Promise<ApiResponse<null>> {
     return apiClient.post<ApiResponse<null>>("/auth/reset-password", {
       email,
-      token,
+      code,
       newPassword,
     });
   },

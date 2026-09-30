@@ -23,7 +23,6 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [devResetUrl, setDevResetUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +38,6 @@ export default function ForgotPasswordPage() {
       const response = await authService.forgotPassword(email.trim());
       if (response.success) {
         setSubmitted(true);
-        setDevResetUrl(response.data?.resetUrl || null);
       } else {
         setError(response.message || "Something went wrong. Please try again.");
       }
@@ -129,30 +127,18 @@ export default function ForgotPasswordPage() {
                   borderRadius: 8,
                   fontSize: 13,
                   color: "var(--ink)",
-                  marginBottom: devResetUrl ? 16 : 0,
+                  marginBottom: 16,
                 }}
               >
-                If an account with that email exists, a password reset link
-                has been generated.
+                If an account with that email exists, a six-digit password
+                reset code has been sent.
               </div>
-              {devResetUrl && (
-                <div
-                  style={{
-                    padding: "12px 14px",
-                    background: "#fffbeb",
-                    border: "1px solid #fde68a",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    color: "var(--ink)",
-                  }}
-                >
-                  Email delivery isn&apos;t configured in this environment
-                  yet, so here&apos;s your reset link directly:{" "}
-                  <Link href={devResetUrl} style={{ color: "var(--brand)", fontWeight: 700 }}>
-                    Reset password
-                  </Link>
-                </div>
-              )}
+              <Link
+                href={`/auth/reset-password?email=${encodeURIComponent(email.trim())}`}
+                style={{ color: "var(--brand)", fontWeight: 700 }}
+              >
+                Enter your reset code
+              </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -190,7 +176,7 @@ export default function ForgotPasswordPage() {
                   cursor: loading ? "not-allowed" : "pointer",
                 }}
               >
-                {loading ? "Sending…" : "Send reset link"}
+                {loading ? "Sending…" : "Send reset code"}
               </button>
             </form>
           )}

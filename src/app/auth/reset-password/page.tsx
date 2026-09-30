@@ -23,8 +23,8 @@ function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
-  const token = searchParams.get("token") || "";
 
+  const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,8 +34,12 @@ function ResetPasswordForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !token) {
-      setError("This reset link is missing required information. Please request a new one.");
+    if (!email) {
+      setError("Request a reset code from the forgot-password page first.");
+      return;
+    }
+    if (!/^\d{6}$/.test(code)) {
+      setError("Enter the six-digit code sent to your email.");
       return;
     }
     if (newPassword.length < 8) {
@@ -51,7 +55,7 @@ function ResetPasswordForm() {
     setError(null);
 
     try {
-      const response = await authService.resetPassword(email, token, newPassword);
+      const response = await authService.resetPassword(email, code, newPassword);
       if (response.success) {
         setSuccess(true);
         setTimeout(() => router.push("/auth/login"), 2000);
@@ -115,7 +119,7 @@ function ResetPasswordForm() {
             Reset your password
           </h1>
           <p style={{ margin: "0 0 24px", fontSize: 14, color: "var(--muted)" }}>
-            Choose a new password for your account.
+            Enter the six-digit code sent to your email and choose a new password.
           </p>
 
           {error && (
@@ -149,6 +153,27 @@ function ResetPasswordForm() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
+                  Email reset code
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => {
+                    setCode(e.target.value.replace(/\D/g, ""));
+                    setError(null);
+                  }}
+                  placeholder="123456"
+                  style={inputStyle}
+                  onFocus={(e) => (e.target.style.borderColor = "var(--brand)")}
+                  onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
+                />
+              </div>
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
                   New password
