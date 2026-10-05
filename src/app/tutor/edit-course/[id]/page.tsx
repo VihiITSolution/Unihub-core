@@ -26,6 +26,7 @@ interface CourseMaterial {
   youtubeVideoId?: string | null;
   youtubeRightsDeclarationId?: number | null;
   persisted?: boolean;
+  pendingUpload?: boolean;
 }
 
 const isYouTubeUrl = (url: string) =>
@@ -44,6 +45,7 @@ const mapContentToMaterial = (content: any): CourseMaterial => ({
   youtubeVideoId: content.youtubeVideoId ?? null,
   youtubeRightsDeclarationId: content.youtubeRightsDeclarationId ?? null,
   persisted: true,
+  pendingUpload: false,
 });
 
 export default function EditCoursePage() {
@@ -367,6 +369,7 @@ export default function EditCoursePage() {
         ? parseInt(currentMaterial.duration)
         : undefined,
       order: parseInt(currentMaterial.order),
+      pendingUpload: true,
     };
 
     setMaterials([...materials, newMaterial]);
@@ -570,8 +573,10 @@ export default function EditCoursePage() {
     setSubmitting(true);
     try {
       for (const material of materials) {
-        // Skip if material already has a URL (already uploaded)
-        if (material.url) continue;
+        // Only submit items deliberately added in this editing session. A URL
+        // is not a reliable saved-state signal because it can be a local
+        // preview or an external link before the save completes.
+        if (!material.pendingUpload) continue;
 
         if (material.videoUrl) {
           const linkResponse = await fetch(
@@ -648,8 +653,11 @@ export default function EditCoursePage() {
         }
       }
 
+      setMaterials((current) =>
+        current.map((material) => ({ ...material, pendingUpload: false })),
+      );
       alert("Materials saved successfully!");
-      loadCourseMaterials();
+      await loadCourseMaterials();
     } catch (error) {
       console.error("Failed to save materials:", error);
       const message =
@@ -662,10 +670,10 @@ export default function EditCoursePage() {
     }
   };
 
-  const hasUnsavedMaterials = materials.some(
-    (material) =>
-      (Boolean(material.file) || Boolean(material.videoUrl)) && !material.url,
-  );
+  const pendingMaterialCount = materials.filter(
+    (material) => material.pendingUpload,
+  ).length;
+  const hasUnsavedMaterials = pendingMaterialCount > 0;
   const editingVideoSourceChanged = Boolean(
     editingMaterial?.type === "video" &&
       editMaterialForm.videoUrl.trim() !==
@@ -1439,6 +1447,17 @@ export default function EditCoursePage() {
                 Save Materials
               </button>
             </div>
+            <p
+              className={`text-right text-sm ${
+                pendingMaterialCount > 0
+                  ? "font-medium text-amber-700"
+                  : "text-gray-500"
+              }`}
+            >
+              {pendingMaterialCount > 0
+                ? `${pendingMaterialCount} material${pendingMaterialCount === 1 ? "" : "s"} ready to upload.`
+                : "Add a file or YouTube link to the materials list to enable saving."}
+            </p>
           </div>
         )}
       </form>
