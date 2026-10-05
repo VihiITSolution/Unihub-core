@@ -26,6 +26,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+type ApiError = Error & { status?: number };
+
+// This is only a client-side expiry check to avoid sending a token that is
+// already known to be expired. The server remains the authority for all
+// authentication decisions and verifies the token signature as usual.
+const isExpiredJwt = (token: string) => {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return false;
+
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(base64)) as { exp?: number };
+    return typeof decoded.exp === "number" && decoded.exp * 1000 <= Date.now();
+  } catch {
+    // Let the API reject malformed tokens so the normal invalid-session flow
+    // handles them consistently.
+    return false;
+  }
+};
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -37,39 +57,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         const savedToken = localStorage.getItem(TOKEN_KEY);
-        const savedUser = localStorage.getItem(USER_KEY);
+        if (savedToken) {
+          if (isExpiredJwt(savedToken)) {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            sessionStorage.setItem(
+              "authSessionMessage",
+              "Your session has expired. Please sign in again to continue.",
+            );
+            return;
+          }
 
-        if (savedToken && savedUser) {
-          // Set initial state from cache
-          setToken(savedToken);
-          setUser(JSON.parse(savedUser));
-
-          // Verify token is still valid by fetching fresh user data
+          // Do not expose a cached credential to the rest of the UI until the
+          // server has validated it. Otherwise widgets mounted during startup
+          // make protected requests with an invalid token and create a cascade
+          // of misleading 401 errors.
           try {
             const response = await authService.getCurrentUser(savedToken);
             if (response.success && response.data?.user) {
+              setToken(savedToken);
               setUser(response.data.user);
               localStorage.setItem(
                 USER_KEY,
                 JSON.stringify(response.data.user),
               );
             } else {
-              // Invalid response, clear auth state
-              setUser(null);
-              setToken(null);
               localStorage.removeItem(TOKEN_KEY);
               localStorage.removeItem(USER_KEY);
+              sessionStorage.setItem(
+                "authSessionMessage",
+                "Your session is no longer valid. Please sign in again.",
+              );
             }
           } catch (error) {
-            // Token might be expired, clear auth state immediately
-            console.warn(
-              "Token validation failed, clearing auth state:",
-              error,
-            );
-            setUser(null);
-            setToken(null);
-            localStorage.removeItem(TOKEN_KEY);
-            localStorage.removeItem(USER_KEY);
+            const status = (error as ApiError)?.status;
+            if (status === 401 || status === 403) {
+              console.warn("Token validation failed, clearing auth state:", error);
+              localStorage.removeItem(TOKEN_KEY);
+              localStorage.removeItem(USER_KEY);
+              sessionStorage.setItem(
+                "authSessionMessage",
+                "Your session is no longer valid. Please sign in again.",
+              );
+            } else {
+              // A temporary outage must not silently log the user out. Keep
+              // the cached profile until the next validation attempt.
+              const savedUser = localStorage.getItem(USER_KEY);
+              if (savedUser) {
+                try {
+                  setToken(savedToken);
+                  setUser(JSON.parse(savedUser));
+                } catch {
+                  localStorage.removeItem(USER_KEY);
+                }
+              }
+              console.warn("Unable to validate the existing session:", error);
+            }
           }
         }
       } catch (error) {

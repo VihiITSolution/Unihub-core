@@ -16,6 +16,16 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Protected pages save a concise explanation here before redirecting after
+  // an expired or invalid JWT is removed from local storage.
+  useEffect(() => {
+    const message = sessionStorage.getItem("authSessionMessage");
+    if (message) {
+      setError(message);
+      sessionStorage.removeItem("authSessionMessage");
+    }
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated && !authLoading && !hasRedirected.current) {
       hasRedirected.current = true;

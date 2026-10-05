@@ -41,7 +41,14 @@ export class ApiClient {
         const error = await response.json().catch(() => ({
           message: 'An error occurred',
         }));
-        throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        // Preserve the status for callers that need to distinguish an expired
+        // session from a temporary network or server problem. Keeping this as
+        // a normal Error preserves the existing service API.
+        const requestError = new Error(
+          error.message || `HTTP error! status: ${response.status}`,
+        ) as Error & { status?: number };
+        requestError.status = response.status;
+        throw requestError;
       }
 
       return await response.json();
