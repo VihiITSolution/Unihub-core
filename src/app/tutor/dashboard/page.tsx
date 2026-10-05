@@ -194,6 +194,19 @@ export default function TutorDashboard() {
         </div>
       </div>
 
+      <section className="mb-12 overflow-hidden rounded-2xl border border-emerald-800/30 bg-gradient-to-r from-emerald-950 via-teal-800 to-emerald-700 p-6 text-white shadow-sm sm:p-8">
+        <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
+          <div className="max-w-2xl">
+            <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.16em] text-emerald-200">Tutor affiliate programme</p>
+            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Share UniHub. Earn referral rewards.</h2>
+            <p className="mt-2 text-sm leading-6 text-emerald-50 sm:text-base">Invite students and vendors with your personal referral link. Earn LKR 20–40 when a referred member becomes active on UniHub.</p>
+          </div>
+          <Link href="/student/affiliate" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-extrabold text-emerald-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-200">
+            Open affiliate hub <span className="ml-2" aria-hidden="true">→</span>
+          </Link>
+        </div>
+      </section>
+
       <div>
         <h2 className="text-3xl font-bold mb-6">My Courses</h2>
         {loading ? (

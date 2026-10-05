@@ -71,6 +71,7 @@ const tutorLinks = [
   { href: "/tutor/live-sessions",  label: "Live Sessions", icon: Icons.video },
   { href: "/tutor/students",       label: "Students",      icon: Icons.users },
   { href: "/tutor/earnings",       label: "Earnings",      icon: Icons.currency },
+  { href: "/student/affiliate",    label: "Affiliate",     icon: Icons.currency },
 ];
 
 const adminLinks = [
