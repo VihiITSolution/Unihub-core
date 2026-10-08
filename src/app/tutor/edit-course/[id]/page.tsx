@@ -93,6 +93,12 @@ export default function EditCoursePage() {
   const [youtubeDeclarationLoading, setYoutubeDeclarationLoading] = useState(true);
   const [youtubeDeclarationSubmitting, setYoutubeDeclarationSubmitting] = useState(false);
   const [youtubeSignature, setYoutubeSignature] = useState("");
+  const [uploadProgress, setUploadProgress] = useState<{
+    current: number;
+    total: number;
+    percent: number;
+    fileName: string;
+  } | null>(null);
   const [editingMaterial, setEditingMaterial] = useState<CourseMaterial | null>(null);
   const [materialToDelete, setMaterialToDelete] = useState<CourseMaterial | null>(null);
   const [materialActionLoading, setMaterialActionLoading] = useState(false);
@@ -112,6 +118,7 @@ export default function EditCoursePage() {
   const MAX_VIDEO_UPLOAD_MB = Number(
     process.env.NEXT_PUBLIC_MAX_VIDEO_UPLOAD_MB || 5000,
   );
+  const CHUNK_SIZE = 512 * 1024;
 
   const [faculties, setFaculties] = useState<Faculty[]>(FALLBACK_FACULTIES);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -567,16 +574,115 @@ export default function EditCoursePage() {
     }
   };
 
+  const uploadVideoInChunks = async (
+    material: CourseMaterial,
+    materialIndex: number,
+    onProgress: (percent: number) => void,
+  ) => {
+    const file = material.file;
+    if (!file || !courseId || !token) {
+      throw new Error("Video upload could not be started. Please sign in and try again.");
+    }
+
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+      const start = chunkIndex * CHUNK_SIZE;
+      const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
+      let lastError: Error | null = null;
+
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const formData = new FormData();
+        formData.append("uploadId", uploadId);
+        formData.append("chunkIndex", String(chunkIndex));
+        formData.append("chunk", chunk, file.name);
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/courses/${courseId}/content/chunks`,
+            {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` },
+              body: formData,
+            },
+          );
+
+          if (response.ok) {
+            lastError = null;
+            break;
+          }
+
+          const body = await response.json().catch(() => ({}));
+          lastError = new Error(
+            body?.message || `Video chunk ${chunkIndex + 1}/${totalChunks} failed (${response.status}).`,
+          );
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error("Network error while uploading video.");
+        }
+
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+        }
+      }
+
+      if (lastError) throw lastError;
+      // Reserve the final 5% for the server to assemble and send the video to YouTube.
+      onProgress(Math.round(((chunkIndex + 1) / totalChunks) * 95));
+    }
+
+    const completeResponse = await fetch(
+      `${API_BASE_URL}/courses/${courseId}/content/chunks/complete`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          uploadId,
+          totalChunks,
+          fileName: file.name,
+          title: material.title,
+          type: material.type,
+          order: String(material.order ?? materialIndex),
+          duration: material.duration ? String(material.duration) : undefined,
+          isPreview: material.isPreview ? "true" : undefined,
+        }),
+      },
+    );
+
+    if (!completeResponse.ok) {
+      const body = await completeResponse.json().catch(() => ({}));
+      throw new Error(body?.message || "Failed to send the video to YouTube.");
+    }
+
+    onProgress(100);
+  };
+
   const handleSaveMaterials = async () => {
     if (!token || !courseId) return;
 
+    const pendingMaterials = materials.filter((material) => material.pendingUpload);
     setSubmitting(true);
+    setUploadProgress(null);
     try {
-      for (const material of materials) {
-        // Only submit items deliberately added in this editing session. A URL
-        // is not a reliable saved-state signal because it can be a local
-        // preview or an external link before the save completes.
-        if (!material.pendingUpload) continue;
+      for (const [materialIndex, material] of pendingMaterials.entries()) {
+        setUploadProgress({
+          current: materialIndex + 1,
+          total: pendingMaterials.length,
+          percent: 0,
+          fileName: material.file?.name ?? material.title,
+        });
+        const onProgress = (percent: number) =>
+          setUploadProgress((current) =>
+            current ? { ...current, percent } : null,
+          );
+
+        if (material.type === "video" && material.file) {
+          await uploadVideoInChunks(material, materialIndex, onProgress);
+          continue;
+        }
 
         if (material.videoUrl) {
           const linkResponse = await fetch(
@@ -591,7 +697,7 @@ export default function EditCoursePage() {
                 title: material.title,
                 type: "video",
                 url: material.videoUrl,
-                order: material.order ?? materials.indexOf(material),
+                order: material.order ?? materialIndex,
                 duration: material.duration,
                 isPreview: Boolean(material.isPreview),
                 youtubeRightsConfirmed: true,
@@ -605,6 +711,7 @@ export default function EditCoursePage() {
               body?.message || `Failed to add YouTube link "${material.title}"`,
             );
           }
+          onProgress(100);
           continue;
         }
 
@@ -615,7 +722,7 @@ export default function EditCoursePage() {
         materialFormData.append("type", material.type);
         materialFormData.append(
           "order",
-          String(material.order ?? materials.indexOf(material)),
+          String(material.order ?? materialIndex),
         );
 
         materialFormData.append("isPreview", String(Boolean(material.isPreview)));
@@ -651,6 +758,7 @@ export default function EditCoursePage() {
           }
           throw new Error(errorMessage);
         }
+        onProgress(100);
       }
 
       setMaterials((current) =>
@@ -666,6 +774,7 @@ export default function EditCoursePage() {
           : "Failed to save some materials";
       alert(message);
     } finally {
+      setUploadProgress(null);
       setSubmitting(false);
     }
   };
@@ -1429,6 +1538,31 @@ export default function EditCoursePage() {
               </div>
             </div>
 
+            {uploadProgress && (
+              <div className="rounded-xl border-2 border-blue-200 bg-white p-6 shadow-sm">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-gray-700">
+                    Uploading {uploadProgress.current} of {uploadProgress.total}
+                  </span>
+                  <span className="text-sm font-bold text-blue-600">
+                    {uploadProgress.percent}%
+                  </span>
+                </div>
+                <div className="mb-2 h-3 overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    className="h-3 rounded-full bg-blue-600 transition-all duration-300"
+                    style={{ width: `${uploadProgress.percent}%` }}
+                  />
+                </div>
+                <p className="truncate text-xs text-gray-500">{uploadProgress.fileName}</p>
+                <p className="mt-1 text-xs text-gray-400">
+                  {uploadProgress.percent >= 95 && uploadProgress.percent < 100
+                    ? "Sending to YouTube. This may take a moment."
+                    : "Keep this page open until the upload finishes."}
+                </p>
+              </div>
+            )}
+
             {/* Save Materials Button */}
             <div className="flex flex-wrap gap-4 justify-end pt-4">
               <button
@@ -1444,7 +1578,11 @@ export default function EditCoursePage() {
                 disabled={!hasUnsavedMaterials || submitting}
                 className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 font-semibold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Save Materials
+                {submitting
+                  ? uploadProgress
+                    ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...`
+                    : "Preparing upload..."
+                  : "Save Materials"}
               </button>
             </div>
             <p
