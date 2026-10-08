@@ -125,17 +125,26 @@ export default function TutorCoursesPage() {
     setSubmittingId(courseId);
     try {
       const response = await courseService.submitForReview(courseId, token);
+      const updatedCourse = response.data?.course;
 
-      if (response.success && response.data) {
+      if (response.success && updatedCourse) {
         setCourses((prev) =>
-          prev.map((c) => (c.id === courseId ? { ...c, ...response.data } : c)),
+          prev.map((course) =>
+            course.id === courseId
+              ? { ...course, ...updatedCourse }
+              : course,
+          ),
         );
       } else {
         alert(response.message || "Failed to submit course for review");
       }
     } catch (error) {
       console.error("Failed to submit course for review:", error);
-      alert("Failed to submit course for review");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit course for review",
+      );
     } finally {
       setSubmittingId(null);
     }

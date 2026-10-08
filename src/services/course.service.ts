@@ -109,8 +109,8 @@ export const courseService = {
   async submitForReview(
     id: string,
     token: string,
-  ): Promise<ApiResponse<Course>> {
-    return apiClient.post<ApiResponse<Course>>(
+  ): Promise<ApiResponse<{ course: Course }>> {
+    return apiClient.post<ApiResponse<{ course: Course }>>(
       `/courses/${id}/submit-for-review`,
       {},
       { token },
