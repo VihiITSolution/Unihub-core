@@ -140,19 +140,7 @@ export default function FeaturedCoursesCarousel() {
         </div>
 
         {/* Course carousel */}
-        <div style={{ marginTop: 20 }}>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-              <button type="button" onClick={() => scrollCourses("previous")} className="course-carousel__button" aria-label="Show previous courses">
-                <ChevronLeft size={20} aria-hidden="true" />
-              </button>
-              <button type="button" onClick={() => scrollCourses("next")} className="course-carousel__button" aria-label="Show more courses">
-                <ChevronRight size={20} aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-
-          {/* Course grid */}
+        <div className="course-carousel__area" style={{ marginTop: 20 }}>
           {loading ? (
             <div
               ref={courseTrackRef}
@@ -205,26 +193,42 @@ export default function FeaturedCoursesCarousel() {
               ))}
             </div>
           )}
+          {!loading && courses.length > 0 && (
+            <>
+              <button type="button" onClick={() => scrollCourses("previous")} className="course-carousel__button course-carousel__button--previous" aria-label="Show previous courses">
+                <ChevronLeft size={22} aria-hidden="true" />
+              </button>
+              <button type="button" onClick={() => scrollCourses("next")} className="course-carousel__button course-carousel__button--next" aria-label="Show more courses">
+                <ChevronRight size={22} aria-hidden="true" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       <style jsx>{`
         .course-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .course-carousel::-webkit-scrollbar { display: none; }
+        .course-carousel__area { position: relative; }
         .course-carousel__button {
-          display: inline-grid; place-items: center; width: 40px; height: 40px;
-          border: 1px solid #b9d9d0; border-radius: 50%; background: rgba(255,255,255,.85);
-          color: var(--brand-dark); cursor: pointer;
+          position: absolute; z-index: 2; top: 50%; display: inline-grid; place-items: center; width: 48px; height: 48px;
+          border: 1px solid #e4e7ec; border-radius: 50%; background: #fff;
+          color: var(--ink); cursor: pointer; box-shadow: 0 4px 14px rgba(15,23,42,.14);
           transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
         }
-        .course-carousel__button:hover { transform: translateY(-2px); background: #e8f6f1; box-shadow: 0 7px 14px rgba(7,63,56,.12); }
+        .course-carousel__button--previous { left: -24px; transform: translateY(-50%); }
+        .course-carousel__button--next { right: -24px; transform: translateY(-50%); }
+        .course-carousel__button:hover { background: #f4fbf8; box-shadow: 0 7px 18px rgba(15,23,42,.2); }
+        .course-carousel__button--previous:hover, .course-carousel__button--next:hover { transform: translateY(-50%) scale(1.06); }
         .course-carousel__button:focus-visible { outline: 3px solid #73bbaa; outline-offset: 2px; }
         :global(.course-card-hover:hover) {
           transform: translateY(-7px) rotateX(2deg);
           box-shadow: 0 23px 38px rgba(7,63,56,.2), inset 0 1px 0 rgba(255,255,255,.92) !important;
         }
         @media (max-width: 640px) {
-          .course-carousel__button { width: 36px; height: 36px; }
+          .course-carousel__button { width: 40px; height: 40px; }
+          .course-carousel__button--previous { left: -10px; }
+          .course-carousel__button--next { right: -10px; }
         }
       `}</style>
     </section>

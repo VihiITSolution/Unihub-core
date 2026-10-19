@@ -30,23 +30,27 @@ export default function HeroSection() {
 
   return (
     <section
+      className="hero-section"
       style={{
-        minHeight: 340,
-        display: "grid",
-        alignItems: "center",
-        background: `
-          linear-gradient(90deg, rgba(7,63,56,.95) 0%, rgba(7,63,56,.80) 48%, rgba(7,63,56,.12) 78%),
-          url("/hero-sri-lankan-students.png") center/cover
-        `,
-        color: "#fff",
+        background: "#fff",
       }}
     >
-      <div className="hero-shell" style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", position: "relative" }}>
-        <div style={{ maxWidth: 580, padding: "42px 0" }}>
+      <div
+        className="hero-shell"
+        style={{
+          width: "min(1180px, calc(100% - 40px))", minHeight: 410, margin: "0 auto", position: "relative",
+          display: "grid", alignItems: "center", overflow: "hidden", borderRadius: 16,
+          background: `
+            linear-gradient(90deg, rgba(7,63,56,.38) 0%, rgba(7,63,56,.18) 50%, rgba(7,63,56,.05) 100%),
+            url("/hero-sri-lankan-students.png") center/cover
+          `,
+        }}
+      >
+        <div className="hero-copy" style={{ maxWidth: 470, padding: 32 }}>
           <p
             style={{
               margin: "0 0 10px",
-              color: "#a9f0df",
+              color: "var(--brand-dark)",
               fontSize: 13,
               fontWeight: 800,
               textTransform: "uppercase",
@@ -73,7 +77,7 @@ export default function HeroSection() {
               margin: "16px 0 24px",
               fontSize: 19,
               lineHeight: 1.45,
-              color: "#e0f7f4",
+              color: "var(--muted)",
             }}
           >
             Find a kuppi before your deadline, buy or sell what you need, and compare boarding near your university, all in one place.
@@ -104,6 +108,11 @@ export default function HeroSection() {
         </nav>
       </div>
       <style jsx>{`
+        .hero-section { padding: 24px 0; }
+        .hero-copy {
+          margin-left: 34px; border: 1px solid rgba(255,255,255,.85); border-radius: 14px;
+          background: rgba(255,255,255,.93); color: var(--ink); box-shadow: 0 15px 32px rgba(0,0,0,.16);
+        }
         .hero-actions {
           position: absolute; right: 0; bottom: 42px; width: min(390px, 35vw);
           padding: 16px; border: 1px solid rgba(255,255,255,.36); border-radius: 16px;
@@ -122,8 +131,10 @@ export default function HeroSection() {
         .hero-action:hover { transform: translateY(-2px); border-color: #a9f0df; background: rgba(255,255,255,.22); }
         .hero-action:focus-visible { outline: 3px solid #a9f0df; outline-offset: 2px; }
         @media (max-width: 760px) {
-          .hero-shell { padding: 0 !important; }
-          .hero-actions { position: static; width: auto; margin: 0 0 32px; }
+          .hero-section { padding: 16px 0; }
+          .hero-shell { display: block !important; min-height: 0 !important; }
+          .hero-copy { margin: 20px; padding: 24px !important; }
+          .hero-actions { position: static; width: auto; margin: 0 20px 20px; }
         }
         @media (max-width: 420px) { .hero-actions__grid { grid-template-columns: 1fr; } }
       `}</style>
