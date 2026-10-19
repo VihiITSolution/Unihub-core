@@ -22,23 +22,6 @@ const TOPICS = [
   { id: "exam", label: "Exams" },
 ];
 
-const YEARS = [
-  { id: "all", label: "All Years" },
-  { id: "1", label: "First Year" },
-  { id: "2", label: "Second Year" },
-  { id: "3", label: "Third Year" },
-  { id: "4", label: "Fourth Year" },
-];
-
-const QUICK_FILTERS = [
-  { label: "Assignment help", query: "assignment" },
-  { label: "Final exam prep", query: "final exam" },
-  { label: "Viva practice", query: "viva" },
-  { label: "Research project", query: "research" },
-  { label: "Internship skills", query: "internship" },
-  { label: "Foundation year", query: "foundation" },
-];
-
 const TOPIC_TEXT: Record<string, [string, string]> = {
   all: ["Featured kuppi sessions", "Browse sessions mapped to Sri Lankan faculties, course codes, assessments, and semester needs."],
   computing: ["Faculty of Computing", "Software engineering, data science, information systems, research projects, and portfolio-ready technical modules."],
@@ -54,8 +37,6 @@ export default function FeaturedCoursesCarousel() {
   const [allCourses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTopic, setActiveTopic] = useState("all");
-  const [activeYear, setActiveYear] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     loadCourses();
@@ -94,31 +75,12 @@ export default function FeaturedCoursesCarousel() {
         (activeTopic === "humanities" && (facultyName.includes("humanit") || facultyName.includes("arts") || facultyName.includes("english"))) ||
         (activeTopic === "exam" && (facultyName.includes("exam") || facultyName.includes("foundation") || facultyName.includes("prep")));
 
-      const yearVal = String(course.year || "");
-      const yearMatch =
-        activeYear === "all" ||
-        (activeYear === "1" && yearVal === "1") ||
-        (activeYear === "2" && yearVal === "2") ||
-        (activeYear === "3" && yearVal === "3") ||
-        (activeYear === "4" && yearVal === "4");
-
-      const q = searchQuery.toLowerCase();
-      const textMatch =
-        !q ||
-        course.title.toLowerCase().includes(q) ||
-        (course.description || "").toLowerCase().includes(q) ||
-        (course.tutor
-          ? `${course.tutor.firstName} ${course.tutor.lastName}`.toLowerCase().includes(q)
-          : false);
-
-      return topicMatch && yearMatch && textMatch;
+      return topicMatch;
     });
   };
 
   const courses = getFilteredCourses();
   const [titleText, copyText] = TOPIC_TEXT[activeTopic] || TOPIC_TEXT.all;
-  const showYearFilter = activeTopic === "all" || activeTopic === "computing";
-
   return (
     <section style={{ padding: "34px 0" }}>
       <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
@@ -129,7 +91,7 @@ export default function FeaturedCoursesCarousel() {
               Search like you are planning your semester
             </h2>
             <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.45 }}>
-              Filter by faculty, then search course codes, lecturers, modules, GPA support, assignments, vivas, or exam topics.
+              Browse sessions mapped to Sri Lankan faculties, course codes, and semester needs.
             </p>
           </div>
           <Link
@@ -154,7 +116,7 @@ export default function FeaturedCoursesCarousel() {
           {TOPICS.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => { setActiveTopic(tab.id); setActiveYear("all"); setSearchQuery(""); }}
+              onClick={() => setActiveTopic(tab.id)}
               style={{
                 minHeight: 42, padding: "0 16px",
                 border: `1px solid ${activeTopic === tab.id ? "var(--ink)" : "var(--line)"}`,
@@ -168,57 +130,6 @@ export default function FeaturedCoursesCarousel() {
               aria-selected={activeTopic === tab.id}
             >
               {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Year filter chips */}
-        {showYearFilter && (
-          <div
-            style={{
-              display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8,
-              margin: "12px 0 2px", padding: 12,
-              border: "1px solid #d7ebe5", borderRadius: 6, background: "#f2fbf8",
-            }}
-          >
-            <span style={{ marginRight: 4, color: "var(--brand-dark)", fontSize: 13, fontWeight: 800 }}>
-              Year filter:
-            </span>
-            {YEARS.map((yr) => (
-              <button
-                key={yr.id}
-                onClick={() => setActiveYear(yr.id)}
-                style={{
-                  minHeight: 34, padding: "0 12px",
-                  border: `1px solid ${activeYear === yr.id ? "var(--brand)" : "var(--line)"}`,
-                  borderRadius: 999,
-                  background: activeYear === yr.id ? "#e8f6f1" : "var(--white)",
-                  color: activeYear === yr.id ? "var(--brand-dark)" : "var(--ink)",
-                  fontSize: 13, fontWeight: 800, cursor: "pointer",
-                }}
-              >
-                {yr.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Quick filter chips */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "12px 0 2px" }}>
-          {QUICK_FILTERS.map((chip) => (
-            <button
-              key={chip.query}
-              onClick={() => setSearchQuery(chip.query)}
-              style={{
-                minHeight: 34, padding: "0 12px",
-                border: `1px solid ${searchQuery === chip.query ? "var(--brand)" : "var(--line)"}`,
-                borderRadius: 999,
-                background: searchQuery === chip.query ? "#e8f6f1" : "var(--white)",
-                color: searchQuery === chip.query ? "var(--brand-dark)" : "var(--ink)",
-                fontSize: 13, fontWeight: 800, cursor: "pointer",
-              }}
-            >
-              {chip.label}
             </button>
           ))}
         </div>

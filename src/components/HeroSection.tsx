@@ -75,7 +75,7 @@ export default function HeroSection() {
               color: "#e0f7f4",
             }}
           >
-            Find peer-led kuppi sessions before deadlines, buy or sell student essentials, discover boarding near your university, and move through the semester with less stress.
+            Find a kuppi before your deadline, buy or sell what you need, and compare boarding near your university, all in one place.
           </p>
 
           {/* CTA buttons */}
@@ -120,17 +120,6 @@ export default function HeroSection() {
 
           {/* Social proof */}
           <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,.15)" }}>
-            <p style={{ margin: "0 0 10px", fontSize: 12, color: "#a9f0df", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Trusted by students from
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-              {["University of Colombo", "University of Moratuwa", "SLIIT", "NSBM"].map((uni) => (
-                <span key={uni} style={{ fontSize: 13, color: "#d7f4ec", display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a9f0df", display: "inline-block" }} />
-                  {uni}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </div>

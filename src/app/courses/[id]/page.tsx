@@ -9,6 +9,7 @@ import { StartConversationButton } from "@/components/chat";
 import YouTubePlayer from "@/components/ui/YouTubePlayer";
 import { Avatar } from "@/components/ui";
 import type { Course, CourseContent } from "@/types";
+import { ClipboardList, FileText, Lock, Play, Star, Video } from "lucide-react";
 
 function getEmbedUrl(url?: string, youtubeVideoId?: string) {
   let videoId = youtubeVideoId || "";
@@ -28,6 +29,16 @@ function getEmbedUrl(url?: string, youtubeVideoId?: string) {
 
   if (!videoId) return url || "";
   return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&cc_load_policy=0`;
+}
+
+function formatDuration(totalMinutes: number) {
+  if (!Number.isFinite(totalMinutes) || totalMinutes <= 0) return "0 min";
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return [hours ? `${hours}h` : null, minutes ? `${minutes}m` : null]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export default function CourseDetailsPage() {
@@ -215,21 +226,6 @@ export default function CourseDetailsPage() {
     }
   };
 
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <span
-            key={star}
-            className={star <= rating ? "text-yellow-400" : "text-gray-300"}
-          >
-            ★
-          </span>
-        ))}
-      </div>
-    );
-  };
-
   if (loading) {
     return (
       <div className="container-custom py-12">
@@ -267,6 +263,11 @@ export default function CourseDetailsPage() {
       </div>
     );
   }
+
+  const lessonDurationMinutes = contents.reduce((total, content) => {
+    const duration = Number(content.duration);
+    return total + (Number.isFinite(duration) && duration > 0 ? duration : 0);
+  }, 0);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -370,8 +371,8 @@ export default function CourseDetailsPage() {
             <div className="flex flex-wrap gap-6 items-center mb-6">
               <div className="flex items-center gap-2">
                 <span className="text-gray-700 text-sm">Average Rating:</span>
-                <span className="font-semibold text-gray-900">
-                  {course.rating ? `${Number(course.rating).toFixed(1)} ★` : "New"}
+                <span className="font-semibold text-gray-900 inline-flex items-center gap-1">
+                  {course.rating ? <>{Number(course.rating).toFixed(1)} <Star size={15} className="fill-current" aria-label="star" /></> : "New"}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-700">
@@ -381,10 +382,7 @@ export default function CourseDetailsPage() {
               <div className="flex items-center gap-2 text-gray-700">
                 <span className="text-sm">Duration:</span>
                 <span className="font-medium">
-                  {[
-                    Number(course.duration) > 0 ? `${course.duration}h` : null,
-                    Number(course.durationMinutes) > 0 ? `${course.durationMinutes}m` : null,
-                  ].filter(Boolean).join(" ") || "0m"}
+                  {formatDuration(lessonDurationMinutes)}
                 </span>
               </div>
             </div>
@@ -442,6 +440,11 @@ export default function CourseDetailsPage() {
                       const isExpanded = expandedPreviewId === content.id;
                       const canPreviewInline =
                         content.type === "video" && !isLocked && content.url;
+                      const ContentIcon = content.type === "video"
+                        ? Video
+                        : content.type === "pdf"
+                          ? FileText
+                          : ClipboardList;
 
                       return (
                         <div key={content.id}>
@@ -449,9 +452,7 @@ export default function CourseDetailsPage() {
                             <span className="w-7 h-7 flex-shrink-0 rounded-full bg-gray-100 text-gray-700 text-xs font-bold flex items-center justify-center">
                               {index + 1}
                             </span>
-                            <span className="text-lg flex-shrink-0">
-                              {content.type === "video" ? "🎥" : content.type === "pdf" ? "📄" : "📝"}
-                            </span>
+                            <ContentIcon className="w-5 h-5 flex-shrink-0 text-gray-500" aria-hidden="true" />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-900 truncate">
                                 {content.title}
@@ -467,7 +468,7 @@ export default function CourseDetailsPage() {
                                 className="text-gray-400 flex-shrink-0"
                                 title="Enroll to unlock this lesson"
                               >
-                                🔒
+                                <Lock size={18} aria-label="Enroll to unlock this lesson" />
                               </span>
                             ) : canPreviewInline ? (
                               <button
@@ -475,9 +476,9 @@ export default function CourseDetailsPage() {
                                 onClick={() =>
                                   setExpandedPreviewId(isExpanded ? null : content.id)
                                 }
-                                className="text-sm text-primary-600 hover:text-primary-700 font-medium flex-shrink-0"
+                                className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-medium flex-shrink-0"
                               >
-                                {isExpanded ? "Close" : "▶ Preview"}
+                                {isExpanded ? "Close" : <><Play size={14} aria-hidden="true" /> Preview</>}
                               </button>
                             ) : content.type === "pdf" && content.url ? (
                               <a

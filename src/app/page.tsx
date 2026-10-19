@@ -17,13 +17,11 @@ const PROMISE_CARDS = [
 ];
 
 const CAMPUS_AREAS = [
-  { title: "Module & assignment help", detail: "Find kuppi sessions mapped to your exact course code, lecturer, and semester week." },
-  { title: "Peer-led study groups", detail: "Join or host group sessions for lab reports, vivas, final exams, and group projects." },
-  { title: "Semester-aware planning", detail: "Sessions are tagged by year, faculty, and deadline season — not just topic." },
-  { title: "Flexible & remote-friendly", detail: "Online and on-campus options for all faculties, including evening and part-time students." },
+  { title: "Course help", detail: "Find support for assignments, labs, and exams." },
+  { title: "Study groups", detail: "Join or start a group with other students." },
+  { title: "Plan your semester", detail: "Find support by year, faculty, and deadline." },
+  { title: "Learn your way", detail: "Choose online or campus sessions that suit you." },
 ];
-
-const TRUST_LABELS = ["Public Universities", "Private Institutes", "External Degrees", "A/L Leavers", "Student Clubs", "Internship Prep"];
 
 export default function Home() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -32,8 +30,6 @@ export default function Home() {
     <div style={{ minHeight: "100vh", background: "var(--white)" }}>
       {/* Hero */}
       <HeroSection />
-
-      <CombinedPromotionBanner isAuthenticated={isAuthenticated} isVendor={Array.isArray(user?.roles) && user.roles.includes("vendor")} />
 
       {false && !isLoading && !user?.isTutorProfileComplete && (
         <section style={{ background: "linear-gradient(115deg, #053f38 0%, #0b665a 58%, #18786b 100%)", color: "#fff", borderBottom: "1px solid rgba(255,255,255,.18)" }}>
@@ -115,10 +111,10 @@ export default function Home() {
         >
           <div>
             <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 800 }}>
-              Built around Sri Lankan campus life
+              Made for campus life
             </h2>
             <p style={{ margin: "0 0 18px", color: "var(--muted)", lineHeight: 1.45 }}>
-              From A/L transition to final-year research, UniHub organises kuppi sessions around the rhythm students already know: semester weeks, group projects, lab reports, vivas, hostel study nights, and internship season.
+              Find study support, join groups, and plan your semester in one place.
             </p>
             <div
               style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}
@@ -145,66 +141,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust section */}
-      <section style={{ background: "#202124", color: "var(--white)", padding: "34px 0" }}>
-        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
-          <div style={{ marginBottom: 20 }}>
-            <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800 }}>Designed for local study culture</h2>
-            <p style={{ margin: "8px 0 0", color: "#cfd2d5", lineHeight: 1.45 }}>
-              Support for public university students, private institute students, external degree learners, and A/L leavers entering higher education.
-            </p>
-          </div>
-          <div
-            style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginTop: 20 }}
-            className="trust-grid-responsive"
-          >
-            {TRUST_LABELS.map((label) => (
-              <div
-                key={label}
-                style={{
-                  display: "grid", placeItems: "center", minHeight: 58,
-                  border: "1px solid rgba(255,255,255,.28)",
-                  color: "#f3f4f6", fontWeight: 800, fontSize: 13, textAlign: "center",
-                  padding: "0 8px",
-                }}
-              >
-                {label}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA banner */}
-      {!isAuthenticated && (
-        <section style={{ background: "var(--brand-dark)", color: "#fff", padding: "34px 28px", textAlign: "center" }}>
-          <h2 style={{ margin: "0 0 12px", fontSize: 30, fontWeight: 800 }}>Ready to ace your university exams?</h2>
-          <p style={{ margin: "0 0 24px", fontSize: 18, color: "#d7f4ec", maxWidth: 600, marginLeft: "auto", marginRight: "auto" }}>
-            Join UniHub today and get access to peer-led kuppi sessions, simplified module guides, and connect with fellow Sri Lankan university students.
-          </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link
-              href="/auth/register"
-              style={{
-                height: 48, display: "inline-flex", alignItems: "center", padding: "0 24px",
-                background: "#fff", color: "var(--ink)", fontSize: 14, fontWeight: 800, border: "1px solid #fff",
-              }}
-            >
-              Join Free
-            </Link>
-            <Link
-              href="/courses"
-              style={{
-                height: 48, display: "inline-flex", alignItems: "center", padding: "0 24px",
-                background: "transparent", color: "#fff", fontSize: 14, fontWeight: 800,
-                border: "1px solid rgba(255,255,255,.6)",
-              }}
-            >
-              Browse Kuppi Sessions
-            </Link>
-          </div>
-        </section>
-      )}
+      {/* Promotions — placed directly before the site footer. */}
+      <CombinedPromotionBanner isAuthenticated={isAuthenticated} isVendor={Array.isArray(user?.roles) && user.roles.includes("vendor")} />
 
       {/* Role Upgrade Modal */}
       <RoleUpgradeModal
