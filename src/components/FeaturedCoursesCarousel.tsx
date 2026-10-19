@@ -28,6 +28,7 @@ export default function FeaturedCoursesCarousel() {
   const [allCourses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTopic, setActiveTopic] = useState("all");
+  const [navigation, setNavigation] = useState({ previous: false, next: false });
   const courseTrackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -79,13 +80,31 @@ export default function FeaturedCoursesCarousel() {
 
     track.scrollBy({
       left: (direction === "next" ? 1 : -1) * Math.max(track.clientWidth * 0.8, 300),
-      behavior: "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
     });
   };
 
   useEffect(() => {
-    courseTrackRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+    courseTrackRef.current?.scrollTo({ left: 0, behavior: "instant" });
   }, [activeTopic]);
+
+  useEffect(() => {
+    const track = courseTrackRef.current;
+    if (loading || !track) {
+      setNavigation({ previous: false, next: false });
+      return;
+    }
+    const updateNavigation = () => setNavigation({
+      previous: track.scrollLeft > 2,
+      next: track.scrollLeft + track.clientWidth < track.scrollWidth - 2,
+    });
+    const observer = new ResizeObserver(updateNavigation);
+    observer.observe(track);
+    for (const card of Array.from(track.children)) observer.observe(card);
+    track.addEventListener("scroll", updateNavigation, { passive: true });
+    updateNavigation();
+    return () => { observer.disconnect(); track.removeEventListener("scroll", updateNavigation); };
+  }, [activeTopic, allCourses, loading]);
   return (
     <section style={{ padding: "34px 0" }}>
       <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
@@ -177,6 +196,10 @@ export default function FeaturedCoursesCarousel() {
           ) : (
             <div
               ref={courseTrackRef}
+              id="featured-course-track"
+              role="region"
+              aria-label="Featured courses"
+              tabIndex={0}
               className="course-carousel"
               style={{
                 display: "flex",
@@ -193,15 +216,15 @@ export default function FeaturedCoursesCarousel() {
               ))}
             </div>
           )}
-          {!loading && courses.length > 0 && (
-            <>
-              <button type="button" onClick={() => scrollCourses("previous")} className="course-carousel__button course-carousel__button--previous" aria-label="Show previous courses">
+          {!loading && (navigation.previous || navigation.next) && (
+            <div className="course-carousel__controls" role="group" aria-label="Browse courses">
+              <button type="button" onClick={() => scrollCourses("previous")} className="course-carousel__button" disabled={!navigation.previous} aria-label="Show previous courses" aria-controls="featured-course-track">
                 <ChevronLeft size={22} aria-hidden="true" />
               </button>
-              <button type="button" onClick={() => scrollCourses("next")} className="course-carousel__button course-carousel__button--next" aria-label="Show more courses">
+              <button type="button" onClick={() => scrollCourses("next")} className="course-carousel__button" disabled={!navigation.next} aria-label="Show more courses" aria-controls="featured-course-track">
                 <ChevronRight size={22} aria-hidden="true" />
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -210,25 +233,19 @@ export default function FeaturedCoursesCarousel() {
         .course-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .course-carousel::-webkit-scrollbar { display: none; }
         .course-carousel__area { position: relative; }
+        .course-carousel__controls { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
         .course-carousel__button {
-          position: absolute; z-index: 2; top: 50%; display: inline-grid; place-items: center; width: 48px; height: 48px;
+          display: inline-grid; flex: 0 0 44px; place-items: center; width: 44px; height: 44px;
           border: 1px solid #e4e7ec; border-radius: 50%; background: #fff;
           color: var(--ink); cursor: pointer; box-shadow: 0 4px 14px rgba(15,23,42,.14);
           transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
         }
-        .course-carousel__button--previous { left: -24px; transform: translateY(-50%); }
-        .course-carousel__button--next { right: -24px; transform: translateY(-50%); }
-        .course-carousel__button:hover { background: #f4fbf8; box-shadow: 0 7px 18px rgba(15,23,42,.2); }
-        .course-carousel__button--previous:hover, .course-carousel__button--next:hover { transform: translateY(-50%) scale(1.06); }
+        .course-carousel__button:hover:not(:disabled) { background: #f4fbf8; box-shadow: 0 7px 18px rgba(15,23,42,.2); }
+        .course-carousel__button:disabled { opacity: .4; cursor: default; box-shadow: none; }
         .course-carousel__button:focus-visible { outline: 3px solid #73bbaa; outline-offset: 2px; }
         :global(.course-card-hover:hover) {
           transform: translateY(-7px) rotateX(2deg);
           box-shadow: 0 23px 38px rgba(7,63,56,.2), inset 0 1px 0 rgba(255,255,255,.92) !important;
-        }
-        @media (max-width: 640px) {
-          .course-carousel__button { width: 40px; height: 40px; }
-          .course-carousel__button--previous { left: -10px; }
-          .course-carousel__button--next { right: -10px; }
         }
       `}</style>
     </section>

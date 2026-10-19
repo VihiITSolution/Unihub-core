@@ -92,8 +92,12 @@ export default function CombinedPromotionBanner({ isAuthenticated, isVendor = fa
                 </article>
               ))}
             </div>
-            {navigation.previous && <button type="button" onClick={() => scrollOffers(-1)} className={[styles.arrow, styles.previous].join(" ")} aria-label="Previous benefits" aria-controls="unihub-benefit-offers"><ChevronLeft size={20} aria-hidden="true" /></button>}
-            {navigation.next && <button type="button" onClick={() => scrollOffers(1)} className={[styles.arrow, styles.next].join(" ")} aria-label="More benefits" aria-controls="unihub-benefit-offers"><ChevronRight size={20} aria-hidden="true" /></button>}
+            {(navigation.previous || navigation.next) && (
+              <div className={styles.controls} role="group" aria-label="Browse benefits">
+                <button type="button" onClick={() => scrollOffers(-1)} className={styles.arrow} disabled={!navigation.previous} aria-label="Previous benefits" aria-controls="unihub-benefit-offers"><ChevronLeft size={20} aria-hidden="true" /></button>
+                <button type="button" onClick={() => scrollOffers(1)} className={styles.arrow} disabled={!navigation.next} aria-label="More benefits" aria-controls="unihub-benefit-offers"><ChevronRight size={20} aria-hidden="true" /></button>
+              </div>
+            )}
           </div>
         </div>
       </div>
