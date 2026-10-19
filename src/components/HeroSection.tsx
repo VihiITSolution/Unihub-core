@@ -23,7 +23,7 @@ export default function HeroSection() {
           <p
             style={{
               margin: "0 0 10px",
-              color: "var(--brand-dark)",
+              color: "#a9f0df",
               fontSize: 13,
               fontWeight: 800,
               textTransform: "uppercase",
@@ -50,7 +50,7 @@ export default function HeroSection() {
               margin: "16px 0 24px",
               fontSize: 19,
               lineHeight: 1.45,
-              color: "var(--muted)",
+              color: "#e0f7f4",
             }}
           >
             Find a kuppi before your deadline, buy or sell what you need, and compare boarding near your university, all in one place.
@@ -62,8 +62,7 @@ export default function HeroSection() {
       <style jsx>{`
         .hero-section { padding: 24px 0; }
         .hero-copy {
-          margin-left: 34px; border: 1px solid rgba(255,255,255,.85); border-radius: 14px;
-          background: rgba(255,255,255,.93); color: var(--ink); box-shadow: 0 15px 32px rgba(0,0,0,.16);
+          margin-left: 34px; color: #fff;
         }
         @media (max-width: 760px) {
           .hero-section { padding: 16px 0; }
