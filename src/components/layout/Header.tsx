@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ShoppingCart } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { RoleUpgradeModal, NotificationBell, ChatBadge, Avatar } from "@/components/ui";
@@ -236,12 +237,13 @@ export default function Header() {
               display: "grid", placeItems: "center",
               cursor: "pointer", borderRadius: 4,
               transition: "background .15s", fontSize: 16,
+              color: "var(--ink)",
               textDecoration: "none",
             }}
             className="hover:bg-soft"
             aria-label="Marketplace"
           >
-            🛒
+            <ShoppingCart size={20} strokeWidth={1.8} aria-hidden="true" />
           </Link>
 
           {/* Auth */}
@@ -397,12 +399,13 @@ export default function Header() {
               width: 36, height: 36,
               border: "1px solid var(--line)",
               background: "var(--white)", fontSize: 16,
+              color: "var(--ink)",
               display: "grid", placeItems: "center",
               textDecoration: "none", borderRadius: 4,
             }}
             aria-label="Marketplace"
           >
-            🛒
+            <ShoppingCart size={20} strokeWidth={1.8} aria-hidden="true" />
           </Link>
         </div>
       </div>
