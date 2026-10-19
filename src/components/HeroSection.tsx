@@ -84,20 +84,20 @@ export default function HeroSection() {
         <nav className="hero-actions" aria-label="Explore UniHub">
           <span className="hero-actions__label">Explore UniHub</span>
           <div className="hero-actions__grid">
-            <Link href="/courses" className="hero-action hero-action--primary">
-              <BookOpen size={18} aria-hidden="true" />
-              Browse Kuppi Sessions
+            <Link href="/courses" className="hero-action">
+              <span className="hero-action__icon"><BookOpen size={17} aria-hidden="true" /></span>
+              Browse Kuppi
             </Link>
-            <button type="button" onClick={handleCreateKuppi} className="hero-action hero-action--primary">
-              <CirclePlus size={18} aria-hidden="true" />
-              Create Your Kuppi
+            <button type="button" onClick={handleCreateKuppi} className="hero-action">
+              <span className="hero-action__icon"><CirclePlus size={17} aria-hidden="true" /></span>
+              Create Kuppi
             </button>
             <Link href="/marketplace" className="hero-action">
-              <ShoppingBag size={18} aria-hidden="true" />
-              View Marketplace
+              <span className="hero-action__icon"><ShoppingBag size={17} aria-hidden="true" /></span>
+              Marketplace
             </Link>
             <Link href="/boarding" className="hero-action">
-              <House size={18} aria-hidden="true" />
+              <span className="hero-action__icon"><House size={17} aria-hidden="true" /></span>
               Find Boarding
             </Link>
           </div>
@@ -111,16 +111,15 @@ export default function HeroSection() {
           box-shadow: 0 18px 38px rgba(0,0,0,.2);
         }
         .hero-actions__label { display: block; margin-bottom: 10px; color: #a9f0df; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-        .hero-actions__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+        .hero-actions__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
         .hero-action {
-          display: flex; min-height: 58px; align-items: center; gap: 9px; padding: 10px;
-          border: 1px solid rgba(255,255,255,.35); border-radius: 10px; background: rgba(255,255,255,.08);
-          color: #fff; font: inherit; font-size: 13px; font-weight: 800; line-height: 1.2; text-align: left;
-          text-decoration: none; cursor: pointer; transition: transform .15s ease, background .15s ease;
+          display: flex; min-height: 62px; align-items: center; gap: 9px; padding: 10px 12px;
+          border: 1px solid rgba(255,255,255,.42); border-radius: 10px; background: rgba(255,255,255,.13);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.13); color: #fff; font: inherit; font-size: 13px; font-weight: 800;
+          line-height: 1.2; text-align: left; text-decoration: none; cursor: pointer; transition: transform .15s ease, background .15s ease, border-color .15s ease;
         }
-        .hero-action:hover { transform: translateY(-2px); background: rgba(255,255,255,.18); }
-        .hero-action--primary { border-color: #d7f4ec; background: #fff; color: #08483f; }
-        .hero-action--primary:hover { background: #e6fff6; }
+        .hero-action__icon { display: inline-grid; flex: 0 0 30px; width: 30px; height: 30px; place-items: center; border-radius: 8px; background: rgba(169,240,223,.18); color: #a9f0df; }
+        .hero-action:hover { transform: translateY(-2px); border-color: #a9f0df; background: rgba(255,255,255,.22); }
         .hero-action:focus-visible { outline: 3px solid #a9f0df; outline-offset: 2px; }
         @media (max-width: 760px) {
           .hero-shell { padding: 0 !important; }
