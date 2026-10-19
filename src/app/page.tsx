@@ -9,11 +9,10 @@ import FeaturedCoursesCarousel from "@/components/FeaturedCoursesCarousel";
 import HeroSection from "@/components/HeroSection";
 import CombinedPromotionBanner from "@/components/CombinedPromotionBanner";
 
-const PROMISE_CARDS = [
-  { title: "Catch up fast", body: "Search by module, year, faculty, assignment type, or exam topic when lectures move faster than your notes." },
-  { title: "Save money", body: "Buy used calculators, lab coats, laptops, books, drawing boards, and hostel items from other students." },
-  { title: "Find a place", body: "Compare boarding, annexes, shared rooms, and hostels near universities before semester starts." },
-  { title: "Feel ready", body: "Prepare for presentations, vivas, internships, repeat exams, and final-year research with practical guidance." },
+const UNIHUB_OVERVIEW = [
+  { number: "01", title: "Learn", body: "Find courses, study help, and student groups." },
+  { number: "02", title: "Earn & save", body: "Teach, sell student items, and discover deals." },
+  { number: "03", title: "Settle in", body: "Explore boarding and campus-life essentials." },
 ];
 
 const CAMPUS_AREAS = [
@@ -65,30 +64,32 @@ export default function Home() {
       {/* Featured courses / kuppi sessions */}
       <FeaturedCoursesCarousel />
 
-      {/* Promise grid — what UniHub is */}
-      <section style={{ background: "var(--soft)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+      {/* UniHub overview */}
+      <section style={{ background: "#f4fbf8", borderTop: "1px solid #d7ebe5", borderBottom: "1px solid #d7ebe5" }}>
         <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto", padding: "34px 0" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 18, marginBottom: 18 }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800, lineHeight: 1.15 }}>
-                Built for the week before everything is due
-              </h2>
+              <span style={{ color: "var(--brand-dark)", fontSize: 12, fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>One student hub</span>
+              <h2 style={{ margin: "5px 0 0", fontSize: 30, fontWeight: 800, lineHeight: 1.15 }}>UniHub makes student life simpler</h2>
               <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.45 }}>
-                UniHub is not just a kuppi list. It is a student survival space for learning, earning, moving rooms, finding deals, and getting ready for the next semester.
+                Learn, earn, and find what you need for campus life in one place.
               </p>
             </div>
           </div>
           <div
-            style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}
+            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}
             className="promise-grid-responsive"
           >
-            {PROMISE_CARDS.map((card) => (
+            {UNIHUB_OVERVIEW.map((card) => (
               <article
                 key={card.title}
-                style={{ padding: 18, border: "1px solid var(--line)", borderRadius: 6, background: "var(--white)" }}
+                style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: 20, border: "1px solid #cfe6df", borderRadius: 10, background: "var(--white)" }}
               >
-                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800 }}>{card.title}</h3>
-                <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>{card.body}</p>
+                <span style={{ color: "var(--brand-dark)", fontSize: 13, fontWeight: 800, letterSpacing: ".08em" }}>{card.number}</span>
+                <div>
+                  <h3 style={{ margin: "0 0 5px", fontSize: 19, fontWeight: 800 }}>{card.title}</h3>
+                  <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>{card.body}</p>
+                </div>
               </article>
             ))}
           </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { HoverCard } from "@/components/ui";
 import type { Course } from "@/types";
@@ -37,6 +38,7 @@ export default function FeaturedCoursesCarousel() {
   const [allCourses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTopic, setActiveTopic] = useState("all");
+  const courseTrackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadCourses();
@@ -81,6 +83,20 @@ export default function FeaturedCoursesCarousel() {
 
   const courses = getFilteredCourses();
   const [titleText, copyText] = TOPIC_TEXT[activeTopic] || TOPIC_TEXT.all;
+
+  const scrollCourses = (direction: "previous" | "next") => {
+    const track = courseTrackRef.current;
+    if (!track) return;
+
+    track.scrollBy({
+      left: (direction === "next" ? 1 : -1) * Math.max(track.clientWidth * 0.8, 300),
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    courseTrackRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+  }, [activeTopic]);
   return (
     <section style={{ padding: "34px 0" }}>
       <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
@@ -134,32 +150,41 @@ export default function FeaturedCoursesCarousel() {
           ))}
         </div>
 
-        {/* Panel with title */}
-        <div
-          style={{
-            marginTop: 12, padding: 22,
-            border: "1px solid var(--line)", background: "var(--soft)",
-          }}
-        >
-          <h3 style={{ margin: "0 0 8px", fontSize: 23, fontWeight: 800 }}>{titleText}</h3>
-          <p style={{ maxWidth: 760, margin: "0 0 18px", color: "var(--muted)", lineHeight: 1.45 }}>
-            {copyText}
-          </p>
+        {/* Course carousel */}
+        <div style={{ marginTop: 20 }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 16 }}>
+            <div>
+              <h3 style={{ margin: "0 0 8px", fontSize: 23, fontWeight: 800 }}>{titleText}</h3>
+              <p style={{ maxWidth: 760, margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>
+                {copyText}
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+              <button type="button" onClick={() => scrollCourses("previous")} className="course-carousel__button" aria-label="Show previous courses">
+                <ChevronLeft size={20} aria-hidden="true" />
+              </button>
+              <button type="button" onClick={() => scrollCourses("next")} className="course-carousel__button" aria-label="Show more courses">
+                <ChevronRight size={20} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
 
           {/* Course grid */}
           {loading ? (
             <div
+              ref={courseTrackRef}
+              className="course-carousel"
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                display: "flex",
+                overflowX: "auto",
                 gap: 18,
+                padding: "8px 4px 18px",
               }}
-              className="course-grid-responsive"
             >
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  style={{ border: "1px solid var(--line)", borderRadius: 6, overflow: "hidden", background: "var(--white)" }}
+                  style={{ flex: "0 0 clamp(245px, 28vw, 300px)", border: "1px solid #d7ebe5", borderRadius: 18, overflow: "hidden", background: "rgba(255,255,255,.75)" }}
                 >
                   <div style={{ width: "100%", aspectRatio: "16/9", background: "#e6e6e6" }} className="skeleton" />
                   <div style={{ padding: 12 }}>
@@ -180,15 +205,20 @@ export default function FeaturedCoursesCarousel() {
             </div>
           ) : (
             <div
+              ref={courseTrackRef}
+              className="course-carousel"
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                display: "flex",
+                overflowX: "auto",
                 gap: 18,
+                padding: "8px 4px 18px",
+                scrollSnapType: "x mandatory",
               }}
-              className="course-grid-responsive"
             >
-              {courses.slice(0, 12).map((course) => (
-                <CourseCard key={course.id} course={course} user={user} />
+              {courses.map((course) => (
+                <div key={course.id} style={{ flex: "0 0 clamp(245px, 28vw, 300px)", scrollSnapAlign: "start" }}>
+                  <CourseCard course={course} user={user} />
+                </div>
               ))}
             </div>
           )}
@@ -196,15 +226,22 @@ export default function FeaturedCoursesCarousel() {
       </div>
 
       <style jsx>{`
-        @media (max-width: 980px) {
-          .course-grid-responsive {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          }
+        .course-carousel { scrollbar-width: none; -ms-overflow-style: none; }
+        .course-carousel::-webkit-scrollbar { display: none; }
+        .course-carousel__button {
+          display: inline-grid; place-items: center; width: 40px; height: 40px;
+          border: 1px solid #b9d9d0; border-radius: 50%; background: rgba(255,255,255,.85);
+          color: var(--brand-dark); cursor: pointer;
+          transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+        }
+        .course-carousel__button:hover { transform: translateY(-2px); background: #e8f6f1; box-shadow: 0 7px 14px rgba(7,63,56,.12); }
+        .course-carousel__button:focus-visible { outline: 3px solid #73bbaa; outline-offset: 2px; }
+        :global(.course-card-hover:hover) {
+          transform: translateY(-7px) rotateX(2deg);
+          box-shadow: 0 23px 38px rgba(7,63,56,.2), inset 0 1px 0 rgba(255,255,255,.92) !important;
         }
         @media (max-width: 640px) {
-          .course-grid-responsive {
-            grid-template-columns: 1fr !important;
-          }
+          .course-carousel__button { width: 36px; height: 36px; }
         }
       `}</style>
     </section>
@@ -245,8 +282,11 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
       <article
         style={{
           position: "relative", minWidth: 0,
-          background: "var(--white)", border: "1px solid var(--line)",
-          borderRadius: 6, overflow: "hidden",
+          background: "linear-gradient(145deg, rgba(255,255,255,.94), rgba(231,247,242,.72))",
+          border: "1px solid rgba(255,255,255,.9)",
+          borderRadius: 18, overflow: "hidden",
+          backdropFilter: "blur(12px)",
+          boxShadow: "0 14px 28px rgba(7,63,56,.12), inset 0 1px 0 rgba(255,255,255,.85)",
           transition: "transform .18s ease, box-shadow .18s ease",
           cursor: "pointer", display: "flex", flexDirection: "column",
         }}
