@@ -27,7 +27,7 @@ export default function ExploreUniHub() {
               data-home-hover
               style={{
                 minHeight: 370,
-                backgroundImage: "url('/unihub-discovery-triptych.png')",
+                backgroundImage: "url('/unihub-discovery-triptych.webp')",
                 backgroundPosition: area.position,
               }}
             >

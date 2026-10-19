@@ -5,6 +5,10 @@
 
 /* Content is visible by default, including before hydration or without JS. */
 @media (prefers-reduced-motion: no-preference) {
+  /* Keep the main heading visible immediately; only its position animates. */
+  .root :global([data-home-hero]) {
+    animation: heroEntrance 480ms cubic-bezier(.22, 1, .36, 1) backwards;
+  }
   .root :global([data-home-motion="pending"]) {
     opacity: 0;
     transform: translateY(18px);
@@ -22,6 +26,11 @@
     transition-duration: 280ms !important;
     transition-timing-function: cubic-bezier(.22, 1, .36, 1) !important;
   }
+}
+
+@keyframes heroEntrance {
+  from { transform: translateY(10px); }
+  to { transform: none; }
 }
 
 @keyframes reveal {

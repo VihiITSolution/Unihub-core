@@ -15,9 +15,10 @@ export default function HomeMotion({ children }: { children: ReactNode }) {
 
     const initialize = () => {
       cleanup();
+      cleanup = () => {};
       if (preference.matches) return;
 
-      const observed = new Set<HTMLElement>();
+      const registered = new WeakSet<HTMLElement>();
       const reveal = (element: HTMLElement) => {
         element.dataset.homeMotion = "visible";
         observer.unobserve(element);
@@ -29,30 +30,32 @@ export default function HomeMotion({ children }: { children: ReactNode }) {
       }, { threshold: 0.08 });
 
       const observe = (element: HTMLElement) => {
-        if (observed.has(element)) return;
-        observed.add(element);
+        if (registered.has(element)) return;
+        registered.add(element);
         element.dataset.homeMotion = "pending";
         observer.observe(element);
       };
 
-      const register = (element: HTMLElement) => {
-        if (element.matches("[data-home-reveal]")) observe(element);
-        element.querySelectorAll<HTMLElement>("[data-home-reveal]").forEach(observe);
+      const visitTargets = (element: HTMLElement, visit: (target: HTMLElement) => void) => {
+        if (element.matches("[data-home-reveal]")) visit(element);
+        element.querySelectorAll<HTMLElement>("[data-home-reveal]").forEach(visit);
       };
-      register(root);
+      visitTargets(root, observe);
 
       // Course cards arrive asynchronously and change when a category is selected.
       const updates = new MutationObserver((records) => {
         for (const record of records) {
-          record.addedNodes.forEach((node) => { if (node instanceof HTMLElement) register(node); });
+          record.addedNodes.forEach((node) => {
+            if (node instanceof HTMLElement && root.contains(node)) visitTargets(node, observe);
+          });
           record.removedNodes.forEach((node) => {
-            if (!(node instanceof HTMLElement)) return;
-            for (const element of observed) {
-              if (node === element || node.contains(element)) {
-                observer.unobserve(element);
-                observed.delete(element);
-              }
-            }
+            if (!(node instanceof HTMLElement) || root.contains(node)) return;
+            // Only visit removed reveal targets, rather than scanning every card.
+            visitTargets(node, (element) => {
+              observer.unobserve(element);
+              registered.delete(element);
+              delete element.dataset.homeMotion;
+            });
           });
         }
       });
@@ -63,7 +66,7 @@ export default function HomeMotion({ children }: { children: ReactNode }) {
         if (!(event.target instanceof HTMLElement)) return;
         let element: HTMLElement | null = event.target;
         while (element && element !== root) {
-          if (element.dataset.homeMotion === "pending") {
+          if (element.dataset.homeMotion === "pending" || element.dataset.homeMotion === "visible") {
             element.dataset.homeMotion = "complete";
             observer.unobserve(element);
           }
@@ -85,8 +88,7 @@ export default function HomeMotion({ children }: { children: ReactNode }) {
         updates.disconnect();
         root.removeEventListener("focusin", handleFocus);
         root.removeEventListener("animationend", finishReveal);
-        for (const element of observed) delete element.dataset.homeMotion;
-        observed.clear();
+        root.querySelectorAll<HTMLElement>("[data-home-motion]").forEach((element) => delete element.dataset.homeMotion);
       };
     };
 

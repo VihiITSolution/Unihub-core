@@ -1,17 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { memo, useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { HoverCard } from "@/components/ui";
 import type { Course } from "@/types";
 import { API_BASE_URL } from "@/lib/constants";
-
-interface CategoryTab {
-  id: string;
-  name: string;
-}
+import { useCarouselNavigation } from "@/hooks/useCarouselNavigation";
 
 const TOPICS = [
   { id: "all", label: "Featured" },
@@ -24,38 +20,39 @@ const TOPICS = [
 ];
 
 export default function FeaturedCoursesCarousel() {
-  const { user, token, isAuthenticated } = useAuth();
+  const { user, token, isLoading: authLoading } = useAuth();
   const [allCourses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTopic, setActiveTopic] = useState("all");
-  const [navigation, setNavigation] = useState({ previous: false, next: false });
   const courseTrackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadCourses();
-  }, [isAuthenticated, token]);
-
-  const loadCourses = async () => {
-    try {
-      setLoading(true);
-      const headers: Record<string, string> = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-      const response = await fetch(`${API_BASE_URL}/courses?limit=100&page=1`, { headers });
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          const data = (result.data as any).courses || result.data;
-          setCourses(Array.isArray(data) ? data : []);
+    if (authLoading) return;
+    const controller = new AbortController();
+    const loadCourses = async () => {
+      try {
+        setLoading(true);
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+        const response = await fetch(`${API_BASE_URL}/courses?limit=100&page=1`, { headers, signal: controller.signal });
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            const data = (result.data as any).courses || result.data;
+            setCourses(Array.isArray(data) ? data : []);
+          }
         }
+      } catch (error) {
+        if (!controller.signal.aborted) console.error("Failed to load courses:", error);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to load courses:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    loadCourses();
+    return () => controller.abort();
+  }, [authLoading, token]);
 
-  const getFilteredCourses = (): Course[] => {
+  const courses = useMemo((): Course[] => {
     return allCourses.filter((course) => {
       const facultyName = (course.categoryObj?.name || course.faculty?.name || course.category || "").toLowerCase();
 
@@ -70,9 +67,8 @@ export default function FeaturedCoursesCarousel() {
 
       return topicMatch;
     });
-  };
-
-  const courses = getFilteredCourses();
+  }, [allCourses, activeTopic]);
+  const navigation = useCarouselNavigation(courseTrackRef, loading ? null : courses);
 
   const scrollCourses = (direction: "previous" | "next") => {
     const track = courseTrackRef.current;
@@ -88,23 +84,6 @@ export default function FeaturedCoursesCarousel() {
     courseTrackRef.current?.scrollTo({ left: 0, behavior: "instant" });
   }, [activeTopic]);
 
-  useEffect(() => {
-    const track = courseTrackRef.current;
-    if (loading || !track) {
-      setNavigation({ previous: false, next: false });
-      return;
-    }
-    const updateNavigation = () => setNavigation({
-      previous: track.scrollLeft > 2,
-      next: track.scrollLeft + track.clientWidth < track.scrollWidth - 2,
-    });
-    const observer = new ResizeObserver(updateNavigation);
-    observer.observe(track);
-    for (const card of Array.from(track.children)) observer.observe(card);
-    track.addEventListener("scroll", updateNavigation, { passive: true });
-    updateNavigation();
-    return () => { observer.disconnect(); track.removeEventListener("scroll", updateNavigation); };
-  }, [activeTopic, allCourses, loading]);
   return (
     <section style={{ padding: "34px 0" }}>
       <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
@@ -209,6 +188,7 @@ export default function FeaturedCoursesCarousel() {
                 gap: 18,
                 padding: "8px 4px 18px",
                 scrollSnapType: "x mandatory",
+                scrollPaddingInline: 4,
               }}
             >
               {courses.map((course, index) => (
@@ -254,7 +234,7 @@ export default function FeaturedCoursesCarousel() {
   );
 }
 
-function CourseCard({ course, user }: { course: Course; user: any }) {
+const CourseCard = memo(function CourseCard({ course, user }: { course: Course; user: any }) {
   const tutorName = course.tutor
     ? `${course.tutor.firstName} ${course.tutor.lastName}`
     : (course as any).tutorName || "Instructor";
@@ -284,16 +264,15 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
     .slice(0, 3);
 
   const cardTrigger = (
-    <Link href={href} style={{ textDecoration: "none", display: "block" }}>
+    <Link href={href} prefetch={false} style={{ textDecoration: "none", display: "block" }}>
       <article
         style={{
           position: "relative", minWidth: 0,
           background: "linear-gradient(145deg, rgba(255,255,255,.94), rgba(231,247,242,.72))",
           border: "1px solid rgba(255,255,255,.9)",
           borderRadius: 18, overflow: "hidden",
-          backdropFilter: "blur(12px)",
           boxShadow: "0 14px 28px rgba(7,63,56,.12), inset 0 1px 0 rgba(255,255,255,.85)",
-          transition: "transform .18s ease, box-shadow .18s ease",
+          transition: "transform .28s ease",
           cursor: "pointer", display: "flex", flexDirection: "column",
         }}
         className="course-card-hover"
@@ -301,9 +280,16 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
       >
         <img
           style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", background: "#e6e6e6" }}
-          src={course.thumbnail || "/library-study-group.png"}
+          src={course.thumbnail || "/library-study-group.webp"}
           alt={course.title}
-          onError={(e) => { (e.target as HTMLImageElement).src = "/library-study-group.png"; }}
+          loading="lazy"
+          decoding="async"
+          width={640}
+          height={360}
+          onError={(e) => {
+            const image = e.currentTarget;
+            if (!image.src.endsWith("/library-study-group.webp")) image.src = "/library-study-group.webp";
+          }}
         />
         <div style={{ padding: 12, flex: 1, display: "flex", flexDirection: "column" }}>
           <h4 style={{ minHeight: 44, margin: "0 0 6px", fontSize: 15, lineHeight: 1.25, fontWeight: 800, color: "var(--ink)" }}>
@@ -400,6 +386,7 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
 
       <Link
         href={href}
+        prefetch={false}
         style={{
           display: "block", width: "100%", textAlign: "center",
           padding: "11px 0",
@@ -414,4 +401,4 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
   );
 
   return <HoverCard trigger={cardTrigger} popup={popup} />;
-}
+});

@@ -1,29 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { getPromotionActions } from "./PromotionBannerContent";
 import styles from "./CombinedPromotionBanner.module.css";
+import { useCarouselNavigation } from "@/hooks/useCarouselNavigation";
 
 export default function CombinedPromotionBanner({ isAuthenticated, isVendor = false }: { isAuthenticated: boolean; isVendor?: boolean }) {
   const actions = getPromotionActions(isAuthenticated, isVendor);
   const trackRef = useRef<HTMLDivElement>(null);
-  const [navigation, setNavigation] = useState({ previous: false, next: false });
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const updateNavigation = () => setNavigation({
-      previous: track.scrollLeft > 2,
-      next: track.scrollLeft + track.clientWidth < track.scrollWidth - 2,
-    });
-    const observer = new ResizeObserver(updateNavigation);
-    observer.observe(track);
-    track.addEventListener("scroll", updateNavigation, { passive: true });
-    updateNavigation();
-    return () => { observer.disconnect(); track.removeEventListener("scroll", updateNavigation); };
-  }, []);
+  const navigation = useCarouselNavigation(trackRef);
 
   const scrollOffers = (direction: number) => {
     const track = trackRef.current;
@@ -39,7 +26,7 @@ export default function CombinedPromotionBanner({ isAuthenticated, isVendor = fa
       id: "affiliate", label: "Affiliate rewards", title: "Invite friends. Earn rewards.",
       description: "Earn LKR 20–40 when a referred student or vendor becomes active.",
       href: actions.affiliateVendor, cta: isAuthenticated ? "Open affiliate hub" : "Start earning",
-      image: "/campus-walkway.png", alt: "University friends walking together on campus",
+      image: "/campus-walkway.webp", alt: "University friends walking together on campus",
     },
     {
       id: "marketplace", label: "Free marketplace listings", title: "Sell your student essentials.",
@@ -55,7 +42,7 @@ export default function CombinedPromotionBanner({ isAuthenticated, isVendor = fa
       id: "tutor", label: "Tutor video program", title: "Share what you know.",
       description: "Earn up to LKR 300 per qualifying video. Keep 90% of each completed sale after the promotion.",
       href: actions.tutor, cta: isAuthenticated ? "Become a tutor" : "Start teaching",
-      image: "/library-study-group.png", alt: "Students sharing knowledge in a study group",
+      image: "/library-study-group.webp", alt: "Students sharing knowledge in a study group",
     },
   ];
 
@@ -76,9 +63,9 @@ export default function CombinedPromotionBanner({ isAuthenticated, isVendor = fa
               {offers.map((offer, index) => (
                 <article key={offer.id} className={styles.card} data-home-reveal data-home-delay={String(Math.min(index + 1, 3))} data-home-hover>
                   {offer.image ? (
-                    <img className={styles.image} src={offer.image} alt={offer.alt} loading="lazy" />
+                    <img className={styles.image} src={offer.image} alt={offer.alt} loading="lazy" decoding="async" width={225} height={122} />
                   ) : (
-                    <div className={styles.image} style={{ backgroundImage: "url('/unihub-discovery-triptych.png')", backgroundSize: "300% 100%", backgroundPosition: offer.position }} role="img" aria-label={offer.id === "marketplace" ? "Books, headphones, and other student essentials" : "A welcoming student boarding room"} />
+                    <div className={styles.image} style={{ backgroundImage: "url('/unihub-discovery-triptych.webp')", backgroundSize: "300% 100%", backgroundPosition: offer.position }} role="img" aria-label={offer.id === "marketplace" ? "Books, headphones, and other student essentials" : "A welcoming student boarding room"} />
                   )}
                   <span className={styles.label}>{offer.label}</span>
                   <h3>{offer.title}</h3>

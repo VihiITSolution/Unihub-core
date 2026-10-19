@@ -30,11 +30,11 @@ export default function CampusLifePanel() {
 
         <div className={styles.collage}>
           <figure className={styles.campus} data-home-reveal data-home-delay="1">
-            <img src="/campus-walkway.png" alt="University students walking together on a Sri Lankan campus" loading="lazy" data-home-hover />
+            <img src="/campus-walkway.webp" alt="University students walking together on a Sri Lankan campus" loading="lazy" decoding="async" width={1024} height={576} data-home-hover />
             <figcaption>Find your people.</figcaption>
           </figure>
           <figure className={styles.study} data-home-reveal data-home-delay="2">
-            <img src="/library-study-group.png" alt="Students learning together in a study group" loading="lazy" data-home-hover />
+            <img src="/library-study-group.webp" alt="Students learning together in a study group" loading="lazy" decoding="async" width={960} height={540} data-home-hover />
             <figcaption>Learn together.</figcaption>
           </figure>
           <div className={styles.essentials}>
