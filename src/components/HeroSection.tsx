@@ -78,25 +78,6 @@ export default function HeroSection() {
             Find peer-led kuppi sessions before deadlines, buy or sell student essentials, discover boarding near your university, and move through the semester with less stress.
           </p>
 
-          {/* Hero pills */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
-            {["Assignment rescue", "Viva confidence", "Peer-to-peer learning", "Boarding near campus"].map((pill) => (
-              <span
-                key={pill}
-                style={{
-                  padding: "7px 10px",
-                  border: "1px solid rgba(255,255,255,.48)",
-                  background: "rgba(255,255,255,.12)",
-                  color: "#fff",
-                  fontSize: 13,
-                  fontWeight: 800,
-                }}
-              >
-                {pill}
-              </span>
-            ))}
-          </div>
-
           {/* CTA buttons */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
             <Link

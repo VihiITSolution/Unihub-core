@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { RoleUpgradeModal } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,15 +8,6 @@ import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 import FeaturedCoursesCarousel from "@/components/FeaturedCoursesCarousel";
 import HeroSection from "@/components/HeroSection";
 import CombinedPromotionBanner from "@/components/CombinedPromotionBanner";
-import { statsService } from "@/services/stats.service";
-
-// Fallback shown until the real platform stats load (or if the request fails).
-const FALLBACK_STATS = [
-  { value: "—", label: "Active Students" },
-  { value: "—", label: "Tutors" },
-  { value: "—", label: "Sessions" },
-  { value: "—", label: "Ratings" },
-];
 
 const PROMISE_CARDS = [
   { title: "Catch up fast", body: "Search by module, year, faculty, assignment type, or exam topic when lectures move faster than your notes." },
@@ -32,42 +23,11 @@ const CAMPUS_AREAS = [
   { title: "Flexible & remote-friendly", detail: "Online and on-campus options for all faculties, including evening and part-time students." },
 ];
 
-const PATHWAYS = [
-  { title: "IT undergraduate pathway", desc: "Cover programming, databases, web projects, software engineering assignments, and internship portfolio work.", meta: ["6 modules", "42 hours", "Portfolio ready"] },
-  { title: "Management studies pathway", desc: "Prepare for presentations, marketing plans, accounting basics, research methods, and group assignments.", meta: ["5 modules", "31 hours", "Viva practice"] },
-  { title: "Engineering support pathway", desc: "Get help with circuit theory, lab reports, design calculations, and exam revision.", meta: ["7 modules", "54 hours", "Lab support"] },
-];
-
-const TESTIMONIALS = [
-  { quote: '"I searched by my department and found help for the exact assignment week I was stuck in."', author: "Hashan M., Computing" },
-  { quote: '"The viva practice made our final presentation feel much less scary."', author: "Nimali S., Management" },
-  { quote: '"It felt like a study group that understood Sri Lankan university pressure."', author: "Yohan P., Engineering" },
-];
-
 const TRUST_LABELS = ["Public Universities", "Private Institutes", "External Degrees", "A/L Leavers", "Student Clubs", "Internship Prep"];
 
 export default function Home() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
-  const [stats, setStats] = useState(FALLBACK_STATS);
-
-  useEffect(() => {
-    statsService
-      .getPlatformStats()
-      .then((response) => {
-        if (response.success && response.data) {
-          const d = response.data;
-          setStats([
-            { value: `${d.activeStudents}+`, label: "Active Students" },
-            { value: `${d.tutors}+`, label: "Tutors" },
-            { value: `${d.sessions}+`, label: "Sessions" },
-            { value: d.averageRating ? `${d.averageRating}★` : "New", label: "Ratings" },
-          ]);
-        }
-      })
-      .catch((err) => console.error("Failed to load platform stats:", err));
-  }, []);
-
   return (
     <div style={{ minHeight: "100vh", background: "var(--white)" }}>
       {/* Hero */}
@@ -105,29 +65,6 @@ export default function Home() {
           </div>
         </section>
       )}
-
-      {/* Stats band */}
-      <section style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "#f2fbf8" }}>
-        <div
-          style={{
-            width: "min(1180px, calc(100% - 40px))",
-            margin: "0 auto",
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 16,
-            padding: "28px 0",
-            textAlign: "center",
-          }}
-          className="stats-grid-responsive"
-        >
-          {stats.map((s) => (
-            <div key={s.label}>
-              <strong style={{ display: "block", fontSize: 28, fontWeight: 800, color: "var(--ink)" }}>{s.value}</strong>
-              <span style={{ color: "var(--muted)" }}>{s.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* Featured courses / kuppi sessions */}
       <FeaturedCoursesCarousel />
@@ -208,35 +145,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pathways */}
-      <section style={{ padding: "34px 0" }}>
-        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
-          <div style={{ marginBottom: 18 }}>
-            <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800 }}>From semester pass to graduate-ready</h2>
-            <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.45 }}>
-              Structured pathways combine module support, projects, GPA recovery, and mentor guidance.
-            </p>
-          </div>
-          <div
-            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}
-            className="career-grid-responsive"
-          >
-            {PATHWAYS.map((p) => (
-              <article
-                key={p.title}
-                style={{ minHeight: 192, padding: 20, border: "1px solid var(--line)", borderRadius: 6, background: "var(--white)" }}
-              >
-                <h3 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800 }}>{p.title}</h3>
-                <p style={{ margin: "0 0 18px", color: "var(--muted)", lineHeight: 1.45 }}>{p.desc}</p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, color: "var(--muted)", fontSize: 13 }}>
-                  {p.meta.map((m) => <span key={m}>{m}</span>)}
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Trust section */}
       <section style={{ background: "#202124", color: "var(--white)", padding: "34px 0" }}>
         <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
@@ -262,29 +170,6 @@ export default function Home() {
               >
                 {label}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section style={{ padding: "34px 0" }}>
-        <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
-          <div style={{ marginBottom: 18 }}>
-            <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800 }}>Student stories that feel familiar</h2>
-          </div>
-          <div
-            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}
-            className="testimonials-responsive"
-          >
-            {TESTIMONIALS.map((t) => (
-              <article
-                key={t.author}
-                style={{ padding: 20, border: "1px solid var(--line)", borderRadius: 6, background: "var(--white)", lineHeight: 1.45 }}
-              >
-                {t.quote}
-                <strong style={{ display: "block", marginTop: 16, color: "var(--ink)" }}>{t.author}</strong>
-              </article>
             ))}
           </div>
         </div>
