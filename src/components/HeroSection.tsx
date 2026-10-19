@@ -1,33 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import Link from "next/link";
-import { BookOpen, CirclePlus, House, ShoppingBag } from "lucide-react";
-
 export default function HeroSection() {
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
-
-  const handleCreateKuppi = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!isAuthenticated) {
-      // Land the new user on the tutor application after they register,
-      // instead of the generic student dashboard - register() doesn't
-      // support a "tutor" account type directly, so becoming a tutor is a
-      // follow-up application step for a normal student account.
-      sessionStorage.setItem("redirectAfterLogin", "/student/become-tutor");
-      router.push("/auth/register");
-      return;
-    }
-    if (user?.roles?.includes("tutor")) {
-      router.push("/tutor/create-course");
-    } else {
-      // Already has an account - send them to apply, not back to registration.
-      router.push("/student/become-tutor");
-    }
-  };
-
   return (
     <section
       className="hero-section"
@@ -85,27 +58,6 @@ export default function HeroSection() {
 
         </div>
 
-        <nav className="hero-actions" aria-label="Explore UniHub">
-          <span className="hero-actions__label">Explore UniHub</span>
-          <div className="hero-actions__grid">
-            <Link href="/courses" className="hero-action">
-              <span className="hero-action__icon"><BookOpen size={17} aria-hidden="true" /></span>
-              Browse Kuppi
-            </Link>
-            <button type="button" onClick={handleCreateKuppi} className="hero-action">
-              <span className="hero-action__icon"><CirclePlus size={17} aria-hidden="true" /></span>
-              Create Kuppi
-            </button>
-            <Link href="/marketplace" className="hero-action">
-              <span className="hero-action__icon"><ShoppingBag size={17} aria-hidden="true" /></span>
-              Marketplace
-            </Link>
-            <Link href="/boarding" className="hero-action">
-              <span className="hero-action__icon"><House size={17} aria-hidden="true" /></span>
-              Find Boarding
-            </Link>
-          </div>
-        </nav>
       </div>
       <style jsx>{`
         .hero-section { padding: 24px 0; }
@@ -113,30 +65,11 @@ export default function HeroSection() {
           margin-left: 34px; border: 1px solid rgba(255,255,255,.85); border-radius: 14px;
           background: rgba(255,255,255,.93); color: var(--ink); box-shadow: 0 15px 32px rgba(0,0,0,.16);
         }
-        .hero-actions {
-          position: absolute; right: 0; bottom: 42px; width: min(390px, 35vw);
-          padding: 16px; border: 1px solid rgba(255,255,255,.36); border-radius: 16px;
-          background: rgba(4,51,45,.57); backdrop-filter: blur(14px);
-          box-shadow: 0 18px 38px rgba(0,0,0,.2);
-        }
-        .hero-actions__label { display: block; margin-bottom: 10px; color: #a9f0df; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-        .hero-actions__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-        .hero-action {
-          display: flex; min-height: 62px; align-items: center; gap: 9px; padding: 10px 12px;
-          border: 1px solid rgba(255,255,255,.42); border-radius: 10px; background: rgba(255,255,255,.13);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,.13); color: #fff; font: inherit; font-size: 13px; font-weight: 800;
-          line-height: 1.2; text-align: left; text-decoration: none; cursor: pointer; transition: transform .15s ease, background .15s ease, border-color .15s ease;
-        }
-        .hero-action__icon { display: inline-grid; flex: 0 0 30px; width: 30px; height: 30px; place-items: center; border-radius: 8px; background: rgba(169,240,223,.18); color: #a9f0df; }
-        .hero-action:hover { transform: translateY(-2px); border-color: #a9f0df; background: rgba(255,255,255,.22); }
-        .hero-action:focus-visible { outline: 3px solid #a9f0df; outline-offset: 2px; }
         @media (max-width: 760px) {
           .hero-section { padding: 16px 0; }
           .hero-shell { display: block !important; min-height: 0 !important; }
           .hero-copy { margin: 20px; padding: 24px !important; }
-          .hero-actions { position: static; width: auto; margin: 0 20px 20px; }
         }
-        @media (max-width: 420px) { .hero-actions__grid { grid-template-columns: 1fr; } }
       `}</style>
     </section>
   );

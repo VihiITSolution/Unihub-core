@@ -6,6 +6,7 @@ import { RoleUpgradeModal } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import type { RoleType } from "@/components/ui/RoleUpgradeModal";
 import FeaturedCoursesCarousel from "@/components/FeaturedCoursesCarousel";
+import ExploreUniHub from "@/components/ExploreUniHub";
 import HeroSection from "@/components/HeroSection";
 import CombinedPromotionBanner from "@/components/CombinedPromotionBanner";
 
@@ -60,6 +61,8 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      <ExploreUniHub />
 
       {/* Featured courses / kuppi sessions */}
       <FeaturedCoursesCarousel />
