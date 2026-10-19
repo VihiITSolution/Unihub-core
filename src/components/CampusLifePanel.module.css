@@ -1,0 +1,60 @@
+.section {
+  padding: 32px 0 48px;
+  background: #fff;
+}
+
+.panel {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 48px);
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  align-items: center;
+  gap: 40px;
+  border-radius: 24px;
+  background: #192e2b;
+  color: #fff;
+}
+
+.copy { min-width: 0; }
+.eyebrow { color: #a9e8ce; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.copy h2 { margin: 12px 0 16px; color: #fff; font-size: clamp(30px, 3.1vw, 44px); line-height: 1.1; font-weight: 800; letter-spacing: -.03em; }
+.description { max-width: 450px; margin: 0; color: #d2dfdb; font-size: 15px; line-height: 1.65; }
+.benefits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 20px; margin: 30px 0; padding: 0; list-style: none; }
+.benefits li { display: flex; align-items: flex-start; gap: 10px; }
+.icon { display: grid; place-items: center; flex: 0 0 34px; height: 34px; border-radius: 50%; background: #c5ecdc; color: #184c3c; }
+.benefits li:nth-child(2) .icon { background: #e2d7f7; color: #523875; }
+.benefits li:nth-child(3) .icon { background: #f8e1b3; color: #6b4616; }
+.benefits li:nth-child(4) .icon { background: #cfe6f7; color: #294d69; }
+.benefits h3 { margin: 0 0 5px; color: #fff; font-size: 14px; font-weight: 700; line-height: 1.4; }
+.benefits p { margin: 0; color: #c5d3cd; font-size: 12px; line-height: 1.5; }
+.action { display: inline-flex; align-items: center; justify-content: center; gap: 18px; min-height: 46px; padding: 12px 20px; border-radius: 8px; background: #fff; color: #193e33; font-size: 13px; font-weight: 800; text-decoration: none; transition: background .2s; }
+.action:hover { background: #d9f5e8; }
+.action:focus-visible { outline: 3px solid #a9e8ce; outline-offset: 4px; }
+
+.collage { display: grid; grid-template-columns: .9fr 1.1fr; grid-template-rows: 190px 220px; gap: 14px; min-width: 0; }
+.collage figure { position: relative; margin: 0; overflow: hidden; border-radius: 14px; background: #345149; }
+.collage figure::after { position: absolute; inset: 50% 0 0; content: ""; background: linear-gradient(transparent, rgba(0,0,0,.65)); pointer-events: none; }
+.collage img, .picture { display: block; width: 100%; height: 100%; object-fit: cover; }
+.campus { grid-column: 1; grid-row: 1 / 3; transform: translateY(8px); }
+.study { grid-column: 2; grid-row: 1; }
+.essentials { display: grid; grid-column: 2; grid-row: 2; grid-template-columns: 1fr 1fr; gap: 14px; }
+.picture { background-image: url('/unihub-discovery-triptych.png'); background-size: 300% 100%; }
+.marketplace .picture { background-position: center; }
+.boarding .picture { background-position: right center; }
+.collage figcaption { position: absolute; z-index: 1; bottom: 14px; left: 14px; right: 10px; color: #fff; font-size: 12px; font-weight: 700; line-height: 1.4; }
+
+@media (max-width: 980px) {
+  .panel { grid-template-columns: 1fr; gap: 32px; }
+  .description { max-width: 600px; }
+  .collage { grid-template-rows: 180px 210px; }
+  .campus { transform: none; }
+}
+
+@media (max-width: 540px) {
+  .panel { width: calc(100% - 28px); padding: 24px 18px; border-radius: 18px; }
+  .benefits { grid-template-columns: 1fr; gap: 18px; }
+  .collage { gap: 10px; grid-template-rows: 145px 175px; }
+  .essentials { gap: 10px; }
+  .collage figcaption { left: 9px; bottom: 10px; font-size: 11px; }
+}
