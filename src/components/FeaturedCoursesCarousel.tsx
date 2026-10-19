@@ -23,16 +23,6 @@ const TOPICS = [
   { id: "exam", label: "Exams" },
 ];
 
-const TOPIC_TEXT: Record<string, [string, string]> = {
-  all: ["Featured kuppi sessions", "Browse sessions mapped to Sri Lankan faculties, course codes, assessments, and semester needs."],
-  computing: ["Faculty of Computing", "Software engineering, data science, information systems, research projects, and portfolio-ready technical modules."],
-  business: ["Faculty of Management Studies", "Marketing, management, accounting, entrepreneurship, group assignments, vivas, and internship communication."],
-  engineering: ["Faculty of Engineering", "Lab support, circuit theory, reports, design calculations, and final exam revision."],
-  medicine: ["Faculty of Medicine", "Health science, nursing, public health, anatomy, and evidence-based study support."],
-  humanities: ["Humanities and Social Sciences", "Academic English, presentations, writing, psychology, law, and foundation-year support."],
-  exam: ["Exam prep and certification support", "Prepare for final exams, supplementary exams, vivas, and professional certification pathways."],
-};
-
 export default function FeaturedCoursesCarousel() {
   const { user, token, isAuthenticated } = useAuth();
   const [allCourses, setCourses] = useState<Course[]>([]);
@@ -82,7 +72,6 @@ export default function FeaturedCoursesCarousel() {
   };
 
   const courses = getFilteredCourses();
-  const [titleText, copyText] = TOPIC_TEXT[activeTopic] || TOPIC_TEXT.all;
 
   const scrollCourses = (direction: "previous" | "next") => {
     const track = courseTrackRef.current;
@@ -152,13 +141,7 @@ export default function FeaturedCoursesCarousel() {
 
         {/* Course carousel */}
         <div style={{ marginTop: 20 }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 16 }}>
-            <div>
-              <h3 style={{ margin: "0 0 8px", fontSize: 23, fontWeight: 800 }}>{titleText}</h3>
-              <p style={{ maxWidth: 760, margin: 0, color: "var(--muted)", lineHeight: 1.45 }}>
-                {copyText}
-              </p>
-            </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
             <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
               <button type="button" onClick={() => scrollCourses("previous")} className="course-carousel__button" aria-label="Show previous courses">
                 <ChevronLeft size={20} aria-hidden="true" />
