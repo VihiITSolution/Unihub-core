@@ -54,7 +54,7 @@ export default function VendorAffiliatePage() {
     }
   };
 
-  const closeDate = useMemo(() => data?.campaign ? new Date(data.campaign.signupEndsAt).toLocaleDateString("en-LK", { day: "numeric", month: "long", year: "numeric" }) : "soon", [data]);
+  const closeDate = useMemo(() => data?.campaign ? new Date(data.campaign.signupEndsAt).toLocaleDateString("en-LK", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Colombo" }) : "soon", [data]);
 
   if (error) return <main className="affiliate-shell"><section className="affiliate-error"><ShieldCheck size={28} /><h1>Affiliate programme</h1><p>{error}</p><button onClick={() => { setError(""); load(); }}>Try again</button></section></main>;
   if (!data) return <main className="affiliate-shell"><section className="affiliate-loading"><div className="affiliate-spinner" /> Loading your affiliate dashboard…</section></main>;
