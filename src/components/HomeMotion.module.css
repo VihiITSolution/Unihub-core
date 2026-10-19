@@ -1,0 +1,44 @@
+.root {
+  min-height: 100vh;
+  background: var(--white);
+}
+
+/* Content is visible by default, including before hydration or without JS. */
+@media (prefers-reduced-motion: no-preference) {
+  .root :global([data-home-motion="pending"]) {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  .root :global([data-home-motion="visible"]) {
+    animation: reveal 620ms cubic-bezier(.22, 1, .36, 1) both;
+  }
+
+  .root :global([data-home-delay="1"]) { animation-delay: 70ms; }
+  .root :global([data-home-delay="2"]) { animation-delay: 140ms; }
+  .root :global([data-home-delay="3"]) { animation-delay: 210ms; }
+
+  .root :global([data-home-hover]) {
+    transition-duration: 280ms !important;
+    transition-timing-function: cubic-bezier(.22, 1, .36, 1) !important;
+  }
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root :global([data-home-reveal]) {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .root :global([data-home-hover]) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

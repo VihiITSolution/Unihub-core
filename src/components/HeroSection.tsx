@@ -21,6 +21,7 @@ export default function HeroSection() {
       >
         <div className="hero-copy" style={{ maxWidth: 470, padding: 32 }}>
           <p
+            data-home-reveal
             style={{
               margin: "0 0 10px",
               color: "#a9f0df",
@@ -34,6 +35,8 @@ export default function HeroSection() {
           </p>
 
           <h1
+            data-home-reveal
+            data-home-delay="1"
             style={{
               margin: 0,
               fontSize: "clamp(36px, 5vw, 58px)",
@@ -45,6 +48,8 @@ export default function HeroSection() {
           </h1>
 
           <p
+            data-home-reveal
+            data-home-delay="2"
             style={{
               maxWidth: 510,
               margin: "16px 0 24px",

@@ -11,17 +11,20 @@ export default function ExploreUniHub() {
   return (
     <section className="explore-unihub" aria-labelledby="explore-unihub-title">
       <div className="explore-unihub__inner">
-        <div className="explore-unihub__intro">
+        <div className="explore-unihub__intro" data-home-reveal>
           <span>Explore UniHub</span>
           <h2 id="explore-unihub-title">Everything for student life, in one place.</h2>
           <p>Study support, student deals, and a place to stay—made for university life.</p>
         </div>
         <div className="explore-unihub__cards">
-          {EXPLORE_AREAS.map((area) => (
+          {EXPLORE_AREAS.map((area, index) => (
             <Link
               key={area.title}
               href={area.href}
               className="explore-unihub__card"
+              data-home-reveal
+              data-home-delay={String(index + 1)}
+              data-home-hover
               style={{
                 minHeight: 370,
                 backgroundImage: "url('/unihub-discovery-triptych.png')",

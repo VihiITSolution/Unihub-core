@@ -10,12 +10,13 @@ import ExploreUniHub from "@/components/ExploreUniHub";
 import HeroSection from "@/components/HeroSection";
 import CombinedPromotionBanner from "@/components/CombinedPromotionBanner";
 import CampusLifePanel from "@/components/CampusLifePanel";
+import HomeMotion from "@/components/HomeMotion";
 
 export default function Home() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   return (
-    <div style={{ minHeight: "100vh", background: "var(--white)" }}>
+    <HomeMotion>
       {/* Hero */}
       <HeroSection />
 
@@ -82,6 +83,6 @@ export default function Home() {
           .tutor-reward-banner { grid-template-columns: 1fr !important; }
         }
       `}</style>
-    </div>
+    </HomeMotion>
   );
 }

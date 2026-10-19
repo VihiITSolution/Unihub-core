@@ -62,9 +62,9 @@ export default function CombinedPromotionBanner({ isAuthenticated, isVendor = fa
   return (
     <section className={styles.section} aria-labelledby="promotion-title">
       <div className={styles.container}>
-        <h2 id="promotion-title" className={styles.heading}>More ways to grow with UniHub</h2>
+        <h2 id="promotion-title" className={styles.heading} data-home-reveal>More ways to grow with UniHub</h2>
         <div className={styles.banner}>
-          <div className={styles.intro}>
+          <div className={styles.intro} data-home-reveal>
             <span className={styles.eyebrow}>Student &amp; vendor benefits</span>
             <h3>Make your UniHub time work harder for you.</h3>
             <p>Invite friends, sell what students need, or share your knowledge.</p>
@@ -73,8 +73,8 @@ export default function CombinedPromotionBanner({ isAuthenticated, isVendor = fa
           </div>
           <div className={styles.carousel}>
             <div ref={trackRef} id="unihub-benefit-offers" className={styles.track} tabIndex={0} role="region" aria-label="Student and vendor offers">
-              {offers.map((offer) => (
-                <article key={offer.id} className={styles.card}>
+              {offers.map((offer, index) => (
+                <article key={offer.id} className={styles.card} data-home-reveal data-home-delay={String(Math.min(index + 1, 3))} data-home-hover>
                   {offer.image ? (
                     <img className={styles.image} src={offer.image} alt={offer.alt} loading="lazy" />
                   ) : (

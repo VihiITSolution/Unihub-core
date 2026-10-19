@@ -109,7 +109,7 @@ export default function FeaturedCoursesCarousel() {
     <section style={{ padding: "34px 0" }}>
       <div style={{ width: "min(1180px, calc(100% - 40px))", margin: "0 auto" }}>
         {/* Section head */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 18, marginBottom: 18 }}>
+        <div data-home-reveal style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 18, marginBottom: 18 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800, lineHeight: 1.15 }}>
               Search like you are planning your semester
@@ -135,6 +135,8 @@ export default function FeaturedCoursesCarousel() {
         <div
           style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}
           className="scrollbar-hide"
+          data-home-reveal
+          data-home-delay="1"
           role="tablist"
         >
           {TOPICS.map((tab) => (
@@ -209,8 +211,8 @@ export default function FeaturedCoursesCarousel() {
                 scrollSnapType: "x mandatory",
               }}
             >
-              {courses.map((course) => (
-                <div key={course.id} style={{ flex: "0 0 clamp(245px, 28vw, 300px)", scrollSnapAlign: "start" }}>
+              {courses.map((course, index) => (
+                <div key={course.id} data-home-reveal data-home-delay={String(Math.min(index, 3))} style={{ flex: "0 0 clamp(245px, 28vw, 300px)", scrollSnapAlign: "start" }}>
                   <CourseCard course={course} user={user} />
                 </div>
               ))}
@@ -295,6 +297,7 @@ function CourseCard({ course, user }: { course: Course; user: any }) {
           cursor: "pointer", display: "flex", flexDirection: "column",
         }}
         className="course-card-hover"
+        data-home-hover
       >
         <img
           style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", background: "#e6e6e6" }}

@@ -30,12 +30,14 @@
 .benefits p { margin: 0; color: #c5d3cd; font-size: 12px; line-height: 1.5; }
 .action { display: inline-flex; align-items: center; justify-content: center; gap: 18px; min-height: 46px; padding: 12px 20px; border-radius: 8px; background: #fff; color: #193e33; font-size: 13px; font-weight: 800; text-decoration: none; transition: background .2s; }
 .action:hover { background: #d9f5e8; }
+.action svg { transition: transform 280ms cubic-bezier(.22, 1, .36, 1); }
 .action:focus-visible { outline: 3px solid #a9e8ce; outline-offset: 4px; }
 
 .collage { display: grid; grid-template-columns: .9fr 1.1fr; grid-template-rows: 190px 220px; gap: 14px; min-width: 0; }
 .collage figure { position: relative; margin: 0; overflow: hidden; border-radius: 14px; background: #345149; }
 .collage figure::after { position: absolute; inset: 50% 0 0; content: ""; background: linear-gradient(transparent, rgba(0,0,0,.65)); pointer-events: none; }
 .collage img, .picture { display: block; width: 100%; height: 100%; object-fit: cover; }
+.collage img, .picture { transition: transform 400ms cubic-bezier(.22, 1, .36, 1); }
 .campus { grid-column: 1; grid-row: 1 / 3; transform: translateY(8px); }
 .study { grid-column: 2; grid-row: 1; }
 .essentials { display: grid; grid-column: 2; grid-row: 2; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -43,6 +45,15 @@
 .marketplace .picture { background-position: center; }
 .boarding .picture { background-position: right center; }
 .collage figcaption { position: absolute; z-index: 1; bottom: 14px; left: 14px; right: 10px; color: #fff; font-size: 12px; font-weight: 700; line-height: 1.4; }
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .collage figure:hover img, .collage figure:hover .picture { transform: scale(1.04); }
+  .action:hover svg { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action svg { transition: none; }
+}
 
 @media (max-width: 980px) {
   .panel { grid-template-columns: 1fr; gap: 32px; }
