@@ -48,14 +48,16 @@ export default function Header() {
     return { href: "/student/dashboard", label: "My Learning" };
   };
 
-  const navLinks = [
-    { ...getDashboardLink(), requiresRole: null },
-    ...(user?.roles?.includes("tutor")
-      ? []
-      : [{ href: "/tutor/dashboard", label: "Tutor", requiresRole: "tutor" as RoleType }]),
-    { href: "/marketplace", label: "Marketplace", requiresRole: null },
-    { href: "/boarding", label: "Boarding", requiresRole: null },
-  ];
+  const navLinks = isAuthenticated
+    ? [
+        { ...getDashboardLink(), requiresRole: null },
+        ...(user?.roles?.includes("tutor")
+          ? []
+          : [{ href: "/tutor/dashboard", label: "Tutor", requiresRole: "tutor" as RoleType }]),
+        { href: "/marketplace", label: "Marketplace", requiresRole: null },
+        { href: "/boarding", label: "Boarding", requiresRole: null },
+      ]
+    : [];
 
   const handleNavClick = (e: React.MouseEvent, link: (typeof navLinks)[0]) => {
     if (!isAuthenticated) return;
@@ -153,25 +155,27 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Desktop nav links */}
-        <nav className="hidden lg:flex items-center flex-shrink-0" style={{ gap: 0 }}>
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={(e) => handleNavClick(e, link)}
-              style={{
-                padding: "0 10px", fontSize: 14, fontWeight: 600,
-                color: "var(--ink)", whiteSpace: "nowrap",
-                height: 40, display: "inline-flex", alignItems: "center",
-                borderRadius: 4, transition: "color .15s", textDecoration: "none",
-              }}
-              className="hover:text-brand"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Desktop nav links — shown after sign-in only */}
+        {isAuthenticated && (
+          <nav className="hidden lg:flex items-center flex-shrink-0" style={{ gap: 0 }}>
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={(e) => handleNavClick(e, link)}
+                style={{
+                  padding: "0 10px", fontSize: 14, fontWeight: 600,
+                  color: "var(--ink)", whiteSpace: "nowrap",
+                  height: 40, display: "inline-flex", alignItems: "center",
+                  borderRadius: 4, transition: "color .15s", textDecoration: "none",
+                }}
+                className="hover:text-brand"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         {/* Search bar — desktop, after nav links */}
         <div className="hidden lg:flex" style={{ flex: 1, minWidth: 0, flexDirection: "column" }}>
@@ -221,6 +225,19 @@ export default function Header() {
             </span>
           )}
         </div>
+
+        <Link
+          href="/help"
+          className="hidden lg:inline-flex hover:border-ink"
+          style={{
+            height: 38, alignItems: "center", padding: "0 14px",
+            border: "1.5px solid var(--line)", background: "var(--white)",
+            color: "var(--ink)", fontSize: 14, fontWeight: 700,
+            textDecoration: "none", borderRadius: 4, flexShrink: 0,
+          }}
+        >
+          Help
+        </Link>
 
         {/* Desktop right actions */}
         <div className="hidden lg:flex items-center flex-shrink-0" style={{ gap: 6 }}>
@@ -469,6 +486,14 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/help"
+              onClick={() => setIsMenuOpen(false)}
+              style={{ display: "block", padding: "11px 18px", fontSize: 14, fontWeight: 600, color: "var(--ink)", textDecoration: "none" }}
+              className="hover:bg-soft"
+            >
+              Help
+            </Link>
           </div>
 
           {/* Mobile auth */}
