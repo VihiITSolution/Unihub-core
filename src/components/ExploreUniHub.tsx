@@ -168,6 +168,7 @@ export default function ExploreUniHub() {
               className="explore-unihub__track"
               style={{
                 gap: CARD_GAP,
+                gridAutoColumns: `calc((100% - ${(slidesPerView - 1) * CARD_GAP}px) / ${slidesPerView})`,
                 transform: `translate3d(${-activeStart * cardStep + dragOffset}px, 0, 0)`,
                 transition: isDragging ? "none" : "transform 500ms ease",
               }}
@@ -185,7 +186,6 @@ export default function ExploreUniHub() {
                     }
                   }}
                   style={{
-                    flexBasis: `calc((100% - ${(slidesPerView - 1) * CARD_GAP}px) / ${slidesPerView})`,
                     backgroundImage: `url('${area.image}')`,
                     backgroundPosition: area.position,
                   }}
@@ -235,8 +235,8 @@ export default function ExploreUniHub() {
         .explore-unihub__viewport { width: 100%; overflow: hidden; border-radius: 18px; outline: none; touch-action: pan-y; cursor: grab; }
         .explore-unihub__viewport:focus-visible { outline: 3px solid var(--brand); outline-offset: 4px; }
         .explore-unihub__viewport:active { cursor: grabbing; }
-        .explore-unihub__track { display: flex; will-change: transform; }
-        .explore-unihub__card { position: relative; display: flex; min-width: 0; min-height: 370px; align-items: flex-end; overflow: hidden; border-radius: 16px; background-color: #e2e8f0; background-repeat: no-repeat; background-size: cover; box-shadow: 0 12px 22px rgba(15,23,42,.12); text-decoration: none; transition: transform .25s ease, box-shadow .25s ease; user-select: none; }
+        .explore-unihub__track { display: grid; grid-auto-flow: column; will-change: transform; }
+        .explore-unihub__card { position: relative; display: flex; width: 100%; min-width: 0; min-height: 370px; align-items: flex-end; overflow: hidden; border-radius: 16px; background-color: #e2e8f0; background-repeat: no-repeat; background-size: cover; box-shadow: 0 12px 22px rgba(15,23,42,.12); text-decoration: none; transition: transform .25s ease, box-shadow .25s ease; user-select: none; }
         .explore-unihub__card::before { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 42%, rgba(4,35,31,.32) 100%); content: ""; }
         .explore-unihub__card:hover { transform: translateY(-5px) scale(1.01); box-shadow: 0 20px 30px rgba(15,23,42,.18); }
         .explore-unihub__card-label { position: absolute; right: 12px; bottom: 12px; left: 12px; display: grid; min-height: 92px; grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: 2px 12px; padding: 17px; border-radius: 11px; background: rgba(255,255,255,.96); color: var(--ink); }
