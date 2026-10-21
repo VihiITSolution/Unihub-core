@@ -307,11 +307,13 @@ export default function EditCoursePage() {
     confirmed = youtubeRightsConfirmed,
     signature = youtubeSignature,
     clearSignature: () => void = () => setYoutubeSignature(""),
+    requireVideoConfirmation = true,
   ) => {
     if (!youtubeDeclarationStatus) {
       alert("The YouTube rights declaration is unavailable. Please refresh and try again.");
       return false;
     }
+    if (youtubeDeclarationStatus.hasDeclaration && !requireVideoConfirmation) return true;
     if (!confirmed) {
       alert("Please confirm the video ownership and rights declaration.");
       return false;
@@ -352,7 +354,6 @@ export default function EditCoursePage() {
         alert("Please enter a valid YouTube link (youtube.com or youtu.be).");
         return;
       }
-      if (!(await ensureYouTubeRightsDeclaration())) return;
     } else if (!currentMaterial.file) {
       alert("Please provide a title and file for the material");
       return;
@@ -362,6 +363,10 @@ export default function EditCoursePage() {
       alert("Please provide a display order for the material");
       return;
     }
+
+    if (currentMaterial.type === "video" && !(await ensureYouTubeRightsDeclaration(
+      youtubeRightsConfirmed, youtubeSignature, () => setYoutubeSignature(""), currentMaterial.source === "youtube",
+    ))) return;
 
     const newMaterial: CourseMaterial = {
       id: Date.now().toString(),
@@ -1486,6 +1491,18 @@ export default function EditCoursePage() {
                       />
                     </div>
                   )}
+
+                {currentMaterial.type === "video" && currentMaterial.source === "upload" && (
+                  <YouTubeRightsDeclarationForm
+                    mode="upload"
+                    status={youtubeDeclarationStatus}
+                    isLoading={youtubeDeclarationLoading}
+                    signature={youtubeSignature}
+                    confirmed={youtubeRightsConfirmed}
+                    onSignatureChange={setYoutubeSignature}
+                    onConfirmedChange={setYoutubeRightsConfirmed}
+                  />
+                )}
 
                 {/* Duration (for videos) */}
                 {currentMaterial.type === "video" && (

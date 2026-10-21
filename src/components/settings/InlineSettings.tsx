@@ -8,6 +8,7 @@ import { socialProfileService } from "@/services/social.service";
 import { isValidPhone, isSriLankanMobile, isNameLike } from "@/lib/validation";
 import { API_BASE_URL } from "@/lib/constants";
 import { Avatar } from "@/components/ui";
+import VideoDeclarationStatus from "@/components/tutor/VideoDeclarationStatus";
 
 // ── tiny helpers ──────────────────────────────────────────────────────────────
 const BIO_MAX = 500;
@@ -138,7 +139,7 @@ function Btn({ children, onClick, type = "button", danger, disabled, small }: {
 
 // ── EDIT PROFILE ──────────────────────────────────────────────────────────────
 function EditProfile() {
-  const { user, token, updateUser } = useAuth();
+  const { user, token, updateUser, hasRole } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ firstName: user?.firstName || "", lastName: user?.lastName || "", phoneNumber: user?.phoneNumber || "", bio: user?.bio || "" });
   const [file, setFile] = useState<File | null>(null);
@@ -261,6 +262,7 @@ function EditProfile() {
   return (
     <div>
       {/* Photo row */}
+      {token && hasRole("tutor") && <VideoDeclarationStatus token={token} />}
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20, padding: "14px", background: "#f9fafb", borderRadius: 8 }}>
         <Avatar
           src={avatar}

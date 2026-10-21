@@ -188,11 +188,12 @@ export default function CreateCoursePage() {
     setCurrentMaterial((prev) => ({ ...prev, [name]: value }));
   };
 
-  const ensureYouTubeRightsDeclaration = async () => {
+  const ensureYouTubeRightsDeclaration = async (requireVideoConfirmation = true) => {
     if (!youtubeDeclarationStatus) {
       alert("The YouTube rights declaration is unavailable. Please refresh and try again.");
       return false;
     }
+    if (youtubeDeclarationStatus.hasDeclaration && !requireVideoConfirmation) return true;
     if (!youtubeRightsConfirmed) {
       alert("Please confirm the video ownership and rights declaration.");
       return false;
@@ -233,11 +234,13 @@ export default function CreateCoursePage() {
         alert("Please enter a valid YouTube link (youtube.com or youtu.be).");
         return;
       }
-      if (!(await ensureYouTubeRightsDeclaration())) return;
     } else if (!currentMaterial.file) {
       alert("Please fill in title and select a file");
       return;
     }
+
+    if (currentMaterial.type === "video" &&
+        !(await ensureYouTubeRightsDeclaration(currentMaterial.source === "youtube"))) return;
 
     const newMaterial: CourseMaterial = {
       id: Date.now().toString(),
@@ -954,6 +957,18 @@ export default function CreateCoursePage() {
                       />
                     </div>
                   )}
+
+                {currentMaterial.type === "video" && currentMaterial.source === "upload" && (
+                  <YouTubeRightsDeclarationForm
+                    mode="upload"
+                    status={youtubeDeclarationStatus}
+                    isLoading={youtubeDeclarationLoading}
+                    signature={youtubeSignature}
+                    confirmed={youtubeRightsConfirmed}
+                    onSignatureChange={setYoutubeSignature}
+                    onConfirmedChange={setYoutubeRightsConfirmed}
+                  />
+                )}
 
                 {currentMaterial.type === "video" && (
                   <div>

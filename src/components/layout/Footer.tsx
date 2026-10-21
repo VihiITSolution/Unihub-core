@@ -78,26 +78,6 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Social profiles */}
-        <div>
-          <h4 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 800 }}>Follow us</h4>
-          <nav className="footer-socials" aria-label="UniHub social media">
-            {SOCIAL_LINKS.map((social) => (
-              <a
-                key={social.name}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`UniHub on ${social.name} (opens in a new tab)`}
-                title={social.name}
-                className="footer-social-link"
-              >
-                {social.icon}
-              </a>
-            ))}
-          </nav>
-        </div>
-
         {/* Support */}
         <div>
           <h4 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 800 }}>Support</h4>
@@ -124,6 +104,26 @@ export default function Footer() {
               {link.label}
             </Link>
           ))}
+        </div>
+
+        {/* Social profiles — last column on the right */}
+        <div>
+          <h4 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 800 }}>Follow us</h4>
+          <nav className="footer-socials" aria-label="UniHub social media">
+            {SOCIAL_LINKS.map((social) => (
+              <a
+                key={social.name}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`UniHub on ${social.name} (opens in a new tab)`}
+                title={social.name}
+                className="footer-social-link"
+              >
+                {social.icon}
+              </a>
+            ))}
+          </nav>
         </div>
       </div>
 
