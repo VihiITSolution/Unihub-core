@@ -1,4 +1,4 @@
-.section { overflow: hidden; padding: 56px 0 44px; background: #fff; }
+.section { overflow: hidden; padding: 56px 0 44px; background: #fff; scroll-margin-top: 120px; }
 .inner { width: min(1180px, calc(100% - 40px)); margin: 0 auto; display: grid; grid-template-columns: minmax(250px, .88fr) minmax(0, 2.12fr); gap: 34px; align-items: center; }
 .intro > span { color: var(--brand-dark); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .intro h2 { margin: 8px 0 12px; font-size: clamp(27px, 3vw, 38px); line-height: 1.14; font-weight: 800; letter-spacing: -.025em; }

@@ -134,7 +134,7 @@ export default function ExploreUniHub() {
   };
 
   return (
-    <section className={styles.section} aria-labelledby="explore-unihub-title">
+    <section id="explore-unihub" className={styles.section} aria-labelledby="explore-unihub-title">
       <div className={styles.inner}>
         <div className={styles.intro} data-home-reveal>
           <span>Explore UniHub</span>

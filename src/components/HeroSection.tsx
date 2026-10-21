@@ -1,5 +1,7 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
+
 export default function HeroSection() {
   return (
     <section
@@ -70,6 +72,9 @@ export default function HeroSection() {
             Find a kuppi before your deadline, buy or sell what you need, and compare boarding near your university, all in one place.
           </p>
 
+          <a href="#explore-unihub" className="hero-start" data-home-hover>
+            Get started <ArrowRight size={19} aria-hidden="true" />
+          </a>
         </div>
 
       </div>
@@ -79,6 +84,14 @@ export default function HeroSection() {
         .hero-overlay { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,63,56,.38) 0%, rgba(7,63,56,.18) 50%, rgba(7,63,56,.05) 100%); }
         .hero-copy {
           position: relative; margin-left: 34px; color: #fff;
+        }
+        .hero-start { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 16px; padding: 12px 22px; border: 1px solid #b9f3d5; border-radius: 9px; background: #b9f3d5; color: #073f38; font-size: 15px; font-weight: 800; text-decoration: none; transition: background .2s ease, transform .2s ease; }
+        .hero-start:hover { background: #d9fbe9; transform: translateY(-2px); }
+        .hero-start:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+        @media (prefers-reduced-motion: reduce) {
+          :global(html) { scroll-behavior: auto; }
+          .hero-start { transition: none; }
+          .hero-start:hover { transform: none; }
         }
         @media (max-width: 760px) {
           .hero-section { padding: 16px 0; }
