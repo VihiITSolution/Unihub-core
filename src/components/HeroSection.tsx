@@ -72,7 +72,7 @@ export default function HeroSection() {
             Find a kuppi before your deadline, buy or sell what you need, and compare boarding near your university, all in one place.
           </p>
 
-          <a href="#explore-unihub" className="hero-start" data-home-hover>
+          <a href="/auth/register" className="hero-start" data-home-hover>
             Get started <ArrowRight size={19} aria-hidden="true" />
           </a>
         </div>
