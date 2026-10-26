@@ -34,6 +34,25 @@ export interface CreateCourseData {
   year?: number;
 }
 
+export interface TutorDashboardActivity {
+  id: string;
+  type: "enrollment" | "review" | "payment";
+  title: string;
+  description: string;
+  occurredAt: string;
+}
+
+export interface TutorDashboardData {
+  courses: Course[];
+  stats: {
+    totalCourses: number;
+    totalStudents: number;
+    averageRating: number;
+    totalRevenue: number;
+  };
+  activities: TutorDashboardActivity[];
+}
+
 export const courseService = {
   async getCourses(
     filters?: CourseFilters,
@@ -102,6 +121,12 @@ export const courseService = {
 
   async getTutorCourses(token: string): Promise<ApiResponse<Course[]>> {
     return apiClient.get<ApiResponse<Course[]>>("/courses/my-courses", {
+      token,
+    });
+  },
+
+  async getTutorDashboard(token: string): Promise<ApiResponse<TutorDashboardData>> {
+    return apiClient.get<ApiResponse<TutorDashboardData>>("/courses/dashboard", {
       token,
     });
   },

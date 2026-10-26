@@ -5,13 +5,33 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
-import { courseService } from "@/services/course.service";
+import { courseService, type TutorDashboardData } from "@/services/course.service";
 import type { Course } from "@/types";
+
+const activityStyle = {
+  enrollment: { icon: "✓", iconClass: "bg-green-100 text-green-600" },
+  review: { icon: "★", iconClass: "bg-yellow-100 text-yellow-600" },
+  payment: { icon: "₨", iconClass: "bg-blue-100 text-blue-600" },
+};
+
+function relativeTime(dateString: string) {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(dateString).getTime()) / 1000));
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+  return new Intl.DateTimeFormat("en-LK", { day: "numeric", month: "short", year: "numeric" }).format(new Date(dateString));
+}
+
+function formatLkr(value: number) {
+  return `Rs. ${value.toLocaleString("en-LK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
 export default function TutorDashboard() {
   const router = useRouter();
   const { user, token, isAuthenticated, hasRole } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [dashboard, setDashboard] = useState<TutorDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,19 +46,20 @@ export default function TutorDashboard() {
       return;
     }
 
-    loadTutorCourses();
+    loadTutorDashboard();
   }, [isAuthenticated, hasRole, router]);
 
-  const loadTutorCourses = async () => {
+  const loadTutorDashboard = async () => {
     if (!token) return;
 
     try {
       setLoading(true);
       setError(null);
-      const response = await courseService.getTutorCourses(token);
+      const response = await courseService.getTutorDashboard(token);
 
       if (response.success && response.data) {
-        setCourses(response.data);
+        setDashboard(response.data);
+        setCourses(response.data.courses);
       } else {
         setError("Failed to load courses");
       }
@@ -65,8 +86,7 @@ export default function TutorDashboard() {
       const response = await courseService.deleteCourse(courseId, token);
 
       if (response.success) {
-        // Remove course from state
-        setCourses(courses.filter((c) => c.id !== courseId));
+        await loadTutorDashboard();
         alert("Course deleted successfully");
       } else {
         alert("Failed to delete course");
@@ -117,7 +137,7 @@ export default function TutorDashboard() {
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">
-            {courses.length}
+            {loading ? "—" : (dashboard?.stats.totalCourses ?? courses.length)}
           </div>
           <div className="text-sm text-gray-500">Total Courses</div>
         </div>
@@ -140,7 +160,7 @@ export default function TutorDashboard() {
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">
-            {courses.reduce((acc, c) => acc + (c.enrolledCount || 0), 0)}
+            {loading ? "—" : (dashboard?.stats.totalStudents ?? 0)}
           </div>
           <div className="text-sm text-gray-500">Total Students</div>
         </div>
@@ -157,12 +177,7 @@ export default function TutorDashboard() {
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">
-            {courses.length > 0
-              ? (
-                  courses.reduce((acc, c) => acc + (c.rating || 0), 0) /
-                  courses.length
-                ).toFixed(1)
-              : "0.0"}
+            {loading ? "—" : (dashboard?.stats.averageRating ?? 0).toFixed(1)}
           </div>
           <div className="text-sm text-gray-500">Average Rating</div>
         </div>
@@ -185,10 +200,7 @@ export default function TutorDashboard() {
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">
-            Rs.
-            {courses
-              .reduce((acc, c) => acc + (c.enrolledCount || 0) * c.price, 0)
-              .toFixed(2)}
+            {loading ? "—" : formatLkr(dashboard?.stats.totalRevenue ?? 0)}
           </div>
           <div className="text-sm text-gray-500">Total Revenue</div>
         </div>
@@ -400,44 +412,29 @@ export default function TutorDashboard() {
       <div className="mt-16">
         <h2 className="text-3xl font-bold mb-6">Recent Activity</h2>
         <div className="card">
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 pb-4 border-b">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="text-green-600">✓</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold">New enrollment</p>
-                <p className="text-sm text-gray-600">
-                  Student enrolled in &quot;Web Development Bootcamp&quot;
-                </p>
-              </div>
-              <span className="text-sm text-gray-500">2 hours ago</span>
+          {loading ? (
+            <div className="py-6 text-center text-gray-500">Loading recent activity...</div>
+          ) : !dashboard?.activities.length ? (
+            <div className="py-6 text-center text-gray-500">New enrollments, reviews, and completed payments will appear here.</div>
+          ) : (
+            <div className="space-y-4">
+              {dashboard.activities.map((activity, index) => {
+                const appearance = activityStyle[activity.type];
+                return (
+                  <div key={activity.id} className={`flex items-center gap-4 ${index < dashboard.activities.length - 1 ? "pb-4 border-b" : ""}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${appearance.iconClass}`}>
+                      <span>{appearance.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold">{activity.title}</p>
+                      <p className="text-sm text-gray-600 truncate">{activity.description}</p>
+                    </div>
+                    <span className="text-sm text-gray-500 whitespace-nowrap">{relativeTime(activity.occurredAt)}</span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex items-center gap-4 pb-4 border-b">
-              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                <span className="text-yellow-600">⭐</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold">New review</p>
-                <p className="text-sm text-gray-600">
-                  5-star review on &quot;Web Development Bootcamp&quot;
-                </p>
-              </div>
-              <span className="text-sm text-gray-500">5 hours ago</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600">💰</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold">Payment received</p>
-                <p className="text-sm text-gray-600">
-                  Earned Rs. 99.99 from course enrollment
-                </p>
-              </div>
-              <span className="text-sm text-gray-500">1 day ago</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
