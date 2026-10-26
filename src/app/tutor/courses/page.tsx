@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { BACKEND_URL } from "@/lib/constants";
 import { courseService } from "@/services/course.service";
 import reviewService, { Review } from "@/services/review.service";
-import { Avatar } from "@/components/ui";
+import { Avatar, ConfirmDialog } from "@/components/ui";
 import type { Course } from "@/types";
 
 export default function TutorCoursesPage() {
@@ -23,6 +23,9 @@ export default function TutorCoursesPage() {
     {},
   );
   const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [deletingCourse, setDeletingCourse] = useState(false);
+  const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -92,30 +95,25 @@ export default function TutorCoursesPage() {
     }));
   };
 
-  const handleDeleteCourse = async (courseId: string, courseTitle: string) => {
-    if (!token) return;
-
-    if (
-      !confirm(
-        `Are you sure you want to delete "${courseTitle}"? This action cannot be undone.`,
-      )
-    ) {
-      return;
-    }
+  const handleDeleteCourse = async () => {
+    if (!token || !courseToDelete) return;
 
     try {
-      const response = await courseService.deleteCourse(courseId, token);
+      setDeletingCourse(true);
+      const response = await courseService.deleteCourse(courseToDelete.id, token);
 
       if (response.success) {
-        // Remove course from state
-        setCourses(courses.filter((c) => c.id !== courseId));
-        alert("Course deleted successfully");
+        setCourses((current) => current.filter((course) => course.id !== courseToDelete.id));
+        setNotice({ type: "success", text: `“${courseToDelete.title}” was deleted.` });
+        setCourseToDelete(null);
       } else {
-        alert("Failed to delete course");
+        setNotice({ type: "error", text: "Course could not be deleted. Please try again." });
       }
     } catch (error) {
       console.error("Failed to delete course:", error);
-      alert("Failed to delete course");
+      setNotice({ type: "error", text: "Course could not be deleted. Please try again." });
+    } finally {
+      setDeletingCourse(false);
     }
   };
 
@@ -135,16 +133,13 @@ export default function TutorCoursesPage() {
               : course,
           ),
         );
+        setNotice({ type: "success", text: "Course submitted for review." });
       } else {
-        alert(response.message || "Failed to submit course for review");
+        setNotice({ type: "error", text: response.message || "Course could not be submitted for review." });
       }
     } catch (error) {
       console.error("Failed to submit course for review:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to submit course for review",
-      );
+      setNotice({ type: "error", text: error instanceof Error ? error.message : "Course could not be submitted for review." });
     } finally {
       setSubmittingId(null);
     }
@@ -165,10 +160,11 @@ export default function TutorCoursesPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-600">
+        <div role="alert" className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-600">
           {error}
         </div>
       )}
+      {notice && <div role={notice.type === "error" ? "alert" : "status"} className={`mb-6 rounded-lg border p-4 ${notice.type === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-green-200 bg-green-50 text-green-700"}`}>{notice.text}</div>}
 
       {loading ? (
         <div className="text-center py-12">Loading your courses...</div>
@@ -247,6 +243,7 @@ export default function TutorCoursesPage() {
                       {(course.approvalStatus === "draft" ||
                         course.approvalStatus === "rejected") && (
                         <button
+                          type="button"
                           onClick={() => handleSubmitForReview(course.id)}
                           disabled={submittingId === course.id}
                           className="mt-2 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
@@ -262,6 +259,7 @@ export default function TutorCoursesPage() {
                         href={`/tutor/edit-course/${course.id}`}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="Edit course"
+                        aria-label={`Edit ${course.title}`}
                       >
                         <svg
                           className="w-5 h-5"
@@ -281,6 +279,7 @@ export default function TutorCoursesPage() {
                         href={`/courses/${course.id}`}
                         className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                         title="View course"
+                        aria-label={`View ${course.title}`}
                       >
                         <svg
                           className="w-5 h-5"
@@ -306,6 +305,7 @@ export default function TutorCoursesPage() {
                         href={`/student/learn/${course.id}`}
                         className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                         title="Watch course"
+                        aria-label={`Preview ${course.title}`}
                       >
                         <svg
                           className="w-5 h-5"
@@ -328,11 +328,11 @@ export default function TutorCoursesPage() {
                         </svg>
                       </Link>
                       <button
-                        onClick={() =>
-                          handleDeleteCourse(course.id, course.title)
-                        }
+                        type="button"
+                        onClick={() => setCourseToDelete(course)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete course"
+                        aria-label={`Delete ${course.title}`}
                       >
                         <svg
                           className="w-5 h-5"
@@ -393,6 +393,7 @@ export default function TutorCoursesPage() {
                       <span>Rs. {course.price}</span>
                     </div>
                     <button
+                      type="button"
                       onClick={() => toggleReviews(course.id)}
                       className="flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium"
                     >
@@ -482,6 +483,15 @@ export default function TutorCoursesPage() {
           ))}
         </div>
       )}
+      <ConfirmDialog
+        isOpen={Boolean(courseToDelete)}
+        title="Delete this course?"
+        description={courseToDelete ? `“${courseToDelete.title}” and its learning material will be permanently removed. This cannot be undone.` : ""}
+        confirmLabel="Delete course"
+        isConfirming={deletingCourse}
+        onConfirm={handleDeleteCourse}
+        onCancel={() => !deletingCourse && setCourseToDelete(null)}
+      />
     </div>
   );
 }

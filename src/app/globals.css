@@ -42,6 +42,27 @@
 
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 7rem;
+  }
+
+  body {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  ::selection {
+    background: #bce9df;
+    color: var(--ink);
+  }
+
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid #0b6b5f !important;
+    outline-offset: 3px !important;
+  }
+
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]) {
+    touch-action: manipulation;
   }
 
   ::-webkit-scrollbar {
@@ -59,6 +80,37 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-400;
+  }
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 12px;
+  left: 12px;
+  transform: translateY(-160%);
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 800;
+  transition: transform .15s ease;
+}
+
+.skip-link:focus { transform: translateY(0); }
+
+@media (max-width: 640px) {
+  .container-custom { padding-left: 16px; padding-right: 16px; }
+  .section-inner { width: min(1180px, calc(100% - 32px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
   }
 }
 

@@ -42,7 +42,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 
 function Msg({ type, text }: { type: "success" | "error"; text: string }) {
   return (
-    <div style={{
+    <div role={type === "error" ? "alert" : "status"} style={{
       padding: "10px 14px", borderRadius: 7, fontSize: 13, fontWeight: 600, marginBottom: 14,
       background: type === "success" ? "#f0fdf4" : "#fef2f2",
       color: type === "success" ? "#166534" : "#991b1b",
@@ -545,7 +545,7 @@ function LinkedAccounts() {
               <div style={{ fontSize: 11, color: "var(--muted)" }}>Sign in with Google</div>
             </div>
           </div>
-          <button onClick={() => alert("Google login not yet configured. Contact support@unihub.lk")} style={{ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 6, border: "1.5px solid #d1d5db", background: "#fff", cursor: "pointer" }}>Connect</button>
+          <span aria-label="Google connection is coming soon" style={{ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 6, border: "1.5px solid #d1d5db", background: "#f9fafb", color: "#6b7280" }}>Coming soon</span>
         </div>
       </div>
       <div style={{ padding: "10px 0", borderBottom: "1px solid var(--line, #f3f4f6)" }}>
@@ -559,7 +559,7 @@ function LinkedAccounts() {
               <div style={{ fontSize: 11, color: "var(--muted)" }}>Sign in with Facebook</div>
             </div>
           </div>
-          <button onClick={() => alert("Facebook login not yet configured. Contact support@unihub.lk")} style={{ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 6, border: "1.5px solid #d1d5db", background: "#fff", cursor: "pointer" }}>Connect</button>
+          <span aria-label="Facebook connection is coming soon" style={{ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 6, border: "1.5px solid #d1d5db", background: "#f9fafb", color: "#6b7280" }}>Coming soon</span>
         </div>
       </div>
       <div style={{ marginTop: 14, padding: "12px 14px", background: "#f0fdf4", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>

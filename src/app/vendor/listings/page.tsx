@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { marketplaceService } from "@/services/marketplace.service";
 import Link from "next/link";
 import type { MarketplaceItem } from "@/types";
+import { ConfirmDialog } from "@/components/ui";
 
 export default function VendorListingsPage() {
   const { user, token } = useAuth();
@@ -15,6 +16,9 @@ export default function VendorListingsPage() {
   const [filter, setFilter] = useState<
     "all" | "active" | "inactive" | "pending"
   >("all");
+  const [listingToDelete, setListingToDelete] = useState<MarketplaceItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   useEffect(() => {
     if (!user?.isVendorProfileComplete) {
@@ -40,16 +44,21 @@ export default function VendorListingsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!token || !confirm("Are you sure you want to delete this listing?"))
-      return;
+  const handleDelete = async () => {
+    if (!token || !listingToDelete) return;
 
     try {
-      await marketplaceService.deleteListing(id, token);
+      setDeleting(true);
+      setNotice(null);
+      await marketplaceService.deleteListing(listingToDelete.id, token);
       await loadListings();
+      setNotice({ type: "success", message: "Listing deleted." });
+      setListingToDelete(null);
     } catch (error) {
       console.error("Failed to delete listing:", error);
-      alert("Failed to delete listing");
+      setNotice({ type: "error", message: "The listing could not be deleted. Please try again." });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -145,10 +154,18 @@ export default function VendorListingsPage() {
         </Link>
       </div>
 
+      {notice && (
+        <div role={notice.type === "error" ? "alert" : "status"} className={`mb-6 rounded-lg border px-4 py-3 text-sm ${notice.type === "error" ? "border-red-200 bg-red-50 text-red-800" : "border-green-200 bg-green-50 text-green-800"}`}>
+          {notice.message}
+        </div>
+      )}
+
       {/* Filter Tabs */}
       <div className="flex flex-wrap gap-4 mb-6 border-b">
         <button
+          type="button"
           onClick={() => setFilter("all")}
+          aria-pressed={filter === "all"}
           className={`px-4 py-2 font-medium border-b-2 ${
             filter === "all"
               ? "border-primary-600 text-primary-600"
@@ -158,7 +175,9 @@ export default function VendorListingsPage() {
           All ({listings.length})
         </button>
         <button
+          type="button"
           onClick={() => setFilter("active")}
+          aria-pressed={filter === "active"}
           className={`px-4 py-2 font-medium border-b-2 ${
             filter === "active"
               ? "border-primary-600 text-primary-600"
@@ -175,7 +194,9 @@ export default function VendorListingsPage() {
           )
         </button>
         <button
+          type="button"
           onClick={() => setFilter("pending")}
+          aria-pressed={filter === "pending"}
           className={`px-4 py-2 font-medium border-b-2 ${
             filter === "pending"
               ? "border-primary-600 text-primary-600"
@@ -185,7 +206,9 @@ export default function VendorListingsPage() {
           Pending ({pendingCount})
         </button>
         <button
+          type="button"
           onClick={() => setFilter("inactive")}
+          aria-pressed={filter === "inactive"}
           className={`px-4 py-2 font-medium border-b-2 ${
             filter === "inactive"
               ? "border-primary-600 text-primary-600"
@@ -315,8 +338,10 @@ export default function VendorListingsPage() {
                           Edit
                         </Link>
                         <button
-                          onClick={() => handleDelete(item.id)}
+                          type="button"
+                          onClick={() => setListingToDelete(item)}
                           className="text-red-600 hover:text-red-800 text-sm font-medium"
+                          aria-label={`Delete ${item.title}`}
                         >
                           Delete
                         </button>
@@ -329,6 +354,16 @@ export default function VendorListingsPage() {
           </table>
         </div>
       )}
+      <ConfirmDialog
+        isOpen={Boolean(listingToDelete)}
+        title="Delete listing?"
+        description={listingToDelete ? `“${listingToDelete.title}” will be permanently removed. This cannot be undone.` : ""}
+        confirmLabel="Delete listing"
+        cancelLabel="Keep listing"
+        isConfirming={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => { if (!deleting) setListingToDelete(null); }}
+      />
     </div>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "@/components/ui";
 
 export default function TermsOfService() {
@@ -9,11 +8,7 @@ export default function TermsOfService() {
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <Link href="/">
-            <Button variant="outline" className="mb-4">
-              ← Back to Home
-            </Button>
-          </Link>
+          <Button href="/" variant="outline" className="mb-4">← Back to Home</Button>
           <h1 className="text-4xl font-bold text-gray-900">Terms of Service</h1>
           <p className="text-gray-600 mt-2">Last updated: March 18, 2026</p>
         </div>
@@ -194,12 +189,8 @@ export default function TermsOfService() {
 
         {/* Footer Links */}
         <div className="mt-8 flex justify-center gap-4">
-          <Link href="/">
-            <Button variant="outline">Home</Button>
-          </Link>
-          <Link href="/privacy">
-            <Button variant="outline">Privacy Policy</Button>
-          </Link>
+          <Button href="/" variant="outline">Home</Button>
+          <Button href="/privacy" variant="outline">Privacy Policy</Button>
         </div>
       </div>
     </div>

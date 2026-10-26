@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
 import { courseService, type TutorDashboardData } from "@/services/course.service";
+import { ConfirmDialog } from "@/components/ui";
 import type { Course } from "@/types";
 
 const activityStyle = {
@@ -34,6 +35,9 @@ export default function TutorDashboard() {
   const [dashboard, setDashboard] = useState<TutorDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [deletingCourse, setDeletingCourse] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -71,29 +75,25 @@ export default function TutorDashboard() {
     }
   };
 
-  const handleDeleteCourse = async (courseId: string, courseTitle: string) => {
-    if (!token) return;
-
-    if (
-      !confirm(
-        `Are you sure you want to delete "${courseTitle}"? This action cannot be undone.`,
-      )
-    ) {
-      return;
-    }
+  const handleDeleteCourse = async () => {
+    if (!token || !courseToDelete) return;
 
     try {
-      const response = await courseService.deleteCourse(courseId, token);
+      setDeletingCourse(true);
+      const response = await courseService.deleteCourse(courseToDelete.id, token);
 
       if (response.success) {
         await loadTutorDashboard();
-        alert("Course deleted successfully");
+        setNotice({ type: "success", text: `“${courseToDelete.title}” was deleted.` });
+        setCourseToDelete(null);
       } else {
-        alert("Failed to delete course");
+        setNotice({ type: "error", text: "Course could not be deleted. Please try again." });
       }
     } catch (error) {
       console.error("Failed to delete course:", error);
-      alert("Failed to delete course");
+      setNotice({ type: "error", text: "Course could not be deleted. Please try again." });
+    } finally {
+      setDeletingCourse(false);
     }
   };
 
@@ -112,10 +112,11 @@ export default function TutorDashboard() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-600">
+        <div role="alert" className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-600">
           {error}
         </div>
       )}
+      {notice && <div role={notice.type === "error" ? "alert" : "status"} className={`mb-6 rounded-lg border p-4 ${notice.type === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-green-200 bg-green-50 text-green-700"}`}>{notice.text}</div>}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
@@ -265,6 +266,7 @@ export default function TutorDashboard() {
                           href={`/tutor/edit-course/${course.id}`}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Edit course"
+                          aria-label={`Edit ${course.title}`}
                         >
                           <svg
                             className="w-5 h-5"
@@ -284,6 +286,7 @@ export default function TutorDashboard() {
                           href={`/courses/${course.id}`}
                           className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                           title="View course"
+                          aria-label={`View ${course.title}`}
                         >
                           <svg
                             className="w-5 h-5"
@@ -309,6 +312,7 @@ export default function TutorDashboard() {
                           href={`/student/learn/${course.id}`}
                           className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                           title="Watch course"
+                          aria-label={`Preview ${course.title}`}
                         >
                           <svg
                             className="w-5 h-5"
@@ -331,11 +335,11 @@ export default function TutorDashboard() {
                           </svg>
                         </Link>
                         <button
-                          onClick={() =>
-                            handleDeleteCourse(course.id, course.title)
-                          }
+                          type="button"
+                          onClick={() => setCourseToDelete(course)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete course"
+                          aria-label={`Delete ${course.title}`}
                         >
                           <svg
                             className="w-5 h-5"
@@ -469,6 +473,15 @@ export default function TutorDashboard() {
           )}
         </div>
       </div>
+      <ConfirmDialog
+        isOpen={Boolean(courseToDelete)}
+        title="Delete this course?"
+        description={courseToDelete ? `“${courseToDelete.title}” and its learning material will be permanently removed. This cannot be undone.` : ""}
+        confirmLabel="Delete course"
+        isConfirming={deletingCourse}
+        onConfirm={handleDeleteCourse}
+        onCancel={() => !deletingCourse && setCourseToDelete(null)}
+      />
     </div>
   );
 }

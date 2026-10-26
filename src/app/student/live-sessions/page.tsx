@@ -12,6 +12,8 @@ export default function StudentLiveSessionsPage() {
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [enrollingSessionId, setEnrollingSessionId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "free" | "upcoming">(
     "all",
   );
@@ -22,6 +24,7 @@ export default function StudentLiveSessionsPage() {
 
   const loadSessions = async () => {
     try {
+      setError(null);
       const token = localStorage.getItem(TOKEN_KEY);
 
       const filters: any = {};
@@ -46,7 +49,10 @@ export default function StudentLiveSessionsPage() {
     }
   };
 
-  const handleEnroll = async (sessionId: string, isFree: boolean) => {
+  const handleEnroll = async (sessionId: string) => {
+    setNotice(null);
+    setError(null);
+    setEnrollingSessionId(sessionId);
     try {
       const token = localStorage.getItem(TOKEN_KEY);
       if (!token) {
@@ -56,12 +62,14 @@ export default function StudentLiveSessionsPage() {
 
       const response = await liveSessionService.enrollInSession(sessionId, {}, token);
       const identity = (response.data as any)?.identity;
-      alert(identity?.invitationStatus === "accepted"
+      setNotice(identity?.invitationStatus === "accepted"
         ? "Successfully enrolled in the session!"
         : "Enrolled. Check your email and accept the Microsoft invitation before joining.");
-      loadSessions();
+      await loadSessions();
     } catch (err: any) {
-      alert(err.message || "Failed to enroll in session");
+      setError(err.message || "Failed to enroll in session");
+    } finally {
+      setEnrollingSessionId(null);
     }
   };
 
@@ -114,8 +122,13 @@ export default function StudentLiveSessionsPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
           {error}
+        </div>
+      )}
+      {notice && (
+        <div role="status" className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded mb-6">
+          {notice}
         </div>
       )}
 
@@ -124,7 +137,9 @@ export default function StudentLiveSessionsPage() {
         {["all", "upcoming", "free"].map((f) => (
           <button
             key={f}
+            type="button"
             onClick={() => setFilter(f as any)}
+            aria-pressed={filter === f}
             className={`px-4 py-2 rounded-md font-medium ${
               filter === f
                 ? "bg-blue-600 text-white"
@@ -190,10 +205,14 @@ export default function StudentLiveSessionsPage() {
                 {/* Actions */}
                 {session.status === "scheduled" && (
                   <button
-                    onClick={() => handleEnroll(session.id, session.isFree)}
-                    className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium"
+                    type="button"
+                    onClick={() => handleEnroll(session.id)}
+                    disabled={enrollingSessionId === session.id}
+                    className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {session.isFree
+                    {enrollingSessionId === session.id
+                      ? "Enrolling…"
+                      : session.isFree
                       ? "Enroll Free"
                       : `Enroll for Rs. ${session.price}`}
                   </button>

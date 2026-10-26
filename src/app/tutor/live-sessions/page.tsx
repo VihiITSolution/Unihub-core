@@ -5,6 +5,7 @@ import Link from "next/link";
 import { liveSessionService, MeetingIdentity } from "@/services/live-session.service";
 import type { LiveSession } from "@/types";
 import { TOKEN_KEY } from "@/lib/constants";
+import { ConfirmDialog } from "@/components/ui";
 
 export default function TutorLiveSessionsPage() {
   const [sessions, setSessions] = useState<LiveSession[]>([]);
@@ -12,6 +13,8 @@ export default function TutorLiveSessionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pendingAction, setPendingAction] = useState<{ session: LiveSession; action: "end" | "cancel" } | null>(null);
+  const [actingOnSessionId, setActingOnSessionId] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -32,8 +35,9 @@ export default function TutorLiveSessionsPage() {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
     try {
-      if (action === "cancel" && !confirm("Cancel this session?")) return;
-      if (action === "end" && !confirm("Mark this session ended and import Teams artifacts?")) return;
+      setError(null);
+      setShareNotice(null);
+      setActingOnSessionId(session.id);
       const response = action === "start"
         ? await liveSessionService.startSession(session.id, token)
         : action === "end"
@@ -42,7 +46,9 @@ export default function TutorLiveSessionsPage() {
       const joinUrl = (response as any).data?.joinUrl;
       if (joinUrl) window.open(joinUrl, "_blank", "noopener,noreferrer");
       await load();
+      setPendingAction(null);
     } catch (err: any) { setError(err.message || `Failed to ${action} session`); }
+    finally { setActingOnSessionId(null); }
   };
 
   const copyReferralInvite = async (session: LiveSession) => {
@@ -67,8 +73,8 @@ export default function TutorLiveSessionsPage() {
         <Link href="/tutor/live-sessions/create" className="rounded-lg bg-blue-600 px-5 py-2.5 text-white">Request session</Link>
       </div>
       {identity && <div className={`mt-5 rounded-lg border p-4 ${identity.invitationStatus === "accepted" ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>Microsoft identity: <strong>{identity.email}</strong> · {identity.invitationStatus}{identity.invitationRedeemUrl && identity.invitationStatus !== "accepted" && <a className="ml-3 underline" href={identity.invitationRedeemUrl} target="_blank" rel="noreferrer">Accept invitation</a>}</div>}
-      {error && <div className="mt-5 rounded-lg bg-red-50 p-4 text-red-700">{error}</div>}
-      {shareNotice && <div className="mt-5 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">{shareNotice}</div>}
+      {error && <div role="alert" className="mt-5 rounded-lg bg-red-50 p-4 text-red-700">{error}</div>}
+      {shareNotice && <div role="status" className="mt-5 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">{shareNotice}</div>}
       <div className="mt-6 space-y-4">
         {sessions.length === 0 && <div className="rounded-xl bg-gray-50 p-10 text-center text-gray-600">No live-session requests yet.</div>}
         {sessions.map((session) => (
@@ -87,11 +93,11 @@ export default function TutorLiveSessionsPage() {
                 {session.rejectionReason && <p className="mt-2 text-sm text-red-700">Changes requested: {session.rejectionReason}</p>}
               </div>
               <div className="flex flex-wrap items-start gap-2">
-                {session.status === "scheduled" && session.approvalStatus === "approved" && session.providerStatus === "ready" && <button onClick={() => act(session, "start")} className="rounded bg-green-600 px-4 py-2 text-white">Start in Teams</button>}
+                {session.status === "scheduled" && session.approvalStatus === "approved" && session.providerStatus === "ready" && <button type="button" onClick={() => act(session, "start")} disabled={actingOnSessionId === session.id} className="rounded bg-green-600 px-4 py-2 text-white disabled:opacity-60">{actingOnSessionId === session.id ? "Starting…" : "Start in Teams"}</button>}
                 {session.status === "scheduled" && <Link href={`/tutor/live-sessions/${session.id}/edit`} className="rounded border px-4 py-2">Reschedule</Link>}
-                {session.status === "scheduled" && <button onClick={() => copyReferralInvite(session)} className="rounded bg-indigo-600 px-4 py-2 text-white">Copy referral invite</button>}
-                {session.status === "live" && <button onClick={() => act(session, "end")} className="rounded bg-red-600 px-4 py-2 text-white">End</button>}
-                {session.status === "scheduled" && <button onClick={() => act(session, "cancel")} className="rounded border border-red-300 px-4 py-2 text-red-700">Cancel</button>}
+                {session.status === "scheduled" && <button type="button" onClick={() => copyReferralInvite(session)} className="rounded bg-indigo-600 px-4 py-2 text-white">Copy referral invite</button>}
+                {session.status === "live" && <button type="button" onClick={() => setPendingAction({ session, action: "end" })} disabled={actingOnSessionId === session.id} className="rounded bg-red-600 px-4 py-2 text-white disabled:opacity-60">End</button>}
+                {session.status === "scheduled" && <button type="button" onClick={() => setPendingAction({ session, action: "cancel" })} disabled={actingOnSessionId === session.id} className="rounded border border-red-300 px-4 py-2 text-red-700 disabled:opacity-60">Cancel</button>}
                 {session.recordingUrl && <a href={session.recordingUrl} target="_blank" rel="noreferrer" className="rounded bg-purple-600 px-4 py-2 text-white">Recording</a>}
                 <Link href={`/tutor/live-sessions/${session.id}/enrollments`} className="rounded bg-gray-100 px-4 py-2">Enrollments</Link>
               </div>
@@ -99,6 +105,16 @@ export default function TutorLiveSessionsPage() {
           </article>
         ))}
       </div>
+      <ConfirmDialog
+        isOpen={Boolean(pendingAction)}
+        title={pendingAction?.action === "end" ? "End this session?" : "Cancel this session?"}
+        description={pendingAction?.action === "end" ? "The session will end and UniHub will import available Teams artifacts." : "Students will no longer be able to join this session."}
+        confirmLabel={pendingAction?.action === "end" ? "End session" : "Cancel session"}
+        cancelLabel="Keep session"
+        isConfirming={Boolean(pendingAction && actingOnSessionId === pendingAction.session.id)}
+        onConfirm={() => { if (pendingAction) void act(pendingAction.session, pendingAction.action); }}
+        onCancel={() => { if (!actingOnSessionId) setPendingAction(null); }}
+      />
     </div>
   );
 }

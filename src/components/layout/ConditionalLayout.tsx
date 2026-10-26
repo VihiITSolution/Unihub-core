@@ -26,7 +26,7 @@ export default function ConditionalLayout({
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1">{children}</main>
+        <main id="main-content" className="flex-1">{children}</main>
         {!isLoading && <Footer />}
       </div>
     );
@@ -40,11 +40,15 @@ export default function ConditionalLayout({
       <div style={{ display: "flex", flex: 1, position: "relative" }}>
         {/* Mobile overlay */}
         {isMobile && sidebarOpen && (
-          <div
+          <button
+            type="button"
+            aria-label="Close navigation menu"
             onClick={toggle}
             style={{
               position: "fixed", inset: 0, top: isMobile ? 64 : 104,
               background: "rgba(0,0,0,.5)", zIndex: 39,
+              border: "none",
+              cursor: "pointer",
             }}
           />
         )}
@@ -80,7 +84,7 @@ export default function ConditionalLayout({
             flexDirection: "column",
           }}
         >
-          <main style={{ flex: 1 }}>{children}</main>
+          <main id="main-content" style={{ flex: 1 }}>{children}</main>
           {!isDashboard && <Footer />}
         </div>
       </div>

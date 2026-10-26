@@ -22,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans" suppressHydrationWarning>
+        <a className="skip-link" href="#main-content">Skip to main content</a>
         <AuthProvider>
           <SidebarProvider>
             <ConditionalLayout>{children}</ConditionalLayout>

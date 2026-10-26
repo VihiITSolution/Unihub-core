@@ -20,6 +20,7 @@ export default function VendorDashboardPage() {
   const { user, token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalListings: 0,
     activeListings: 0,
@@ -42,11 +43,14 @@ export default function VendorDashboardPage() {
 
     try {
       setLoading(true);
+      setError(null);
 
       // Load vendor stats - handle if profile doesn't exist yet
       let vendorStats = null;
+      let loadedAnyData = false;
       try {
         vendorStats = await vendorService.getStats(token);
+        loadedAnyData = true;
       } catch {
         // vendor profile may not exist yet — stats unavailable
       }
@@ -55,6 +59,7 @@ export default function VendorDashboardPage() {
       let listings: any = { success: true, data: { items: [] } };
       try {
         listings = await marketplaceService.getMyListings(token);
+        loadedAnyData = true;
       } catch {
         // no listings yet
       }
@@ -66,6 +71,7 @@ export default function VendorDashboardPage() {
           { status: "pending" },
           token,
         );
+        loadedAnyData = true;
       } catch {
         // no sales yet
       }
@@ -80,8 +86,12 @@ export default function VendorDashboardPage() {
         pendingOrders: sales.data?.length || 0,
         averageRating: vendorStats?.data?.stats?.averageRating || 0,
       });
+      if (!loadedAnyData) {
+        setError("We could not load your shop overview. Please try again.");
+      }
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
+      setError("We could not load your shop overview. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -103,6 +113,12 @@ export default function VendorDashboardPage() {
           Welcome back! Here's your shop overview.
         </p>
       </div>
+      {error && (
+        <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <span>{error}</span>
+          <button type="button" onClick={loadDashboardData} className="rounded px-3 py-1.5 font-semibold underline underline-offset-2 hover:bg-red-100">Try again</button>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -213,12 +229,11 @@ export default function VendorDashboardPage() {
             </div>
             <div className="h-12 w-px bg-gray-300"></div>
             <div>
-              <div className="text-sm text-gray-600 mb-1">Conversion Rate</div>
+              <div className="text-sm text-gray-600 mb-1">Average sales per listing</div>
               <div className="text-3xl font-bold">
                 {stats.totalListings > 0
-                  ? ((stats.totalSales / stats.totalListings) * 100).toFixed(1)
+                  ? (stats.totalSales / stats.totalListings).toFixed(1)
                   : 0}
-                %
               </div>
             </div>
           </div>
