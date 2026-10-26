@@ -44,7 +44,7 @@ function formatDuration(totalMinutes: number) {
 export default function CourseDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { isAuthenticated, token } = useAuth();
+  const { user, isAuthenticated, token } = useAuth();
   const courseId = params?.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contents, setContents] = useState<CourseContent[]>([]);
@@ -403,9 +403,9 @@ export default function CourseDetailsPage() {
                 </h5>
                 <p className="text-xs text-gray-500">Instructor</p>
               </div>
-              {(course.tutor?.id || course.tutorId) && (
+              {(course.tutor?.id || course.tutorId) && String(course.tutor?.id || course.tutorId) !== String(user?.id) && (
                 <StartConversationButton
-                  recipientId={Number(course.tutor?.id || course.tutorId)}
+                  recipientId={course.tutor?.id || course.tutorId}
                   contextType="course"
                   contextId={Number(course.id)}
                   label="Message Tutor"

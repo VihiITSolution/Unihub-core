@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL, BACKEND_URL } from "@/lib/constants";
+import { StartConversationButton } from "@/components/chat";
 import type { Course, CourseContent } from "@/types";
 
 export default function LearnPage() {
@@ -395,6 +396,17 @@ export default function LearnPage() {
           <h3 className="text-sm md:text-base font-semibold text-gray-800 mb-3">
             {course?.title || "Course Progress"}
           </h3>
+          {(course.tutor?.id || course.tutorId) && String(course.tutor?.id || course.tutorId) !== String(user?.id) && (
+            <div className="mb-4">
+              <StartConversationButton
+                recipientId={course.tutor?.id || course.tutorId}
+                contextType="course"
+                contextId={Number(course.id)}
+                label="Contact tutor"
+                className="inline-flex items-center gap-2 rounded-md bg-primary-700 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-800 disabled:cursor-wait disabled:opacity-70"
+              />
+            </div>
+          )}
           <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
             <div
               className="h-full bg-primary-600 transition-all duration-300"
@@ -416,7 +428,10 @@ export default function LearnPage() {
 
         {/* Mobile Toggle Button */}
         <button
+          type="button"
           onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-expanded={sidebarOpen}
+          aria-controls="course-materials"
           className="md:hidden p-4 bg-white border-b border-gray-300 flex items-center justify-between hover:bg-gray-50"
         >
           <span className="font-semibold text-gray-700">Course Materials</span>
@@ -437,6 +452,7 @@ export default function LearnPage() {
 
         {/* Sidebar Content - Course Materials List */}
         <div
+          id="course-materials"
           className={`${sidebarOpen ? "block" : "hidden"} md:block overflow-y-auto flex-1`}
         >
           <div className="p-4">
@@ -455,6 +471,7 @@ export default function LearnPage() {
                 contents.map((content, index) => (
                   <button
                     key={content.id}
+                    type="button"
                     onClick={() => {
                       handleContentSelect(content);
                       setSidebarOpen(false);
