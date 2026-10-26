@@ -116,10 +116,14 @@ export default function RegisterPage() {
   const [verificationCode, setVerificationCode] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [liveSessionInviteId, setLiveSessionInviteId] = useState<number | null>(null);
 
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get("ref");
+    const searchParams = new URLSearchParams(window.location.search);
+    const code = searchParams.get("ref");
     if (code) setFormData((previous) => ({ ...previous, referralCode: code.trim().toUpperCase() }));
+    const sessionId = Number(searchParams.get("liveSession"));
+    if (Number.isInteger(sessionId) && sessionId > 0) setLiveSessionInviteId(sessionId);
   }, []);
 
   // Departments for the selected faculty
@@ -225,6 +229,7 @@ export default function RegisterPage() {
         primaryRole: "student" as UserRole,
         phoneNumber: formData.phoneNumber || undefined,
         referralCode: formData.referralCode.trim() || undefined,
+        liveSessionInviteId: liveSessionInviteId || undefined,
         studentEmail: formData.accountType === "student" ? formData.studentEmail || undefined : undefined,
         studentProfile:
           formData.accountType === "student"
@@ -285,6 +290,8 @@ export default function RegisterPage() {
       completeRegistration(result.data);
       if (formData.accountType === "vendor") {
         router.push("/student/become-vendor");
+      } else if (liveSessionInviteId) {
+        router.push("/student/live-sessions");
       } else if (formData.accountType === "student") {
         // New students complete their profile from the consolidated dashboard settings area.
         router.push("/student/dashboard?section=settings&setting=profile");

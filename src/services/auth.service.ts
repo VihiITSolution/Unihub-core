@@ -35,6 +35,7 @@ export interface RegisterData {
   studentEmail?: string;
   studentProfile?: StudentProfileData;
   referralCode?: string;
+  liveSessionInviteId?: number;
 }
 
 export interface AuthResponse {

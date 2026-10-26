@@ -46,6 +46,12 @@ export interface MeetingIdentity {
   lastError?: string;
 }
 
+export interface LiveSessionReferralLink {
+  inviteUrl: string;
+  referralCode: string;
+  sessionId: number;
+}
+
 export const liveSessionService = {
   // Get all live sessions with filters
   async getSessions(
@@ -69,6 +75,13 @@ export const liveSessionService = {
 
   async getMySessions(token: string): Promise<{ success: boolean; data: { sessions: LiveSession[] } }> {
     return apiClient.get("/live-sessions/mine", { token });
+  },
+
+  async getReferralLink(id: string | number, token: string): Promise<ApiResponse<LiveSessionReferralLink>> {
+    return apiClient.get<ApiResponse<LiveSessionReferralLink>>(
+      `/live-sessions/${id}/referral-link`,
+      { token },
+    );
   },
 
   async getMeetingIdentity(token: string): Promise<{ success: boolean; data: { identity: MeetingIdentity | null } }> {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, type RefObject } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import enrollmentService, { Enrollment } from "@/services/enrollment.service";
 import { BACKEND_URL } from "@/lib/constants";
@@ -29,7 +30,7 @@ function ProgressBar({ value }: { value: number }) {
 // ── Section wrapper ───────────────────────────────────────────────────────────
 function Section({ title, subtitle, cta, children }: {
   title: string; subtitle?: string;
-  cta?: { label: string; href: string };
+  cta?: { label: string; href: string; onClick?: () => void };
   children: React.ReactNode;
 }) {
   return (
@@ -39,7 +40,20 @@ function Section({ title, subtitle, cta, children }: {
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "var(--ink)" }}>{title}</h2>
           {subtitle && <p style={{ margin: "5px 0 0", fontSize: 13, color: "var(--muted)" }}>{subtitle}</p>}
         </div>
-        {cta && (
+        {cta && (cta.onClick ? (
+          <button
+            type="button"
+            onClick={cta.onClick}
+            style={{
+              display: "inline-flex", alignItems: "center", height: 36, padding: "0 14px",
+              border: "1.5px solid var(--ink)", borderRadius: 4,
+              fontSize: 13, fontWeight: 800, color: "var(--ink)", background: "#fff", cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            {cta.label}
+          </button>
+        ) : (
           <Link
             href={cta.href}
             style={{
@@ -51,7 +65,7 @@ function Section({ title, subtitle, cta, children }: {
           >
             {cta.label}
           </Link>
-        )}
+        ))}
       </div>
       {children}
     </div>
@@ -104,6 +118,7 @@ function CourseRow({ enrollment }: { enrollment: Enrollment }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const router = useRouter();
   const verifiedStudent = isVerifiedStudent(user);
   const showStudentVerificationPrompt = shouldShowStudentVerificationBanner(user);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -171,6 +186,15 @@ export default function StudentDashboard() {
   const scrollTo = (id: string) => {
     setActiveSection(id);
     sectionRefs[id]?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const openSettingsPanel = (panel: string) => {
+    const allowedPanels = ["profile", "password", "notifications", "privacy", "accounts", "danger"];
+    const targetPanel = allowedPanels.includes(panel) ? panel : "profile";
+    setActiveSection("settings");
+    setSettingsPanel(targetPanel);
+    router.replace(`/student/dashboard?section=settings&setting=${targetPanel}`, { scroll: false });
+    window.requestAnimationFrame(() => settingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
   useEffect(() => {
@@ -275,12 +299,13 @@ export default function StudentDashboard() {
                 Confirm your university email to show a verified-student check beside your profile photo.
               </p>
             </div>
-            <Link
-              href="/student/dashboard?section=settings&setting=profile"
+            <button
+              type="button"
+              onClick={() => openSettingsPanel("profile")}
               style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 40, padding: "0 16px", borderRadius: 5, background: "var(--brand)", color: "#fff", fontSize: 13, fontWeight: 800, textDecoration: "none" }}
             >
               Verify email
-            </Link>
+            </button>
           </section>
         )}
 
@@ -381,7 +406,7 @@ export default function StudentDashboard() {
           <Section
             title="Profile, certificates, and account"
             subtitle="Your account can hold student details, faculty, year, certificates, payment history, tutor bookings, and privacy settings."
-            cta={{ label: "Edit profile", href: "/student/dashboard?section=settings&setting=profile" }}
+            cta={{ label: "Edit profile", href: "/student/dashboard?section=settings&setting=profile", onClick: () => openSettingsPanel("profile") }}
           >
             {completedCount === 0 ? (
               <div style={{ padding: "8px 0", color: "var(--muted)", fontSize: 13, textAlign: "center" }}>

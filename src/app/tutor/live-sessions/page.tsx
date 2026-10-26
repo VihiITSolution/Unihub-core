@@ -10,6 +10,7 @@ export default function TutorLiveSessionsPage() {
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [identity, setIdentity] = useState<MeetingIdentity | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -44,6 +45,20 @@ export default function TutorLiveSessionsPage() {
     } catch (err: any) { setError(err.message || `Failed to ${action} session`); }
   };
 
+  const copyReferralInvite = async (session: LiveSession) => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+    try {
+      setError(null);
+      const response = await liveSessionService.getReferralLink(session.id, token);
+      if (!response.success || !response.data) throw new Error(response.message || "Unable to create the share link");
+      await navigator.clipboard.writeText(response.data.inviteUrl);
+      setShareNotice(`Invite link for “${session.title}” copied. New students who register with it will be enrolled automatically.`);
+    } catch (err: any) {
+      setError(err.message || "Unable to copy the referral invite link");
+    }
+  };
+
   if (loading) return <div className="p-10 text-center">Loading live sessions…</div>;
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -53,6 +68,7 @@ export default function TutorLiveSessionsPage() {
       </div>
       {identity && <div className={`mt-5 rounded-lg border p-4 ${identity.invitationStatus === "accepted" ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>Microsoft identity: <strong>{identity.email}</strong> · {identity.invitationStatus}{identity.invitationRedeemUrl && identity.invitationStatus !== "accepted" && <a className="ml-3 underline" href={identity.invitationRedeemUrl} target="_blank" rel="noreferrer">Accept invitation</a>}</div>}
       {error && <div className="mt-5 rounded-lg bg-red-50 p-4 text-red-700">{error}</div>}
+      {shareNotice && <div className="mt-5 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">{shareNotice}</div>}
       <div className="mt-6 space-y-4">
         {sessions.length === 0 && <div className="rounded-xl bg-gray-50 p-10 text-center text-gray-600">No live-session requests yet.</div>}
         {sessions.map((session) => (
@@ -73,6 +89,7 @@ export default function TutorLiveSessionsPage() {
               <div className="flex flex-wrap items-start gap-2">
                 {session.status === "scheduled" && session.approvalStatus === "approved" && session.providerStatus === "ready" && <button onClick={() => act(session, "start")} className="rounded bg-green-600 px-4 py-2 text-white">Start in Teams</button>}
                 {session.status === "scheduled" && <Link href={`/tutor/live-sessions/${session.id}/edit`} className="rounded border px-4 py-2">Reschedule</Link>}
+                {session.status === "scheduled" && <button onClick={() => copyReferralInvite(session)} className="rounded bg-indigo-600 px-4 py-2 text-white">Copy referral invite</button>}
                 {session.status === "live" && <button onClick={() => act(session, "end")} className="rounded bg-red-600 px-4 py-2 text-white">End</button>}
                 {session.status === "scheduled" && <button onClick={() => act(session, "cancel")} className="rounded border border-red-300 px-4 py-2 text-red-700">Cancel</button>}
                 {session.recordingUrl && <a href={session.recordingUrl} target="_blank" rel="noreferrer" className="rounded bg-purple-600 px-4 py-2 text-white">Recording</a>}
