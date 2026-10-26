@@ -7,6 +7,8 @@ import { tutorService } from "@/services/tutor.service";
 import { SHOW_TUTOR_VIDEO_PROMOTION } from "@/lib/promotionFlags";
 
 const TUTOR_BIO_MAX_LENGTH = 1000;
+const INPUT_CLASS = "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100";
+const SECTION_CLASS = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7";
 
 const EXPERTISE_OPTIONS = [
   "Mathematics",
@@ -47,6 +49,13 @@ export default function BecomeTutorPage() {
     linkedinLink: "",
     remarks: "",
   });
+  const requiredDetailsComplete = Boolean(
+    formData.qualifications.trim() &&
+    formData.graduationStatus &&
+    formData.expertiseAreas.length &&
+    formData.coursesSubjects.length &&
+    formData.bio.trim(),
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,14 +219,15 @@ export default function BecomeTutorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-12">
-      <div className="container-custom max-w-4xl">
+    <div className="min-h-screen bg-slate-50 py-8 sm:py-12">
+      <div className="container-custom max-w-5xl">
         {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+        <div className="mb-8 text-center sm:mb-10">
+          <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800">Tutor application</span>
+          <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-5xl">
             Become a Tutor
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
             Share your knowledge and help students succeed. Fill in your details
             below to apply as a tutor on UniHub.
           </p>
@@ -328,7 +338,7 @@ export default function BecomeTutorPage() {
         )}
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-r-lg mb-8 shadow-sm">
+          <div role="alert" className="mb-8 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-red-700 shadow-sm">
             <p className="font-medium">Error</p>
             <p className="text-sm">{error}</p>
           </div>
@@ -336,12 +346,23 @@ export default function BecomeTutorPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-xl overflow-hidden"
+          className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-xl shadow-slate-200/60"
         >
-          <div className="p-4 sm:p-8 space-y-10">
+          <div className="border-b border-slate-200 bg-white px-5 py-5 sm:px-8 sm:py-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Tell us about your teaching</h2>
+                <p className="mt-1 text-sm text-slate-600">Fields marked <span className="font-bold text-red-600">*</span> are required. You can add portfolio links later.</p>
+              </div>
+              <div className={`rounded-full px-3 py-1.5 text-xs font-bold ${requiredDetailsComplete ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+                {requiredDetailsComplete ? "Required details complete" : "Complete required details"}
+              </div>
+            </div>
+          </div>
+          <div className="space-y-6 p-4 sm:p-8">
             {/* Academic Qualification Section */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3 pb-3 border-b-2 border-ocean-500">
+            <section className={`${SECTION_CLASS} space-y-6`}>
+              <div className="flex items-center space-x-3 border-b border-slate-200 pb-4">
                 <div className="p-2 bg-ocean-100 rounded-lg">
                   <svg
                     className="w-6 h-6 text-ocean-600"
@@ -363,8 +384,8 @@ export default function BecomeTutorPage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Academic Qualification
+                <h2 className="text-xl font-bold text-gray-900">
+                  Academic background
                 </h2>
               </div>
 
@@ -379,7 +400,7 @@ export default function BecomeTutorPage() {
                     value={formData.qualifications}
                     onChange={handleChange}
                     rows={4}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
+                    className={INPUT_CLASS}
                     placeholder="e.g., Bachelor's in Computer Science, Master's in Mathematics, PhD in Physics..."
                   />
                   <p className="text-xs text-gray-500 mt-2">
@@ -393,7 +414,7 @@ export default function BecomeTutorPage() {
                     Graduation Status <span className="text-red-500">*</span>
                   </label>
                   <div className="space-y-3">
-                    <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-gray-50 hover:border-ocean-300">
+                    <label className={`flex items-center rounded-xl border p-4 cursor-pointer transition-all ${formData.graduationStatus === "graduate" ? "border-emerald-500 bg-emerald-50" : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50"}`}>
                       <input
                         type="radio"
                         name="graduationStatus"
@@ -406,7 +427,7 @@ export default function BecomeTutorPage() {
                         Graduate
                       </span>
                     </label>
-                    <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-gray-50 hover:border-ocean-300">
+                    <label className={`flex items-center rounded-xl border p-4 cursor-pointer transition-all ${formData.graduationStatus === "undergraduate" ? "border-emerald-500 bg-emerald-50" : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50"}`}>
                       <input
                         type="radio"
                         name="graduationStatus"
@@ -433,16 +454,16 @@ export default function BecomeTutorPage() {
                     onChange={handleChange}
                     min="0"
                     max="50"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
+                    className={INPUT_CLASS}
                     placeholder="0"
                   />
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Portfolio Section */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3 pb-3 border-b-2 border-purple-500">
+            <section className={`${SECTION_CLASS} space-y-6`}>
+              <div className="flex items-center space-x-3 border-b border-slate-200 pb-4">
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <svg
                     className="w-6 h-6 text-purple-600"
@@ -458,7 +479,7 @@ export default function BecomeTutorPage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Portfolio</h2>
+                <h2 className="text-xl font-bold text-gray-900">Portfolio <span className="text-sm font-medium text-slate-400">(optional)</span></h2>
               </div>
 
               <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
@@ -486,7 +507,7 @@ export default function BecomeTutorPage() {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-1 gap-6">
+              <div className="grid gap-5 md:grid-cols-3">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     YouTube Channel / Introduction Video Link{" "}
@@ -499,7 +520,7 @@ export default function BecomeTutorPage() {
                     name="youtubeLink"
                     value={formData.youtubeLink}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
+                    className={INPUT_CLASS}
                     placeholder="https://youtube.com/..."
                   />
                 </div>
@@ -513,7 +534,7 @@ export default function BecomeTutorPage() {
                     name="blogLink"
                     value={formData.blogLink}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
+                    className={INPUT_CLASS}
                     placeholder="https://yourblog.com"
                   />
                 </div>
@@ -527,16 +548,16 @@ export default function BecomeTutorPage() {
                     name="linkedinLink"
                     value={formData.linkedinLink}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
+                    className={INPUT_CLASS}
                     placeholder="https://linkedin.com/in/yourprofile"
                   />
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Areas of Expertise */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3 pb-3 border-b-2 border-green-500">
+            <section className={`${SECTION_CLASS} space-y-5`}>
+              <div className="flex items-center space-x-3 border-b border-slate-200 pb-4">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <svg
                     className="w-6 h-6 text-green-600"
@@ -552,35 +573,36 @@ export default function BecomeTutorPage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900">
                   Areas of Expertise <span className="text-red-500">*</span>
                 </h2>
               </div>
               <p className="text-sm text-gray-600">
-                Select the subjects you have expertise in. Choose at least one.
+                Select the subjects you have expertise in. Choose at least one. <span className="font-semibold text-emerald-700">{formData.expertiseAreas.length} selected</span>
               </p>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {EXPERTISE_OPTIONS.map((area) => (
                   <button
                     key={area}
                     type="button"
                     onClick={() => handleExpertiseToggle(area)}
-                    className={`p-4 border-2 rounded-xl text-sm font-medium transition-all transform hover:scale-105 ${
+                    aria-pressed={formData.expertiseAreas.includes(area)}
+                    className={`flex min-h-12 items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-all ${
                       formData.expertiseAreas.includes(area)
-                        ? "bg-ocean-500 text-white border-ocean-500 shadow-lg"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-ocean-400 hover:shadow-md"
+                        ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                        : "bg-white text-gray-700 border-slate-200 hover:border-emerald-400 hover:bg-emerald-50"
                     }`}
                   >
-                    {area}
+                    <span>{area}</span><span aria-hidden="true" className={formData.expertiseAreas.includes(area) ? "block" : "hidden"}>✓</span>
                   </button>
                 ))}
               </div>
-            </div>
+            </section>
 
             {/* Subjects for Courses */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3 pb-3 border-b-2 border-amber-500">
+            <section className={`${SECTION_CLASS} space-y-5`}>
+              <div className="flex items-center space-x-3 border-b border-slate-200 pb-4">
                 <div className="p-2 bg-amber-100 rounded-lg">
                   <svg
                     className="w-6 h-6 text-amber-600"
@@ -596,17 +618,17 @@ export default function BecomeTutorPage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900">
                   Subjects You'll Create Courses On{" "}
                   <span className="text-red-500">*</span>
                 </h2>
               </div>
               <p className="text-sm text-gray-600">
                 Select the subjects you plan to create courses for. Choose at
-                least one.
+                least one. <span className="font-semibold text-amber-700">{formData.coursesSubjects.length} selected</span>
               </p>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {EXPERTISE_OPTIONS.map((subject) => (
                   <button
                     key={subject}
@@ -619,21 +641,22 @@ export default function BecomeTutorPage() {
                           : [...prev.coursesSubjects, subject],
                       }));
                     }}
-                    className={`p-4 border-2 rounded-xl text-sm font-medium transition-all transform hover:scale-105 ${
+                    aria-pressed={formData.coursesSubjects.includes(subject)}
+                    className={`flex min-h-12 items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-all ${
                       formData.coursesSubjects.includes(subject)
-                        ? "bg-amber-500 text-white border-amber-500 shadow-lg"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-amber-400 hover:shadow-md"
+                        ? "border-amber-500 bg-amber-500 text-white shadow-sm"
+                        : "bg-white text-gray-700 border-slate-200 hover:border-amber-400 hover:bg-amber-50"
                     }`}
                   >
-                    {subject}
+                    <span>{subject}</span><span aria-hidden="true" className={formData.coursesSubjects.includes(subject) ? "block" : "hidden"}>✓</span>
                   </button>
                 ))}
               </div>
-            </div>
+            </section>
 
             {/* About You */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3 pb-3 border-b-2 border-indigo-500">
+            <section className={`${SECTION_CLASS} space-y-6`}>
+              <div className="flex items-center space-x-3 border-b border-slate-200 pb-4">
                 <div className="p-2 bg-indigo-100 rounded-lg">
                   <svg
                     className="w-6 h-6 text-indigo-600"
@@ -649,7 +672,7 @@ export default function BecomeTutorPage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">About You</h2>
+                <h2 className="text-xl font-bold text-gray-900">About you</h2>
               </div>
 
               <div>
@@ -662,7 +685,7 @@ export default function BecomeTutorPage() {
                   onChange={handleChange}
                   rows={6}
                   maxLength={TUTOR_BIO_MAX_LENGTH}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
+                  className={INPUT_CLASS}
                   placeholder="Tell students about yourself, your teaching style, and what makes you a great tutor..."
                 />
                 <p className="text-xs text-gray-500 mt-2">
@@ -680,32 +703,31 @@ export default function BecomeTutorPage() {
                   value={formData.remarks}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
+                  className={INPUT_CLASS}
                   placeholder="Any additional information you'd like to share..."
                 />
               </div>
-            </div>
+            </section>
           </div>
 
           {/* Submit Section */}
-          <div className="bg-gray-50 px-8 py-6 border-t-2 border-gray-200">
-            <div className="flex flex-col md:flex-row gap-4">
+          <div className="border-t border-slate-200 bg-white px-5 py-5 sm:px-8 sm:py-6">
+            {!requiredDetailsComplete && <p className="mb-4 text-center text-sm text-slate-500">Complete the required fields to submit your application.</p>}
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all"
+                className="px-6 py-3.5 border border-slate-300 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition-all"
                 disabled={loading}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-6 py-4 bg-gradient-to-r from-ocean-500 to-ocean-600 text-white font-semibold rounded-xl hover:from-ocean-600 hover:to-ocean-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3.5 bg-emerald-700 text-white font-semibold rounded-xl hover:bg-emerald-800 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={
                   loading ||
-                  formData.expertiseAreas.length === 0 ||
-                  !formData.graduationStatus ||
-                  formData.coursesSubjects.length === 0
+                  !requiredDetailsComplete
                 }
               >
                 {loading
@@ -717,7 +739,7 @@ export default function BecomeTutorPage() {
         </form>
 
         {/* Application Process Info */}
-        <div className="mt-8 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-6">
+        <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-5 sm:p-6">
           <h3 className="font-semibold mb-3 text-blue-900 text-lg">
             Application Process
           </h3>
