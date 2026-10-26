@@ -188,6 +188,7 @@ export default function FacultyNav() {
 
   return (
     <div
+      className="faculty-nav"
       style={{ borderTop: "1px solid var(--line)", position: "relative" }}
     >
       {/* Left fade + arrow */}

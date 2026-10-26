@@ -162,23 +162,6 @@ export default function Footer() {
         </div>
       </div>
 
-      <style jsx>{`
-        .footer-socials { display: flex; flex-wrap: wrap; gap: 10px; }
-        .footer-social-link { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; border: 1px solid #424242; border-radius: 10px; background: #222; color: #fff; text-decoration: none; transition: background .2s ease, border-color .2s ease, color .2s ease; }
-        .footer-social-link:hover { border-color: #a9f0df; background: #073f38; color: #a9f0df; }
-        .footer-social-link:focus-visible { outline: 3px solid #a9f0df; outline-offset: 3px; }
-        @media (prefers-reduced-motion: reduce) { .footer-social-link { transition: none; } }
-        @media (max-width: 980px) {
-          .footer-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-        @media (max-width: 640px) {
-          .footer-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </footer>
   );
 }

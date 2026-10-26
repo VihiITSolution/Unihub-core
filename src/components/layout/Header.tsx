@@ -59,6 +59,14 @@ export default function Header() {
       ]
     : [];
 
+  const mobileNavLinks = isAuthenticated
+    ? navLinks
+    : [
+        { href: "/courses", label: "Browse Kuppi Sessions", requiresRole: null },
+        { href: "/marketplace", label: "Marketplace", requiresRole: null },
+        { href: "/boarding", label: "Boarding", requiresRole: null },
+      ];
+
   const handleNavClick = (e: React.MouseEvent, link: (typeof navLinks)[0]) => {
     if (!isAuthenticated) return;
     if (link.requiresRole) {
@@ -475,7 +483,7 @@ export default function Header() {
 
           {/* Nav links */}
           <div style={{ padding: "6px 0" }}>
-            {navLinks.map((link) => (
+            {mobileNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

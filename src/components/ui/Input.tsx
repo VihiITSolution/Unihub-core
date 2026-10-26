@@ -27,6 +27,8 @@ export const Input: React.FC<InputProps> = ({
   icon,
   className = "",
 }) => {
+  const errorId = error ? `${name}-error` : undefined;
+
   return (
     <div className={`w-full ${className}`}>
       {label && (
@@ -55,12 +57,14 @@ export const Input: React.FC<InputProps> = ({
           disabled={disabled}
           className={`w-full px-4 py-3 ${
             icon ? "pl-10" : ""
-          } border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-            error ? "border-red-500" : "border-gray-300"
-          } ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}`}
+          } border rounded-md text-ink transition-colors duration-200 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 ${
+            error ? "border-red-600" : "border-line"
+          } ${disabled ? "bg-gray-100 cursor-not-allowed text-gray-500" : "bg-white"}`}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={errorId}
         />
       </div>
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && <p id={errorId} className="mt-1 text-sm text-red-700">{error}</p>}
     </div>
   );
 };

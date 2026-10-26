@@ -447,3 +447,54 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
+
+/* Home hero: these rules deliberately live in the global stylesheet.  The
+   previous styled-jsx block could arrive after the first render in Next 16,
+   leaving the image in the document flow and its text without contrast. */
+.hero-section { padding: 24px 0; }
+.hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero-overlay { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7, 63, 56, .72) 0%, rgba(7, 63, 56, .42) 52%, rgba(7, 63, 56, .1) 100%); }
+.hero-copy { position: relative; z-index: 1; margin-left: 34px; color: #fff; }
+.hero-start {
+  display: inline-flex; min-height: 48px; align-items: center; justify-content: center;
+  gap: 12px; padding: 12px 22px; border: 1px solid #b9f3d5; border-radius: 9px;
+  background: #b9f3d5; color: #073f38; font-size: 15px; font-weight: 800;
+  text-decoration: none; transition: background .2s ease, transform .2s ease;
+}
+.hero-start:hover { background: #d9fbe9; transform: translateY(-2px); }
+.hero-start:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+
+/* Footer styles and breakpoints must be available on the initial server render. */
+.footer-socials { display: flex; flex-wrap: wrap; gap: 10px; }
+.footer-social-link {
+  display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
+  flex-shrink: 0; border: 1px solid #424242; border-radius: 10px; background: #222;
+  color: #fff; text-decoration: none; transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+.footer-social-link:hover { border-color: #a9f0df; background: #073f38; color: #a9f0df; }
+.footer-social-link:focus-visible { outline: 3px solid #a9f0df; outline-offset: 3px; }
+
+@media (max-width: 980px) {
+  .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+@media (max-width: 1023px) {
+  .faculty-nav { display: none; }
+}
+
+@media (max-width: 760px) {
+  .hero-section { padding: 16px 0; }
+  .hero-shell { min-height: 500px !important; }
+  .hero-copy { margin-left: 0; padding: 28px 24px !important; max-width: 100% !important; }
+  .hero-overlay { background: linear-gradient(180deg, rgba(7, 63, 56, .22) 0%, rgba(7, 63, 56, .88) 48%, rgba(7, 63, 56, .98) 100%); }
+}
+
+@media (max-width: 640px) {
+  .container-custom { padding-left: 16px; padding-right: 16px; }
+  .footer-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-start, .footer-social-link { transition: none; }
+  .hero-start:hover { transform: none; }
+}
