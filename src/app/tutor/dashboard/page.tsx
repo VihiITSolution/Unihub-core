@@ -408,6 +408,38 @@ export default function TutorDashboard() {
         )}
       </div>
 
+      <section className="mt-16">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-3xl font-bold">Student Feedback</h2>
+            <p className="mt-1 text-sm text-gray-600">Recent feedback from students enrolled in your courses.</p>
+          </div>
+        </div>
+        {loading ? (
+          <div className="card py-8 text-center text-gray-500">Loading student feedback...</div>
+        ) : !dashboard?.recentReviews.length ? (
+          <div className="card py-8 text-center text-gray-500">Feedback from students will appear here after they review a course.</div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {dashboard.recentReviews.map((review) => (
+              <article key={review.id} className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{review.studentName}</p>
+                    <Link href={`/courses/${review.courseId}`} className="mt-1 block text-sm font-medium text-blue-600 hover:underline truncate">
+                      {review.courseTitle}
+                    </Link>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-yellow-50 px-2.5 py-1 text-sm font-bold text-yellow-700">★ {review.rating.toFixed(1)}</span>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-gray-600 line-clamp-4">{review.comment}</p>
+                <time className="mt-4 block text-xs text-gray-500" dateTime={review.createdAt}>{relativeTime(review.createdAt)}</time>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* Recent Activity */}
       <div className="mt-16">
         <h2 className="text-3xl font-bold mb-6">Recent Activity</h2>

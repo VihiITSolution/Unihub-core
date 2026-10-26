@@ -42,6 +42,16 @@ export interface TutorDashboardActivity {
   occurredAt: string;
 }
 
+export interface TutorCourseFeedback {
+  id: string;
+  courseId: string;
+  courseTitle: string;
+  studentName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 export interface TutorDashboardData {
   courses: Course[];
   stats: {
@@ -50,6 +60,7 @@ export interface TutorDashboardData {
     averageRating: number;
     totalRevenue: number;
   };
+  recentReviews: TutorCourseFeedback[];
   activities: TutorDashboardActivity[];
 }
 
