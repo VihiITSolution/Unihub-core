@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { tutorService } from "@/services/tutor.service";
+import { SHOW_TUTOR_VIDEO_PROMOTION } from "@/lib/promotionFlags";
 
 const TUTOR_BIO_MAX_LENGTH = 1000;
 
@@ -222,6 +223,7 @@ export default function BecomeTutorPage() {
           </p>
         </div>
 
+        {SHOW_TUTOR_VIDEO_PROMOTION && (
         <section className="mb-8 overflow-hidden rounded-2xl bg-white shadow-xl p-6 sm:p-8 border border-gray-200" aria-labelledby="tutor-rewards-title">
           <div className="text-center mb-8">
             <h2 id="tutor-rewards-title" className="text-2xl font-bold text-gray-900 tracking-wide uppercase mb-2">Tutor Video Tutorial Program</h2>
@@ -323,6 +325,7 @@ export default function BecomeTutorPage() {
             Eligibility: Videos must be longer than 20 minutes, approved by UniHub, and meet UniHub content standards. The 100+ enrolment bonus must be achieved within the promotional period.
           </div>
         </section>
+        )}
 
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-r-lg mb-8 shadow-sm">
@@ -476,8 +479,8 @@ export default function BecomeTutorPage() {
                   <div className="ml-3">
                     <p className="text-sm text-blue-700">
                       <strong>Recommended:</strong> Add a YouTube teaching video
-                      to show your teaching style. Videos that are 20 minutes or
-                      longer may qualify for the promotional reward after review.
+                      to show your teaching style.
+                      {SHOW_TUTOR_VIDEO_PROMOTION && " Videos that are 20 minutes or longer may qualify for the promotional reward after review."}
                     </p>
                   </div>
                 </div>

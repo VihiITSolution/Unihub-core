@@ -6,6 +6,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { getPromotionActions } from "./PromotionBannerContent";
 import styles from "./CombinedPromotionBanner.module.css";
 import { useCarouselNavigation } from "@/hooks/useCarouselNavigation";
+import { SHOW_TUTOR_VIDEO_PROMOTION } from "@/lib/promotionFlags";
 
 export default function CombinedPromotionBanner({ isAuthenticated, isVendor = false }: { isAuthenticated: boolean; isVendor?: boolean }) {
   const actions = getPromotionActions(isAuthenticated, isVendor);
@@ -44,7 +45,7 @@ export default function CombinedPromotionBanner({ isAuthenticated, isVendor = fa
       href: actions.tutor, cta: isAuthenticated ? "Become a tutor" : "Start teaching",
       image: "/library-study-group.webp", alt: "Students sharing knowledge in a study group",
     },
-  ];
+  ].filter((offer) => offer.id !== "tutor" || SHOW_TUTOR_VIDEO_PROMOTION);
 
   return (
     <section className={styles.section} aria-labelledby="promotion-title">

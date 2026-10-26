@@ -3,6 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "./Modal";
+import { SHOW_TUTOR_VIDEO_PROMOTION } from "@/lib/promotionFlags";
 
 export type RoleType = "tutor" | "vendor";
 
@@ -122,7 +123,7 @@ export const RoleUpgradeModal: React.FC<RoleUpgradeModalProps> = ({
           </ul>
         </div>
 
-        {roleType === "tutor" && (
+        {roleType === "tutor" && SHOW_TUTOR_VIDEO_PROMOTION && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6 text-left">
             <p className="font-semibold text-emerald-900 mb-2">
               Tutor video rewards — until further notice
