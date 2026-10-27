@@ -339,6 +339,9 @@ export default function LearnPage() {
     return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&cc_load_policy=0`;
   };
 
+  const isYouTubeResource = (url?: string) =>
+    /(?:youtube\.com|youtu\.be|youtube-nocookie\.com)/i.test(url || "");
+
   if (loading) {
     return (
       <div className="container-custom py-12">
@@ -497,8 +500,8 @@ export default function LearnPage() {
                           {content.title}
                         </div>
                         <div className="flex items-center gap-2 text-xs text-gray-600 flex-wrap">
-                          <span>{content.type === "video" ? "🎥" : "📄"}</span>
-                          <span>{content.type.toUpperCase()}</span>
+                          <span>{content.type === "video" ? "🎥" : content.type === "link" ? "🔗" : "📄"}</span>
+                          <span>{content.type === "link" ? "SUPPORT LINK" : content.type.toUpperCase()}</span>
                           {content.duration && (
                             <span>• {content.duration} min</span>
                           )}
@@ -536,7 +539,7 @@ export default function LearnPage() {
               </h1>
               <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600">
                 <span>
-                  {currentContent.type === "video" ? "🎥 Video" : "📄 PDF"}
+                  {currentContent.type === "video" ? "🎥 Video" : currentContent.type === "link" ? "🔗 Support material" : "📄 PDF"}
                 </span>
                 {currentContent.duration && (
                   <span>⏱️ {currentContent.duration} minutes</span>
@@ -601,6 +604,38 @@ export default function LearnPage() {
                         Download PDF
                       </a>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Public support material viewer */}
+              {currentContent.type === "link" && currentContent.url && (
+                <div className="mb-6 overflow-hidden rounded-lg border-2 border-gray-200 bg-white">
+                  {isYouTubeResource(currentContent.url) ? (
+                    <div className="aspect-video w-full bg-black">
+                      <YouTubePlayer
+                        embedUrl={getEmbedUrl(currentContent.url)}
+                        title={currentContent.title}
+                      />
+                    </div>
+                  ) : (
+                    <iframe
+                      src={currentContent.url}
+                      title={currentContent.title}
+                      className="h-[70vh] min-h-[420px] w-full bg-white"
+                      sandbox="allow-forms allow-popups allow-same-origin allow-scripts"
+                    />
+                  )}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-gray-50 px-4 py-3 text-sm">
+                    <span className="text-gray-600">If this provider does not allow in-page viewing, open it in a new tab.</span>
+                    <a
+                      href={currentContent.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-primary-700 hover:underline"
+                    >
+                      Open resource ↗
+                    </a>
                   </div>
                 </div>
               )}

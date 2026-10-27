@@ -16,10 +16,11 @@ import {
 interface CourseMaterial {
   id: string;
   title: string;
-  type: "video" | "pdf";
+  type: "video" | "pdf" | "link";
   url?: string;
   file?: File;
   videoUrl?: string;
+  resourceUrl?: string;
   duration?: number | null;
   order?: number;
   isPreview?: boolean;
@@ -33,6 +34,15 @@ const isYouTubeUrl = (url: string) =>
   /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtube-nocookie\.com|youtu\.be)\//i.test(
     url.trim(),
   );
+
+const isPublicResourceUrl = (value: string) => {
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+};
 
 const mapContentToMaterial = (content: any): CourseMaterial => ({
   id: String(content.id),
@@ -80,10 +90,11 @@ export default function EditCoursePage() {
   const [materials, setMaterials] = useState<CourseMaterial[]>([]);
   const [currentMaterial, setCurrentMaterial] = useState({
     title: "",
-    type: "video" as "video" | "pdf",
+    type: "video" as "video" | "pdf" | "link",
     source: "upload" as "upload" | "youtube",
     file: null as File | null,
     videoUrl: "",
+    resourceUrl: "",
     duration: "",
     order: "",
   });
@@ -348,7 +359,12 @@ export default function EditCoursePage() {
       return;
     }
 
-    if (currentMaterial.type === "video" && currentMaterial.source === "youtube") {
+    if (currentMaterial.type === "link") {
+      if (!isPublicResourceUrl(currentMaterial.resourceUrl)) {
+        alert("Please enter a valid public http(s) support-material link.");
+        return;
+      }
+    } else if (currentMaterial.type === "video" && currentMaterial.source === "youtube") {
       const url = currentMaterial.videoUrl.trim();
       if (!url || !isYouTubeUrl(url)) {
         alert("Please enter a valid YouTube link (youtube.com or youtu.be).");
@@ -377,6 +393,10 @@ export default function EditCoursePage() {
         currentMaterial.type === "video" && currentMaterial.source === "youtube"
           ? currentMaterial.videoUrl.trim()
           : undefined,
+      resourceUrl:
+        currentMaterial.type === "link"
+          ? currentMaterial.resourceUrl.trim()
+          : undefined,
       duration: currentMaterial.duration
         ? parseInt(currentMaterial.duration)
         : undefined,
@@ -391,6 +411,7 @@ export default function EditCoursePage() {
       source: "upload",
       file: null,
       videoUrl: "",
+      resourceUrl: "",
       duration: "",
       order: "",
     });
@@ -404,7 +425,7 @@ export default function EditCoursePage() {
       duration: material.duration != null ? String(material.duration) : "",
       order: material.order != null ? String(material.order) : "0",
       isPreview: Boolean(material.isPreview),
-      videoUrl: material.type === "video" ? material.url || material.videoUrl || "" : "",
+      videoUrl: material.type === "video" || material.type === "link" ? material.url || material.videoUrl || material.resourceUrl || "" : "",
     });
     setEditYoutubeRightsConfirmed(false);
     setEditYoutubeSignature("");
@@ -450,6 +471,8 @@ export default function EditCoursePage() {
     const currentVideoUrl = (editingMaterial.url || editingMaterial.videoUrl || "").trim();
     const videoUrlChanged =
       editingMaterial.type === "video" && nextVideoUrl !== currentVideoUrl;
+    const linkUrlChanged =
+      editingMaterial.type === "link" && nextVideoUrl !== currentVideoUrl;
 
     if (videoUrlChanged) {
       if (!nextVideoUrl || !isYouTubeUrl(nextVideoUrl)) {
@@ -469,6 +492,13 @@ export default function EditCoursePage() {
         return;
       }
     }
+    if (linkUrlChanged && !isPublicResourceUrl(nextVideoUrl)) {
+      setMaterialFeedback({
+        type: "error",
+        message: "Please enter a valid public http(s) support-material link.",
+      });
+      return;
+    }
 
     setMaterialActionLoading(true);
     setMaterialFeedback(null);
@@ -484,6 +514,7 @@ export default function EditCoursePage() {
                   order,
                   isPreview: editMaterialForm.isPreview,
                   videoUrl: videoUrlChanged ? nextVideoUrl : material.videoUrl,
+                  resourceUrl: linkUrlChanged ? nextVideoUrl : material.resourceUrl,
                 }
               : material,
           ),
@@ -502,8 +533,8 @@ export default function EditCoursePage() {
               duration,
               order,
               isPreview: editMaterialForm.isPreview,
-              ...(videoUrlChanged
-                ? { url: nextVideoUrl, youtubeRightsConfirmed: true }
+              ...(videoUrlChanged || linkUrlChanged
+                ? { url: nextVideoUrl, ...(videoUrlChanged ? { youtubeRightsConfirmed: true } : {}) }
                 : {}),
             }),
           },
@@ -686,6 +717,32 @@ export default function EditCoursePage() {
 
         if (material.type === "video" && material.file) {
           await uploadVideoInChunks(material, materialIndex, onProgress);
+          continue;
+        }
+
+        if (material.type === "link" && material.resourceUrl) {
+          const linkResponse = await fetch(
+            `${API_BASE_URL}/courses/${courseId}/content`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                title: material.title,
+                type: "link",
+                url: material.resourceUrl,
+                order: material.order ?? materialIndex,
+                isPreview: Boolean(material.isPreview),
+              }),
+            },
+          );
+          if (!linkResponse.ok) {
+            const body = await linkResponse.json().catch(() => ({}));
+            throw new Error(body?.message || `Failed to add support link "${material.title}"`);
+          }
+          onProgress(100);
           continue;
         }
 
@@ -1381,13 +1438,14 @@ export default function EditCoursePage() {
                     onChange={(e) =>
                       handleMaterialChange(
                         "type",
-                        e.target.value as "video" | "pdf",
+                        e.target.value as "video" | "pdf" | "link",
                       )
                     }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="video">Video</option>
                     <option value="pdf">PDF Document</option>
+                    <option value="link">Public Support Material</option>
                   </select>
                 </div>
 
@@ -1439,7 +1497,7 @@ export default function EditCoursePage() {
 
                 {/* File Upload */}
                 {(currentMaterial.type === "pdf" ||
-                  currentMaterial.source === "upload") && (
+                  (currentMaterial.type === "video" && currentMaterial.source === "upload")) && (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Upload File *
@@ -1491,6 +1549,24 @@ export default function EditCoursePage() {
                       />
                     </div>
                   )}
+
+                {currentMaterial.type === "link" && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Public Support Material Link *
+                    </label>
+                    <input
+                      type="url"
+                      value={currentMaterial.resourceUrl}
+                      onChange={(event) => handleMaterialChange("resourceUrl", event.target.value)}
+                      placeholder="https://www.youtube.com/watch?v=... or another public resource"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <p className="mt-2 text-sm text-gray-500">
+                      YouTube links play in UniHub. Other public resources open in UniHub where embedding is allowed, with an open-link fallback.
+                    </p>
+                  </div>
+                )}
 
                 {currentMaterial.type === "video" && currentMaterial.source === "upload" && (
                   <YouTubeRightsDeclarationForm
@@ -1778,6 +1854,31 @@ export default function EditCoursePage() {
                     onConfirmedChange={setEditYoutubeRightsConfirmed}
                   />
                 )}
+              </div>
+            ) : editingMaterial.type === "link" ? (
+              <div>
+                <label
+                  htmlFor="editMaterialResourceUrl"
+                  className="mb-2 block text-sm font-semibold text-gray-700"
+                >
+                  Public Support Material Link
+                </label>
+                <input
+                  id="editMaterialResourceUrl"
+                  type="url"
+                  value={editMaterialForm.videoUrl}
+                  onChange={(event) =>
+                    setEditMaterialForm((current) => ({
+                      ...current,
+                      videoUrl: event.target.value,
+                    }))
+                  }
+                  placeholder="https://www.youtube.com/watch?v=... or another public resource"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="mt-2 text-xs leading-5 text-gray-500">
+                  YouTube links play in UniHub. Other public resources use an in-page viewer where the provider permits it, with an open-link fallback.
+                </p>
               </div>
             ) : (
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">

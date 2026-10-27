@@ -179,7 +179,7 @@ export interface CourseContent {
   id: string;
   courseId: string;
   title: string;
-  type: "video" | "pdf" | "quiz";
+  type: "video" | "pdf" | "link" | "quiz";
   url?: string;
   youtubeVideoId?: string;
   duration?: number;

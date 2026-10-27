@@ -16,15 +16,25 @@ import {
 interface CourseMaterial {
   id: string;
   title: string;
-  type: "video" | "pdf";
+  type: "video" | "pdf" | "link";
   file?: File;
   videoUrl?: string;
+  resourceUrl?: string;
   duration?: number;
   isPreview?: boolean;
 }
 
 const isYouTubeUrl = (url: string) =>
   /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test(url.trim());
+
+const isPublicResourceUrl = (value: string) => {
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+};
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -60,10 +70,11 @@ export default function CreateCoursePage() {
   const [materials, setMaterials] = useState<CourseMaterial[]>([]);
   const [currentMaterial, setCurrentMaterial] = useState({
     title: "",
-    type: "video" as "video" | "pdf",
+    type: "video" as "video" | "pdf" | "link",
     source: "upload" as "upload" | "youtube",
     file: null as File | null,
     videoUrl: "",
+    resourceUrl: "",
     duration: "",
     isPreview: false,
   });
@@ -228,7 +239,12 @@ export default function CreateCoursePage() {
       return;
     }
 
-    if (currentMaterial.type === "video" && currentMaterial.source === "youtube") {
+    if (currentMaterial.type === "link") {
+      if (!isPublicResourceUrl(currentMaterial.resourceUrl)) {
+        alert("Please enter a valid public http(s) support-material link.");
+        return;
+      }
+    } else if (currentMaterial.type === "video" && currentMaterial.source === "youtube") {
       const url = currentMaterial.videoUrl.trim();
       if (!url || !isYouTubeUrl(url)) {
         alert("Please enter a valid YouTube link (youtube.com or youtu.be).");
@@ -251,6 +267,10 @@ export default function CreateCoursePage() {
         currentMaterial.type === "video" && currentMaterial.source === "youtube"
           ? currentMaterial.videoUrl.trim()
           : undefined,
+      resourceUrl:
+        currentMaterial.type === "link"
+          ? currentMaterial.resourceUrl.trim()
+          : undefined,
       duration: currentMaterial.duration
         ? parseInt(currentMaterial.duration)
         : undefined,
@@ -264,6 +284,7 @@ export default function CreateCoursePage() {
       source: "upload",
       file: null,
       videoUrl: "",
+      resourceUrl: "",
       duration: "",
       isPreview: false,
     });
@@ -471,6 +492,31 @@ export default function CreateCoursePage() {
     onProgress(100);
   };
 
+  const addSupportLinkMaterial = async (
+    courseId: string,
+    material: CourseMaterial,
+    materialIndex: number,
+    authToken: string,
+    onProgress: (percent: number) => void,
+  ): Promise<void> => {
+    const res = await fetch(`${API_BASE_URL}/courses/${courseId}/content`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: material.title,
+        type: "link",
+        url: material.resourceUrl,
+        order: String(materialIndex),
+        isPreview: material.isPreview ? "true" : undefined,
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body?.message || "Failed to add support-material link.");
+    }
+    onProgress(100);
+  };
+
   const handleFinish = async () => {
     if (materials.length === 0) {
       const confirm = window.confirm(
@@ -501,6 +547,8 @@ export default function CreateCoursePage() {
           await uploadVideoInChunks(createdCourseId!, material, i, token!, onProgress);
         } else if (material.type === "video" && material.videoUrl) {
           await addYouTubeLinkMaterial(createdCourseId!, material, i, token!, onProgress);
+        } else if (material.type === "link" && material.resourceUrl) {
+          await addSupportLinkMaterial(createdCourseId!, material, i, token!, onProgress);
         } else {
           const materialFormData = new FormData();
           materialFormData.append("title", material.title);
@@ -830,6 +878,7 @@ export default function CreateCoursePage() {
                     >
                       <option value="video">Video Lesson</option>
                       <option value="pdf">PDF Document</option>
+                      <option value="link">Public Support Material</option>
                     </select>
                   </div>
 
@@ -894,7 +943,7 @@ export default function CreateCoursePage() {
                 )}
 
                 {(currentMaterial.type === "pdf" ||
-                  currentMaterial.source === "upload") && (
+                  (currentMaterial.type === "video" && currentMaterial.source === "upload")) && (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       {currentMaterial.type === "video"
@@ -957,6 +1006,25 @@ export default function CreateCoursePage() {
                       />
                     </div>
                   )}
+
+                {currentMaterial.type === "link" && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Public Support Material Link
+                    </label>
+                    <input
+                      type="url"
+                      name="resourceUrl"
+                      value={currentMaterial.resourceUrl}
+                      onChange={handleMaterialChange}
+                      placeholder="https://www.youtube.com/watch?v=... or another public resource"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <p className="text-sm text-gray-500 mt-2">
+                      YouTube links play in UniHub. Other public links open in UniHub where embedding is allowed, with an open-link fallback.
+                    </p>
+                  </div>
+                )}
 
                 {currentMaterial.type === "video" && currentMaterial.source === "upload" && (
                   <YouTubeRightsDeclarationForm
@@ -1041,12 +1109,16 @@ export default function CreateCoursePage() {
                               className={`px-2 py-1 text-xs font-semibold rounded ${
                                 material.type === "video"
                                   ? "bg-red-100 text-red-700"
-                                  : "bg-blue-100 text-blue-700"
+                                  : material.type === "link"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "bg-blue-100 text-blue-700"
                               }`}
                             >
                               {material.type === "video"
                                 ? "📹 VIDEO"
-                                : "📄 PDF"}
+                                : material.type === "link"
+                                  ? "🔗 LINK"
+                                  : "📄 PDF"}
                             </span>
                             <span className="font-semibold text-gray-900">
                               {material.title}

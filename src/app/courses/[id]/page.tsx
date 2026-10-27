@@ -31,6 +31,10 @@ function getEmbedUrl(url?: string, youtubeVideoId?: string) {
   return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&cc_load_policy=0`;
 }
 
+function isYouTubeResource(url?: string) {
+  return /(?:youtube\.com|youtu\.be|youtube-nocookie\.com)/i.test(url || "");
+}
+
 function formatDuration(totalMinutes: number) {
   if (!Number.isFinite(totalMinutes) || totalMinutes <= 0) return "0 min";
 
@@ -439,9 +443,11 @@ export default function CourseDetailsPage() {
                       const isLocked = content.locked || (!content.isPreview && !isEnrolled);
                       const isExpanded = expandedPreviewId === content.id;
                       const canPreviewInline =
-                        content.type === "video" && !isLocked && content.url;
+                        (content.type === "video" || content.type === "link") && !isLocked && content.url;
                       const ContentIcon = content.type === "video"
                         ? Video
+                        : content.type === "link"
+                          ? ClipboardList
                         : content.type === "pdf"
                           ? FileText
                           : ClipboardList;
@@ -458,7 +464,7 @@ export default function CourseDetailsPage() {
                                 {content.title}
                               </p>
                               <p className="text-xs text-gray-500">
-                                {content.type === "video" ? "Video" : content.type === "pdf" ? "PDF" : "Quiz"}
+                                {content.type === "video" ? "Video" : content.type === "pdf" ? "PDF" : content.type === "link" ? "Support material" : "Quiz"}
                                 {content.duration ? ` · ${content.duration} min` : ""}
                                 {content.isPreview ? " · Preview" : ""}
                               </p>
@@ -493,10 +499,26 @@ export default function CourseDetailsPage() {
                           </div>
                           {isExpanded && canPreviewInline && (
                             <div className="bg-black aspect-video">
-                              <YouTubePlayer
-                                embedUrl={getEmbedUrl(content.url, content.youtubeVideoId)}
-                                title={content.title}
-                              />
+                              {content.type === "link" && !isYouTubeResource(content.url) ? (
+                                <iframe
+                                  src={content.url}
+                                  title={content.title}
+                                  className="h-full w-full bg-white"
+                                  sandbox="allow-forms allow-popups allow-same-origin allow-scripts"
+                                />
+                              ) : (
+                                <YouTubePlayer
+                                  embedUrl={getEmbedUrl(content.url, content.youtubeVideoId)}
+                                  title={content.title}
+                                />
+                              )}
+                            </div>
+                          )}
+                          {isExpanded && content.type === "link" && content.url && (
+                            <div className="flex justify-end bg-gray-50 px-3 py-2 text-sm">
+                              <a href={content.url} target="_blank" rel="noopener noreferrer" className="font-medium text-primary-700 hover:underline">
+                                Open resource in new tab ↗
+                              </a>
                             </div>
                           )}
                         </div>
