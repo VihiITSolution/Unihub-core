@@ -44,6 +44,22 @@ const isPublicResourceUrl = (value: string) => {
   }
 };
 
+const readVideoDurationMinutes = (file: File): Promise<number | null> =>
+  new Promise((resolve) => {
+    const video = document.createElement("video");
+    const objectUrl = URL.createObjectURL(file);
+    video.preload = "metadata";
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(Number.isFinite(video.duration) && video.duration > 0 ? Math.ceil(video.duration / 60) : null);
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(null);
+    };
+    video.src = objectUrl;
+  });
+
 const mapContentToMaterial = (content: any): CourseMaterial => ({
   id: String(content.id),
   title: content.title,
@@ -288,7 +304,7 @@ export default function EditCoursePage() {
     setCurrentMaterial((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleMaterialFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMaterialFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -311,7 +327,14 @@ export default function EditCoursePage() {
       return;
     }
 
-    setCurrentMaterial((prev) => ({ ...prev, file }));
+    const detectedDuration = currentMaterial.type === "video"
+      ? await readVideoDurationMinutes(file)
+      : null;
+    setCurrentMaterial((prev) => ({
+      ...prev,
+      file,
+      duration: prev.duration || (detectedDuration ? String(detectedDuration) : ""),
+    }));
   };
 
   const ensureYouTubeRightsDeclaration = async (
@@ -855,13 +878,6 @@ export default function EditCoursePage() {
     e.preventDefault();
     if (!token || !courseId) return;
 
-    const hours = Number(formData.duration);
-    const minutes = Number(formData.durationMinutes);
-    if (!Number.isInteger(hours) || hours < 0 || !Number.isInteger(minutes) || minutes < 0 || minutes > 59 || (hours === 0 && minutes === 0)) {
-      setError("Enter a duration of at least one minute. Minutes must be between 0 and 59.");
-      return;
-    }
-
     setSubmitting(true);
     setError(null);
 
@@ -874,8 +890,6 @@ export default function EditCoursePage() {
       formDataToSend.append("aboutCourse", formData.aboutCourse);
       formDataToSend.append("price", "0");
       formDataToSend.append("level", formData.level);
-      formDataToSend.append("duration", formData.duration);
-      formDataToSend.append("durationMinutes", formData.durationMinutes);
       formDataToSend.append("facultyId", formData.facultyId || "");
       formDataToSend.append("departmentId", formData.departmentId || "");
       formDataToSend.append("year", formData.year || "");
@@ -1123,47 +1137,9 @@ export default function EditCoursePage() {
               </div>
             </div>
 
-            {/* Duration */}
-            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Duration
-              </h2>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Total course duration <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label htmlFor="courseDurationHours" className="block text-sm text-gray-600 mb-1">Hours</label>
-                    <input
-                      id="courseDurationHours"
-                      type="number"
-                      name="duration"
-                      required
-                      min="0"
-                      step="1"
-                      value={formData.duration}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="courseDurationMinutes" className="block text-sm text-gray-600 mb-1">Minutes</label>
-                    <input
-                      id="courseDurationMinutes"
-                      type="number"
-                      name="durationMinutes"
-                      required
-                      min="0"
-                      max="59"
-                      step="1"
-                      value={formData.durationMinutes}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              <span className="font-semibold">Course duration is automatic.</span>{" "}
+              It is calculated from video lessons when their duration is available; no manual total is required.
             </div>
 
             {/* Course Thumbnail */}
