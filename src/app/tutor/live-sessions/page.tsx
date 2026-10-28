@@ -7,14 +7,57 @@ import type { LiveSession } from "@/types";
 import { TOKEN_KEY } from "@/lib/constants";
 import { ConfirmDialog } from "@/components/ui";
 
+type InviteCopyResult = "copied" | "shared" | "cancelled" | "manual";
+
+async function copyOrShareInvite(text: string, title: string): Promise<InviteCopyResult> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return "copied";
+    }
+  } catch {
+    // Some mobile browsers block the Clipboard API even after a button tap.
+    // Use the legacy selection method and then the native share sheet below.
+  }
+
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.setAttribute("readonly", "");
+  textArea.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+  document.body.appendChild(textArea);
+  let copied = false;
+  try {
+    textArea.focus();
+    textArea.select();
+    copied = document.execCommand("copy");
+  } catch {
+    copied = false;
+  } finally {
+    document.body.removeChild(textArea);
+  }
+  if (copied) return "copied";
+
+  if (typeof navigator.share === "function") {
+    try {
+      await navigator.share({ title, text });
+      return "shared";
+    } catch (error: any) {
+      if (error?.name === "AbortError") return "cancelled";
+    }
+  }
+  return "manual";
+}
+
 export default function TutorLiveSessionsPage() {
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [identity, setIdentity] = useState<MeetingIdentity | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const [manualInviteText, setManualInviteText] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingAction, setPendingAction] = useState<{ session: LiveSession; action: "end" | "cancel" } | null>(null);
   const [actingOnSessionId, setActingOnSessionId] = useState<string | null>(null);
+  const [copyingSessionId, setCopyingSessionId] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -56,12 +99,22 @@ export default function TutorLiveSessionsPage() {
     if (!token) return;
     try {
       setError(null);
+      setManualInviteText(null);
+      setCopyingSessionId(session.id);
       const response = await liveSessionService.getReferralLink(session.id, token);
       if (!response.success || !response.data) throw new Error(response.message || "Unable to create the share link");
-      await navigator.clipboard.writeText(response.data.shareMessage || response.data.inviteUrl);
-      setShareNotice(`Invitation message with the session details and registration link copied for “${session.title}”.`);
+      const inviteText = response.data.shareMessage || response.data.inviteUrl;
+      const result = await copyOrShareInvite(inviteText, `Join ${session.title} on UniHub`);
+      if (result === "copied") setShareNotice(`Invitation message with the session details and registration link copied for “${session.title}”.`);
+      else if (result === "shared") setShareNotice("Your phone’s share options are open. Choose an app to send the invitation.");
+      else if (result === "manual") {
+        setManualInviteText(inviteText);
+        setShareNotice("Your browser blocked copying. Select and copy the invitation text below.");
+      }
     } catch (err: any) {
       setError(err.message || "Unable to copy the referral invite link");
+    } finally {
+      setCopyingSessionId(null);
     }
   };
 
@@ -75,6 +128,7 @@ export default function TutorLiveSessionsPage() {
       {identity && <div className={`mt-5 rounded-lg border p-4 ${identity.invitationStatus === "accepted" ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>Microsoft identity: <strong>{identity.email}</strong> · {identity.invitationStatus}{identity.invitationRedeemUrl && identity.invitationStatus !== "accepted" && <a className="ml-3 underline" href={identity.invitationRedeemUrl} target="_blank" rel="noreferrer">Accept invitation</a>}</div>}
       {error && <div role="alert" className="mt-5 rounded-lg bg-red-50 p-4 text-red-700">{error}</div>}
       {shareNotice && <div role="status" className="mt-5 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">{shareNotice}</div>}
+      {manualInviteText && <textarea aria-label="Referral invitation text" readOnly value={manualInviteText} onFocus={(event) => event.currentTarget.select()} onClick={(event) => event.currentTarget.select()} className="mt-3 min-h-36 w-full rounded-lg border border-gray-300 p-3 text-sm" />}
       <div className="mt-6 space-y-4">
         {sessions.length === 0 && <div className="rounded-xl bg-gray-50 p-10 text-center text-gray-600">No live-session requests yet.</div>}
         {sessions.map((session) => (
@@ -95,7 +149,7 @@ export default function TutorLiveSessionsPage() {
               <div className="flex flex-wrap items-start gap-2">
                 {session.status === "scheduled" && session.approvalStatus === "approved" && session.providerStatus === "ready" && <button type="button" onClick={() => act(session, "start")} disabled={actingOnSessionId === session.id} className="rounded bg-green-600 px-4 py-2 text-white disabled:opacity-60">{actingOnSessionId === session.id ? "Starting…" : "Start in Teams"}</button>}
                 {session.status === "scheduled" && <Link href={`/tutor/live-sessions/${session.id}/edit`} className="rounded border px-4 py-2">Reschedule</Link>}
-                {session.status === "scheduled" && <button type="button" onClick={() => copyReferralInvite(session)} className="rounded bg-indigo-600 px-4 py-2 text-white">Copy referral invite</button>}
+                {session.status === "scheduled" && <button type="button" disabled={copyingSessionId === session.id} onClick={() => copyReferralInvite(session)} className="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-60">{copyingSessionId === session.id ? "Preparing invite…" : "Copy referral invite"}</button>}
                 {session.status === "live" && <button type="button" onClick={() => setPendingAction({ session, action: "end" })} disabled={actingOnSessionId === session.id} className="rounded bg-red-600 px-4 py-2 text-white disabled:opacity-60">End</button>}
                 {session.status === "scheduled" && <button type="button" onClick={() => setPendingAction({ session, action: "cancel" })} disabled={actingOnSessionId === session.id} className="rounded border border-red-300 px-4 py-2 text-red-700 disabled:opacity-60">Cancel</button>}
                 {session.recordingUrl && <a href={session.recordingUrl} target="_blank" rel="noreferrer" className="rounded bg-purple-600 px-4 py-2 text-white">Recording</a>}
