@@ -104,6 +104,14 @@ export const liveSessionService = {
     );
   },
 
+  async enrollFromReferralInvite(id: string | number, referralCode: string, token: string): Promise<ApiResponse<any>> {
+    return apiClient.post<ApiResponse<any>>(
+      `/live-sessions/${id}/referral-enroll?ref=${encodeURIComponent(referralCode)}`,
+      undefined,
+      { token },
+    );
+  },
+
   async getMeetingIdentity(token: string): Promise<{ success: boolean; data: { identity: MeetingIdentity | null } }> {
     return apiClient.get("/live-sessions/meeting-identity", { token });
   },

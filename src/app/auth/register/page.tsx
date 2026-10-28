@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useDashboardPath } from "@/contexts/AuthContext";
@@ -97,7 +97,7 @@ function apiErrorMessage(error: unknown, fallback: string) {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { completeRegistration } = useAuth();
+  const { completeRegistration, isAuthenticated, isLoading: authLoading, token } = useAuth();
   const dashboardPath = useDashboardPath();
 
   const [step, setStep] = useState(1);
@@ -118,13 +118,20 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [liveSessionInviteId, setLiveSessionInviteId] = useState<number | null>(null);
+  const [liveSessionReferralCode, setLiveSessionReferralCode] = useState<string | null>(null);
   const [liveSessionInvite, setLiveSessionInvite] = useState<LiveSessionInvitePreview | null>(null);
   const [liveSessionInviteError, setLiveSessionInviteError] = useState<string | null>(null);
+  const [joiningLiveSessionInvite, setJoiningLiveSessionInvite] = useState(false);
+  const referralEnrollmentStarted = useRef(false);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const code = searchParams.get("ref");
-    if (code) setFormData((previous) => ({ ...previous, referralCode: code.trim().toUpperCase() }));
+    if (code) {
+      const referralCode = code.trim().toUpperCase();
+      setFormData((previous) => ({ ...previous, referralCode }));
+      setLiveSessionReferralCode(referralCode);
+    }
     const sessionId = Number(searchParams.get("liveSession"));
     if (!Number.isInteger(sessionId) || sessionId <= 0) return;
     setLiveSessionInviteId(sessionId);
@@ -137,6 +144,22 @@ export default function RegisterPage() {
       else setLiveSessionInviteError(response.message || "This live-session invitation is unavailable.");
     }).catch(() => setLiveSessionInviteError("This live-session invitation is unavailable."));
   }, []);
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated || !token || !liveSessionInviteId || !liveSessionReferralCode || referralEnrollmentStarted.current) return;
+    referralEnrollmentStarted.current = true;
+    setJoiningLiveSessionInvite(true);
+    void liveSessionService.enrollFromReferralInvite(liveSessionInviteId, liveSessionReferralCode, token)
+      .then((response) => {
+        if (!response.success) throw new Error(response.message || "Unable to enroll in this live session.");
+        router.replace("/student/my-sessions?invite=joined");
+      })
+      .catch((requestError: unknown) => {
+        referralEnrollmentStarted.current = false;
+        setLiveSessionInviteError(apiErrorMessage(requestError, "Unable to enroll in this live session."));
+        setJoiningLiveSessionInvite(false);
+      });
+  }, [authLoading, isAuthenticated, liveSessionInviteId, liveSessionReferralCode, router, token]);
 
   // Departments for the selected faculty
   const activeFaculty = FALLBACK_FACULTIES.find((f) => String(f.id) === selectedFacultyId);
@@ -303,7 +326,7 @@ export default function RegisterPage() {
       if (formData.accountType === "vendor") {
         router.push("/student/become-vendor");
       } else if (liveSessionInviteId) {
-        router.push("/student/live-sessions");
+        router.push("/student/my-sessions?invite=joined");
       } else if (formData.accountType === "student") {
         // New students complete their profile from the consolidated dashboard settings area.
         router.push("/student/dashboard?section=settings&setting=profile");
@@ -468,6 +491,11 @@ export default function RegisterPage() {
           {liveSessionInviteError && (
             <div style={{ margin: "0 0 20px", padding: "12px 14px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, fontSize: 13, color: "#92400e" }}>
               {liveSessionInviteError}
+            </div>
+          )}
+          {joiningLiveSessionInvite && (
+            <div role="status" style={{ margin: "0 0 20px", padding: "12px 14px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 8, fontSize: 13, color: "#1d4ed8" }}>
+              Enrolling you in this live session…
             </div>
           )}
 
@@ -936,7 +964,7 @@ export default function RegisterPage() {
         {/* Login link */}
         <p style={{ textAlign: "center", marginTop: 24, fontSize: 14, color: "var(--muted)" }}>
           Already have an account?{" "}
-          <Link href="/auth/login" style={{ color: "var(--brand)", fontWeight: 700, textDecoration: "none" }}>
+          <Link href="/auth/login" onClick={() => { if (liveSessionInviteId) sessionStorage.setItem("redirectAfterLogin", `${window.location.pathname}${window.location.search}`); }} style={{ color: "var(--brand)", fontWeight: 700, textDecoration: "none" }}>
             Log in
           </Link>
         </p>
