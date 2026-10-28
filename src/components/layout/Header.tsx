@@ -539,6 +539,50 @@ export default function Header() {
                   <div style={{ fontSize: 12, color: "var(--muted)", textTransform: "capitalize" }}>{user.primaryRole}</div>
                 </div>
               </div>
+
+              {user.roles && user.roles.length > 1 && (
+                <div style={{ borderTop: "1px solid var(--line)", margin: "0 -14px 12px", padding: "12px 14px 0" }}>
+                  <p style={{ margin: "0 0 5px", fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    Switch Mode
+                  </p>
+                  {(["student", "tutor"] as const).map((role) =>
+                    user.roles.includes(role) ? (
+                      <button
+                        key={role}
+                        onClick={async () => {
+                          if (user.primaryRole !== role) {
+                            const result = await switchRole(role);
+                            if (result.success) {
+                              router.push(`/${role}/dashboard`);
+                              setIsMenuOpen(false);
+                            }
+                          }
+                        }}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "8px", border: "none", width: "100%", textAlign: "left",
+                          background: user.primaryRole === role ? (role === "student" ? "#eff6ff" : "#f0fdf4") : "transparent",
+                          color: user.primaryRole === role ? (role === "student" ? "#1d4ed8" : "#15803d") : "var(--ink)",
+                          fontSize: 14, fontWeight: user.primaryRole === role ? 700 : 400,
+                          cursor: user.primaryRole === role ? "default" : "pointer", borderRadius: 4,
+                        }}
+                        disabled={user.primaryRole === role}
+                      >
+                        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                          <div style={{ width: 7, height: 7, borderRadius: "50%", background: role === "student" ? "#3b82f6" : "var(--brand)" }} />
+                          {role.charAt(0).toUpperCase() + role.slice(1)}
+                        </span>
+                        {user.primaryRole === role && (
+                          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    ) : null,
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={() => { logout(); router.push("/"); setIsMenuOpen(false); }}
                 style={{ fontSize: 14, color: "#dc2626", background: "none", border: "none", cursor: "pointer", padding: 0 }}
