@@ -58,8 +58,8 @@ export default function TutorLiveSessionsPage() {
       setError(null);
       const response = await liveSessionService.getReferralLink(session.id, token);
       if (!response.success || !response.data) throw new Error(response.message || "Unable to create the share link");
-      await navigator.clipboard.writeText(response.data.inviteUrl);
-      setShareNotice(`Invite link for “${session.title}” copied. New students who register with it will be enrolled automatically.`);
+      await navigator.clipboard.writeText(response.data.shareMessage || response.data.inviteUrl);
+      setShareNotice(`Invitation message with the session details and registration link copied for “${session.title}”.`);
     } catch (err: any) {
       setError(err.message || "Unable to copy the referral invite link");
     }

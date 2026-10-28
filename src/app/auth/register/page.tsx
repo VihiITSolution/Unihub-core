@@ -8,6 +8,7 @@ import type { UserRole } from "@/types";
 import { isSriLankanMobile, hasLetters } from "@/lib/validation";
 import { FALLBACK_FACULTIES } from "@/services/faculty.service";
 import { authService } from "@/services/auth.service";
+import { liveSessionService, LiveSessionInvitePreview } from "@/services/live-session.service";
 
 const UNIVERSITIES = [
   "University of Colombo",
@@ -117,13 +118,24 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [liveSessionInviteId, setLiveSessionInviteId] = useState<number | null>(null);
+  const [liveSessionInvite, setLiveSessionInvite] = useState<LiveSessionInvitePreview | null>(null);
+  const [liveSessionInviteError, setLiveSessionInviteError] = useState<string | null>(null);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const code = searchParams.get("ref");
     if (code) setFormData((previous) => ({ ...previous, referralCode: code.trim().toUpperCase() }));
     const sessionId = Number(searchParams.get("liveSession"));
-    if (Number.isInteger(sessionId) && sessionId > 0) setLiveSessionInviteId(sessionId);
+    if (!Number.isInteger(sessionId) || sessionId <= 0) return;
+    setLiveSessionInviteId(sessionId);
+    if (!code) {
+      setLiveSessionInviteError("This live-session invitation is missing its referral code.");
+      return;
+    }
+    void liveSessionService.getReferralInvite(sessionId, code).then((response) => {
+      if (response.success && response.data?.session) setLiveSessionInvite(response.data.session);
+      else setLiveSessionInviteError(response.message || "This live-session invitation is unavailable.");
+    }).catch(() => setLiveSessionInviteError("This live-session invitation is unavailable."));
   }, []);
 
   // Departments for the selected faculty
@@ -435,6 +447,29 @@ export default function RegisterPage() {
             {step === 3 && formData.accountType === "vendor" && "You'll set up your shop after registration"}
             {step === 4 && "Enter the six-digit code we sent to your mobile number"}
           </p>
+
+          {liveSessionInvite && (
+            <section
+              aria-label="Live-session invitation"
+              style={{ margin: "0 0 20px", padding: "16px", borderRadius: 9, border: "1px solid #a7f3d0", background: "#ecfdf5" }}
+            >
+              <p style={{ margin: "0 0 5px", fontSize: 12, fontWeight: 800, color: "#047857", letterSpacing: ".06em", textTransform: "uppercase" }}>You’re invited to join</p>
+              <h2 style={{ margin: "0 0 5px", fontSize: 17, fontWeight: 800, color: "#064e3b" }}>{liveSessionInvite.title}</h2>
+              <p style={{ margin: "0 0 5px", fontSize: 13, color: "#065f46" }}>Hosted by {liveSessionInvite.tutorName}</p>
+              <p style={{ margin: "0 0 7px", fontSize: 13, color: "#065f46" }}>
+                {new Date(liveSessionInvite.scheduledStartTime).toLocaleString("en-LK", { dateStyle: "full", timeStyle: "short", timeZone: "Asia/Colombo" })} (Sri Lanka time)
+              </p>
+              {liveSessionInvite.description && <p style={{ margin: "0 0 7px", fontSize: 13, lineHeight: 1.5, color: "#065f46" }}>{liveSessionInvite.description}</p>}
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#047857" }}>
+                {liveSessionInvite.approvalStatus === "approved" ? "Create your account to reserve your free place and join this session." : "Create your account to reserve your free place. We’ll let you know once the session is confirmed."}
+              </p>
+            </section>
+          )}
+          {liveSessionInviteError && (
+            <div style={{ margin: "0 0 20px", padding: "12px 14px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, fontSize: 13, color: "#92400e" }}>
+              {liveSessionInviteError}
+            </div>
+          )}
 
           {error && (
             <div

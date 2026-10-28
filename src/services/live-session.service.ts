@@ -50,6 +50,20 @@ export interface LiveSessionReferralLink {
   inviteUrl: string;
   referralCode: string;
   sessionId: number;
+  session: LiveSessionInvitePreview;
+  shareMessage: string;
+}
+
+export interface LiveSessionInvitePreview {
+  id: number;
+  title: string;
+  description?: string | null;
+  scheduledStartTime: string;
+  scheduledEndTime: string;
+  isFree: boolean;
+  status: string;
+  approvalStatus: "pending" | "approved" | "rejected";
+  tutorName: string;
 }
 
 export const liveSessionService = {
@@ -81,6 +95,12 @@ export const liveSessionService = {
     return apiClient.get<ApiResponse<LiveSessionReferralLink>>(
       `/live-sessions/${id}/referral-link`,
       { token },
+    );
+  },
+
+  async getReferralInvite(id: string | number, referralCode: string): Promise<ApiResponse<{ session: LiveSessionInvitePreview }>> {
+    return apiClient.get<ApiResponse<{ session: LiveSessionInvitePreview }>>(
+      `/live-sessions/${id}/referral-invite?ref=${encodeURIComponent(referralCode)}`,
     );
   },
 
