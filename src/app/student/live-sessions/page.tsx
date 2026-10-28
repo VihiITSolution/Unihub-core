@@ -3,17 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CalendarDays, CircleAlert, Mail, Users, Video } from "lucide-react";
+import { CalendarDays, CircleAlert, Mail, Play, Users, Video } from "lucide-react";
 import { liveSessionService } from "@/services/live-session.service";
 import type { LiveSession } from "@/types";
 import { TOKEN_KEY } from "@/lib/constants";
 
-type Filter = "all" | "upcoming" | "free";
+type Filter = "all" | "upcoming" | "free" | "recordings";
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "all", label: "All sessions" },
   { value: "upcoming", label: "Upcoming" },
   { value: "free", label: "Free" },
+  { value: "recordings", label: "Recordings" },
 ];
 
 const STATUS_LABELS: Record<string, string> = {
@@ -56,6 +57,8 @@ export default function StudentLiveSessionsPage() {
         filters.upcoming = true;
       } else if (filter === "free") {
         filters.isFree = true;
+      } else if (filter === "recordings") {
+        filters.status = "recorded";
       }
 
       const response = await liveSessionService.getSessions(
@@ -136,19 +139,22 @@ export default function StudentLiveSessionsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <header className="flex flex-wrap gap-4 justify-between items-end mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Live sessions</h1>
-          <p className="mt-1 text-gray-600">
-            Join tutor-led sessions on Microsoft Teams, or catch the recording afterwards.
-          </p>
+      <header className="mb-8 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-950 to-slate-800 px-5 py-6 text-white shadow-sm sm:px-7">
+        <div className="flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-300"><Video className="h-4 w-4" aria-hidden="true" /> Learn together, live</div>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight">Live sessions</h1>
+            <p className="mt-2 max-w-2xl text-slate-300">
+              Reserve a place, join your tutor on Microsoft Teams, and revisit available recordings afterwards.
+            </p>
+          </div>
+          <Link
+            href="/student/my-sessions"
+            className="rounded-md bg-white px-4 py-2.5 font-semibold text-slate-900 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            My sessions
+          </Link>
         </div>
-        <Link
-          href="/student/my-sessions"
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-        >
-          My sessions
-        </Link>
       </header>
 
       {error && (
@@ -186,7 +192,7 @@ export default function StudentLiveSessionsPage() {
         </div>
       )}
 
-      <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Filter sessions">
+      <div className="mb-6 flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm" role="group" aria-label="Filter sessions">
         {FILTERS.map(({ value, label }) => (
           <button
             key={value}
@@ -195,8 +201,8 @@ export default function StudentLiveSessionsPage() {
             aria-pressed={filter === value}
             className={`rounded-md px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
               filter === value
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             {label}
@@ -236,7 +242,7 @@ export default function StudentLiveSessionsPage() {
             return (
               <li
                 key={session.id}
-                className="flex flex-col rounded-lg border border-gray-200 bg-white p-5"
+                className="flex min-h-72 flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="text-lg font-semibold leading-snug text-gray-900">
@@ -311,9 +317,9 @@ export default function StudentLiveSessionsPage() {
                   {session.status === "live" && (
                     <Link
                       href={`/student/live-sessions/${session.id}/watch`}
-                      className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+                      className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
                     >
-                      Join session
+                      <Play className="h-4 w-4" aria-hidden="true" /> Join session
                     </Link>
                   )}
 

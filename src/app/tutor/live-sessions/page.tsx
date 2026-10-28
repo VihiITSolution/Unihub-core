@@ -152,7 +152,7 @@ export default function TutorLiveSessionsPage() {
                 {session.status === "scheduled" && <button type="button" disabled={copyingSessionId === session.id} onClick={() => copyReferralInvite(session)} className="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-60">{copyingSessionId === session.id ? "Preparing invite…" : "Copy referral invite"}</button>}
                 {session.status === "live" && <button type="button" onClick={() => setPendingAction({ session, action: "end" })} disabled={actingOnSessionId === session.id} className="rounded bg-red-600 px-4 py-2 text-white disabled:opacity-60">End</button>}
                 {session.status === "scheduled" && <button type="button" onClick={() => setPendingAction({ session, action: "cancel" })} disabled={actingOnSessionId === session.id} className="rounded border border-red-300 px-4 py-2 text-red-700 disabled:opacity-60">Cancel</button>}
-                {session.recordingUrl && <a href={session.recordingUrl} target="_blank" rel="noreferrer" className="rounded bg-purple-600 px-4 py-2 text-white">Recording</a>}
+                {session.recordingUrl && <Link href={`/tutor/live-sessions/${session.id}/recording`} className="rounded bg-purple-600 px-4 py-2 text-white">Manage recording</Link>}
                 <Link href={`/tutor/live-sessions/${session.id}/enrollments`} className="rounded bg-gray-100 px-4 py-2">Enrollments</Link>
               </div>
             </div>

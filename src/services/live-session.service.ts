@@ -67,6 +67,19 @@ export interface LiveSessionInvitePreview {
   tutorName: string;
 }
 
+export interface RecordingDetails {
+  title?: string;
+  description?: string;
+  tags?: string[];
+}
+
+export interface AddRecordingToCourseData {
+  courseId: string;
+  title?: string;
+  order?: number;
+  isPreview?: boolean;
+}
+
 export const liveSessionService = {
   // Get all live sessions with filters
   async getSessions(
@@ -186,6 +199,30 @@ export const liveSessionService = {
       `/live-sessions/${id}/end`,
       {},
       { token }
+    );
+  },
+
+  async updateRecording(
+    id: string,
+    data: RecordingDetails,
+    token: string,
+  ): Promise<ApiResponse<{ session: LiveSession }>> {
+    return apiClient.put<ApiResponse<{ session: LiveSession }>>(
+      `/live-sessions/${id}/recording`,
+      data,
+      { token },
+    );
+  },
+
+  async addRecordingToCourse(
+    id: string,
+    data: AddRecordingToCourseData,
+    token: string,
+  ): Promise<ApiResponse<{ content: { id: string } }>> {
+    return apiClient.post<ApiResponse<{ content: { id: string } }>>(
+      `/live-sessions/${id}/recording/course-content`,
+      data,
+      { token },
     );
   },
 
