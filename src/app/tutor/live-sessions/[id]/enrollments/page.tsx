@@ -43,6 +43,20 @@ export default function SessionEnrollmentsPage() {
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   };
 
+  // DECIMAL columns arrive from the API as strings, so coerce before any
+  // arithmetic or formatting. Adding a string to a number concatenates, and
+  // the result has no toFixed.
+  const money = (value: unknown) => {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? amount : 0;
+  };
+
+  const formatLkr = (value: unknown) =>
+    `Rs. ${money(value).toLocaleString("en-LK", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleString("en-US", {
@@ -100,7 +114,7 @@ export default function SessionEnrollmentsPage() {
         <div className="bg-white p-4 rounded-lg shadow">
           <p className="text-gray-600 text-sm">Total Revenue</p>
           <p className="text-2xl font-bold">
-            ${enrollments.reduce((sum, e) => sum + e.amountPaid, 0).toFixed(2)}
+            {formatLkr(enrollments.reduce((sum, e) => sum + money(e.amountPaid), 0))}
           </p>
         </div>
       </div>
@@ -145,7 +159,7 @@ export default function SessionEnrollmentsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <p className="font-medium">${enrollment.amountPaid.toFixed(2)}</p>
+                      <p className="font-medium">{formatLkr(enrollment.amountPaid)}</p>
                       <span
                         className={`text-xs px-2 py-1 rounded ${
                           enrollment.paymentStatus === "completed"
