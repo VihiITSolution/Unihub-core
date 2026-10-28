@@ -3,9 +3,34 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { CalendarDays, CircleAlert, Mail, Users, Video } from "lucide-react";
 import { liveSessionService } from "@/services/live-session.service";
 import type { LiveSession } from "@/types";
 import { TOKEN_KEY } from "@/lib/constants";
+
+type Filter = "all" | "upcoming" | "free";
+
+const FILTERS: { value: Filter; label: string }[] = [
+  { value: "all", label: "All sessions" },
+  { value: "upcoming", label: "Upcoming" },
+  { value: "free", label: "Free" },
+];
+
+const STATUS_LABELS: Record<string, string> = {
+  scheduled: "Scheduled",
+  live: "Live now",
+  ended: "Ended",
+  cancelled: "Cancelled",
+  recorded: "Recording ready",
+};
+
+const STATUS_STYLES: Record<string, string> = {
+  scheduled: "bg-blue-50 text-blue-700 ring-blue-600/20",
+  live: "bg-green-50 text-green-700 ring-green-600/20",
+  ended: "bg-gray-100 text-gray-600 ring-gray-500/20",
+  cancelled: "bg-red-50 text-red-700 ring-red-600/20",
+  recorded: "bg-purple-50 text-purple-700 ring-purple-600/20",
+};
 
 export default function StudentLiveSessionsPage() {
   const router = useRouter();
@@ -13,10 +38,9 @@ export default function StudentLiveSessionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [needsInvitation, setNeedsInvitation] = useState(false);
   const [enrollingSessionId, setEnrollingSessionId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "free" | "upcoming">(
-    "all",
-  );
+  const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {
     loadSessions();
@@ -43,7 +67,7 @@ export default function StudentLiveSessionsPage() {
         : (response.data as any)?.sessions || [];
       setSessions(sessionsData);
     } catch (err: any) {
-      setError(err.message || "Failed to load sessions");
+      setError(err.message || "We couldn't load the sessions. Try again in a moment.");
     } finally {
       setIsLoading(false);
     }
@@ -52,6 +76,7 @@ export default function StudentLiveSessionsPage() {
   const handleEnroll = async (sessionId: string) => {
     setNotice(null);
     setError(null);
+    setNeedsInvitation(false);
     setEnrollingSessionId(sessionId);
     try {
       const token = localStorage.getItem(TOKEN_KEY);
@@ -62,208 +87,260 @@ export default function StudentLiveSessionsPage() {
 
       const response = await liveSessionService.enrollInSession(sessionId, {}, token);
       const identity = (response.data as any)?.identity;
-      setNotice(identity?.invitationStatus === "accepted"
-        ? "Successfully enrolled in the session!"
-        : "Enrolled. Check your email and accept the Microsoft invitation before joining.");
+      if (identity?.invitationStatus === "accepted") {
+        setNotice("You're enrolled. The session will appear in My sessions.");
+      } else {
+        setNeedsInvitation(true);
+        setNotice(null);
+      }
       await loadSessions();
     } catch (err: any) {
-      setError(err.message || "Failed to enroll in session");
+      setError(err.message || "We couldn't complete your enrolment. Try again.");
     } finally {
       setEnrollingSessionId(null);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("en-US", {
-      month: "short",
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleString("en-GB", {
+      weekday: "short",
       day: "numeric",
-      year: "numeric",
+      month: "short",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     });
+
+  const relativeStart = (dateString: string) => {
+    const diffMs = new Date(dateString).getTime() - Date.now();
+    if (diffMs <= 0) return null;
+    const minutes = Math.round(diffMs / 60000);
+    if (minutes < 60) return `Starts in ${minutes} min`;
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return `Starts in ${hours} ${hours === 1 ? "hour" : "hours"}`;
+    const days = Math.round(hours / 24);
+    return `Starts in ${days} ${days === 1 ? "day" : "days"}`;
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      scheduled: "bg-blue-100 text-blue-800",
-      live: "bg-green-100 text-green-800 animate-pulse",
-      ended: "bg-gray-100 text-gray-800",
-      cancelled: "bg-red-100 text-red-800",
-      recorded: "bg-purple-100 text-purple-800",
-    };
-
-    return (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status]}`}
-      >
-        {status.toUpperCase()}
-      </span>
-    );
-  };
+  const price = (session: LiveSession) =>
+    session.isFree ? "Free" : `Rs. ${Number(session.price).toLocaleString("en-LK")}`;
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center h-96" role="status" aria-live="polite">
+        <span className="h-10 w-10 rounded-full border-2 border-gray-200 border-t-blue-600 motion-safe:animate-spin" />
+        <span className="sr-only">Loading sessions</span>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Live Sessions</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <header className="flex flex-wrap gap-4 justify-between items-end mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Live sessions</h1>
+          <p className="mt-1 text-gray-600">
+            Join tutor-led sessions on Microsoft Teams, or catch the recording afterwards.
+          </p>
+        </div>
         <Link
           href="/student/my-sessions"
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 font-medium flex-shrink-0"
+          className="rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
         >
-          My Enrolled Sessions
+          My sessions
         </Link>
-      </div>
+      </header>
 
       {error && (
-        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-          {error}
+        <div
+          role="alert"
+          className="mb-6 flex gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-800"
+        >
+          <CircleAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
+          <p>{error}</p>
         </div>
       )}
+
       {notice && (
-        <div role="status" className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded mb-6">
+        <div
+          role="status"
+          className="mb-6 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-green-800"
+        >
           {notice}
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {["all", "upcoming", "free"].map((f) => (
+      {needsInvitation && (
+        <div
+          role="status"
+          className="mb-6 flex gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-4 text-amber-900"
+        >
+          <Mail className="h-5 w-5 shrink-0" aria-hidden="true" />
+          <div>
+            <p className="font-medium">One more step before you can join</p>
+            <p className="mt-1 text-sm">
+              We've emailed you a Microsoft Teams invitation. Open it and accept, using the same
+              email address as your UniHub account. Until you do, the join button won't work.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Filter sessions">
+        {FILTERS.map(({ value, label }) => (
           <button
-            key={f}
+            key={value}
             type="button"
-            onClick={() => setFilter(f as any)}
-            aria-pressed={filter === f}
-            className={`px-4 py-2 rounded-md font-medium ${
-              filter === f
+            onClick={() => setFilter(value)}
+            aria-pressed={filter === value}
+            className={`rounded-md px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
+              filter === value
                 ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : "bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
             }`}
           >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            {label}
           </button>
         ))}
       </div>
 
-      {/* Sessions Grid */}
       {sessions.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-600">No live sessions available</p>
+        <div className="rounded-lg border border-dashed border-gray-300 py-16 text-center">
+          <Video className="mx-auto h-8 w-8 text-gray-400" aria-hidden="true" />
+          <p className="mt-3 font-medium text-gray-900">
+            {filter === "all"
+              ? "No sessions scheduled yet"
+              : "No sessions match this filter"}
+          </p>
+          <p className="mt-1 text-gray-600">
+            {filter === "all"
+              ? "Tutors post sessions a few days ahead. Check back soon."
+              : "Try a different filter to see what else is on."}
+          </p>
+          {filter !== "all" && (
+            <button
+              type="button"
+              onClick={() => setFilter("all")}
+              className="mt-4 font-medium text-blue-600 hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            >
+              Show all sessions
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sessions.map((session) => (
-            <div
-              key={session.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-            >
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-semibold flex-1">
+        <ul className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {sessions.map((session) => {
+            const countdown =
+              session.status === "scheduled" ? relativeStart(session.scheduledStartTime) : null;
+
+            return (
+              <li
+                key={session.id}
+                className="flex flex-col rounded-lg border border-gray-200 bg-white p-5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-lg font-semibold leading-snug text-gray-900">
                     {session.title}
-                  </h3>
-                  {getStatusBadge(session.status)}
+                  </h2>
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
+                      STATUS_STYLES[session.status] ?? STATUS_STYLES.ended
+                    }`}
+                  >
+                    {session.status === "live" && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-600 motion-safe:animate-pulse" />
+                    )}
+                    {STATUS_LABELS[session.status] ?? session.status}
+                  </span>
                 </div>
 
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {session.description || "No description"}
+                <p className="mt-1.5 text-sm text-gray-600">
+                  {session.tutor?.firstName} {session.tutor?.lastName}
                 </p>
 
-                <div className="space-y-2 text-sm text-gray-600 mb-4">
-                  <div className="flex items-center gap-2">
-                    <span>👨‍🏫</span>
-                    <span>
-                      {session.tutor?.firstName} {session.tutor?.lastName}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>📅</span>
-                    <span>{formatDate(session.scheduledStartTime)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>👥</span>
-                    <span>
-                      {session.totalAttendees}{" "}
-                      {session.maxAttendees ? `/ ${session.maxAttendees}` : ""}{" "}
-                      attendees
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>💰</span>
-                    <span className="font-semibold">
-                      {session.isFree ? "Free" : `Rs. ${session.price}`}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                {session.status === "scheduled" && (
-                  <button
-                    type="button"
-                    onClick={() => handleEnroll(session.id)}
-                    disabled={enrollingSessionId === session.id}
-                    className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {enrollingSessionId === session.id
-                      ? "Enrolling…"
-                      : session.isFree
-                      ? "Enroll Free"
-                      : `Enroll for Rs. ${session.price}`}
-                  </button>
+                {session.description && (
+                  <p className="mt-3 line-clamp-2 text-sm text-gray-600">{session.description}</p>
                 )}
 
-                {session.status === "live" && (
-                  <Link
-                    href={`/student/live-sessions/${session.id}/watch`}
-                    className="block w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 font-medium text-center"
-                  >
-                    🔴 Join Live Now
-                  </Link>
+                <dl className="mt-4 space-y-2 text-sm text-gray-700">
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
+                    <dt className="sr-only">Starts</dt>
+                    <dd>
+                      {formatDate(session.scheduledStartTime)}
+                      {countdown && <span className="text-gray-500"> · {countdown}</span>}
+                    </dd>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
+                    <dt className="sr-only">Attendees</dt>
+                    <dd>
+                      {session.totalAttendees}
+                      {session.maxAttendees ? ` of ${session.maxAttendees}` : ""} enrolled
+                    </dd>
+                  </div>
+                </dl>
+
+                {session.tags && session.tags.length > 0 && (
+                  <ul className="mt-4 flex flex-wrap gap-1.5">
+                    {session.tags.map((tag, idx) => (
+                      <li
+                        key={idx}
+                        className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+                      >
+                        {tag}
+                      </li>
+                    ))}
+                  </ul>
                 )}
 
-                {(session.status === "ended" ||
-                  session.status === "recorded") &&
-                  session.recordingUrl && (
-                    <a
-                      href={session.recordingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 font-medium text-center"
+                <div className="mt-5 flex items-center justify-between gap-3 border-t border-gray-100 pt-4">
+                  <span className="font-semibold text-gray-900">{price(session)}</span>
+
+                  {session.status === "scheduled" && (
+                    <button
+                      type="button"
+                      onClick={() => handleEnroll(session.id)}
+                      disabled={enrollingSessionId === session.id}
+                      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                     >
-                      Watch Recording
-                    </a>
+                      {enrollingSessionId === session.id ? "Enrolling…" : "Enrol"}
+                    </button>
                   )}
 
-                {session.status === "cancelled" && (
-                  <div className="w-full bg-red-100 text-red-800 py-2 rounded-md text-center font-medium">
-                    Cancelled
-                  </div>
-                )}
-              </div>
+                  {session.status === "live" && (
+                    <Link
+                      href={`/student/live-sessions/${session.id}/watch`}
+                      className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+                    >
+                      Join session
+                    </Link>
+                  )}
 
-              {session.tags && session.tags.length > 0 && (
-                <div className="px-6 pb-4">
-                  <div className="flex flex-wrap gap-2">
-                    {session.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
+                  {(session.status === "ended" || session.status === "recorded") &&
+                    session.recordingUrl && (
+                      <a
+                        href={session.recordingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
                       >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
+                        Watch recording
+                      </a>
+                    )}
+
+                  {session.status === "ended" && !session.recordingUrl && (
+                    <span className="text-sm text-gray-500">No recording</span>
+                  )}
+
+                  {session.status === "cancelled" && (
+                    <span className="text-sm font-medium text-red-700">Cancelled</span>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
