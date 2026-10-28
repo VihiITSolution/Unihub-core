@@ -246,8 +246,8 @@ export const liveSessionService = {
   async getSessionEnrollments(
     id: string,
     token: string
-  ): Promise<PaginatedResponse<SessionEnrollment>> {
-    return apiClient.get<PaginatedResponse<SessionEnrollment>>(
+  ): Promise<ApiResponse<{ enrollments: SessionEnrollment[] }>> {
+    return apiClient.get<ApiResponse<{ enrollments: SessionEnrollment[] }>>(
       `/live-sessions/${id}/enrollments`,
       { token }
     );

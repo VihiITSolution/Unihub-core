@@ -28,7 +28,8 @@ export default function SessionEnrollmentsPage() {
       }
 
       const response = await liveSessionService.getSessionEnrollments(sessionId, token);
-      setEnrollments(response.data || []);
+      const enrollmentData = response.data?.enrollments;
+      setEnrollments(Array.isArray(enrollmentData) ? enrollmentData : []);
     } catch (err: any) {
       setError(err.message || "Failed to load enrollments");
     } finally {
