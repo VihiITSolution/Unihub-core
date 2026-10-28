@@ -97,7 +97,7 @@ function apiErrorMessage(error: unknown, fallback: string) {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { completeRegistration, isAuthenticated, isLoading: authLoading, token } = useAuth();
+  const { completeRegistration, isAuthenticated, isLoading: authLoading, token, user } = useAuth();
   const dashboardPath = useDashboardPath();
 
   const [step, setStep] = useState(1);
@@ -146,7 +146,11 @@ export default function RegisterPage() {
   }, []);
 
   useEffect(() => {
-    if (authLoading || !isAuthenticated || !token || !liveSessionInviteId || !liveSessionReferralCode || referralEnrollmentStarted.current) return;
+    if (authLoading || !isAuthenticated || !token || !user || !liveSessionInvite || !liveSessionInviteId || !liveSessionReferralCode || referralEnrollmentStarted.current) return;
+    if (Number(user.id) === liveSessionInvite.tutorId) {
+      router.replace("/tutor/live-sessions");
+      return;
+    }
     referralEnrollmentStarted.current = true;
     setJoiningLiveSessionInvite(true);
     void liveSessionService.enrollFromReferralInvite(liveSessionInviteId, liveSessionReferralCode, token)
@@ -159,7 +163,7 @@ export default function RegisterPage() {
         setLiveSessionInviteError(apiErrorMessage(requestError, "Unable to enroll in this live session."));
         setJoiningLiveSessionInvite(false);
       });
-  }, [authLoading, isAuthenticated, liveSessionInviteId, liveSessionReferralCode, router, token]);
+  }, [authLoading, isAuthenticated, liveSessionInvite, liveSessionInviteId, liveSessionReferralCode, router, token, user]);
 
   // Departments for the selected faculty
   const activeFaculty = FALLBACK_FACULTIES.find((f) => String(f.id) === selectedFacultyId);

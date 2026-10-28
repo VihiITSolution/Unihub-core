@@ -56,6 +56,7 @@ export interface LiveSessionReferralLink {
 
 export interface LiveSessionInvitePreview {
   id: number;
+  tutorId: number;
   title: string;
   description?: string | null;
   scheduledStartTime: string;
