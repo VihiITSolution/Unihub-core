@@ -99,7 +99,7 @@ export default function StudentLiveSessionsPage() {
         setNotice("You're enrolled. The session will appear in My sessions.");
       } else {
         setNeedsInvitation(true);
-        setNotice(null);
+        setNotice("You're enrolled. Accept the Microsoft Teams invitation before joining the session.");
       }
       await loadSessions();
     } catch (err: any) {
@@ -116,6 +116,8 @@ export default function StudentLiveSessionsPage() {
       return;
     }
     if (!identity) {
+      setEnrollingSessionId(sessionId);
+      setNotice("Set up your Teams email to finish enrolling.");
       setTeamsEmail(defaultTeamsEmail());
       setTeamsEmailSessionId(sessionId);
       return;
@@ -245,19 +247,6 @@ export default function StudentLiveSessionsPage() {
         </div>
       )}
 
-      {teamsEmailSessionId !== null && (
-        <form onSubmit={saveTeamsEmail} className="mb-6 rounded-md border border-blue-200 bg-blue-50 p-4 text-blue-950">
-          <h2 className="font-semibold">Set up Microsoft Teams</h2>
-          <p className="mt-1 text-sm">Use the email address you sign in to Microsoft Teams with. We suggested the confirmed email in your UniHub profile; you can change it.</p>
-          <label className="mt-4 block text-sm font-medium" htmlFor="student-teams-email">Teams email</label>
-          <div className="mt-1 flex flex-col gap-2 sm:flex-row">
-            <input id="student-teams-email" type="email" required value={teamsEmail} onChange={(event) => setTeamsEmail(event.target.value)} className="min-w-0 flex-1 rounded-md border border-blue-300 bg-white px-3 py-2 text-gray-900" placeholder="you@example.com" />
-            <button type="submit" disabled={settingTeamsEmail} className="rounded-md bg-blue-700 px-4 py-2 font-medium text-white disabled:opacity-60">{settingTeamsEmail ? "Sending invitation…" : "Use this email"}</button>
-            <button type="button" disabled={settingTeamsEmail} onClick={() => setTeamsEmailSessionId(null)} className="rounded-md border border-blue-300 bg-white px-4 py-2 font-medium">Cancel</button>
-          </div>
-        </form>
-      )}
-
       <div className="mb-6 flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm" role="group" aria-label="Filter sessions">
         {FILTERS.map(({ value, label }) => (
           <button
@@ -376,7 +365,7 @@ export default function StudentLiveSessionsPage() {
                       disabled={enrollingSessionId === session.id}
                       className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                     >
-                      {enrollingSessionId === session.id ? "Enrolling…" : "Enrol"}
+                      {enrollingSessionId === session.id ? (teamsEmailSessionId === session.id ? "Set up Teams…" : "Enrolling…") : "Enrol"}
                     </button>
                   )}
 
@@ -413,6 +402,22 @@ export default function StudentLiveSessionsPage() {
             );
           })}
         </ul>
+      )}
+
+      {teamsEmailSessionId !== null && (
+        <div className="fixed inset-0 z-50 flex items-end bg-slate-950/50 p-4 sm:items-center sm:justify-center" role="presentation">
+          <form onSubmit={saveTeamsEmail} role="dialog" aria-modal="true" aria-labelledby="student-teams-email-title" className="w-full max-w-lg rounded-xl bg-white p-5 shadow-2xl sm:p-6">
+            <h2 id="student-teams-email-title" className="text-xl font-bold text-gray-900">Set up Microsoft Teams</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">Use the email address you sign in to Microsoft Teams with. We suggested the confirmed email in your UniHub profile; you can change it.</p>
+            {error && <p role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
+            <label className="mt-5 block text-sm font-semibold text-gray-900" htmlFor="student-teams-email">Teams email</label>
+            <input id="student-teams-email" type="email" required autoFocus value={teamsEmail} onChange={(event) => setTeamsEmail(event.target.value)} className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2.5 text-gray-900" placeholder="you@example.com" />
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button type="button" disabled={settingTeamsEmail} onClick={() => { setTeamsEmailSessionId(null); setEnrollingSessionId(null); setNotice(null); }} className="rounded-md border border-gray-300 px-4 py-2.5 font-medium text-gray-700 disabled:opacity-60">Cancel</button>
+              <button type="submit" disabled={settingTeamsEmail} className="rounded-md bg-blue-700 px-4 py-2.5 font-medium text-white disabled:opacity-60">{settingTeamsEmail ? "Sending invitation…" : "Continue and enrol"}</button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   );
