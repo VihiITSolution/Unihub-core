@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, type FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar } from "@/components/ui";
@@ -41,6 +42,7 @@ const Icons = {
   users:       <Icon d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />,
   chartBar:    <Icon d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />,
   tag:         <Icon d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L9.568 3z M6 6h.008v.008H6V6z" />,
+  arrows:      <Icon d="M7.5 7.5h12m0 0l-3-3m3 3l-3 3M16.5 16.5h-12m0 0l3 3m-3-3l3-3" />,
 };
 
 // ── Nav link definitions ─────────────────────────────────────────────────────
@@ -90,8 +92,11 @@ const bottomLinks = [
 export default function Sidebar({ isOpen, onToggle, userType = "student" }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, switchRole } = useAuth();
   const verifiedStudent = isVerifiedStudent(user);
+  const [switchingRole, setSwitchingRole] = useState<"student" | "tutor" | null>(null);
+  const [switchError, setSwitchError] = useState<string | null>(null);
+  const [sidebarSearch, setSidebarSearch] = useState("");
 
   const links =
     userType === "tutor" ? tutorLinks
@@ -99,7 +104,30 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
     : studentLinks;
 
   const showVendorSection  = !!user?.isVendorProfileComplete;
-  const showBecomeVendor   = !user?.isVendorProfileComplete && userType === "student";
+  const switchableRoles = (["student", "tutor"] as const).filter((role) => user?.roles?.includes(role));
+
+  const handleRoleSwitch = async (role: "student" | "tutor") => {
+    if (!user || user.primaryRole === role) return;
+    setSwitchError(null);
+    setSwitchingRole(role);
+    const result = await switchRole(role);
+    setSwitchingRole(null);
+    if (result.success) {
+      router.push(`/${role}/dashboard`);
+      if (window.innerWidth < 1024) onToggle();
+    } else {
+      setSwitchError(result.error || "Unable to switch mode. Please try again.");
+    }
+  };
+
+  const handleSidebarSearch = (event: FormEvent) => {
+    event.preventDefault();
+    const query = sidebarSearch.trim();
+    if (!query) return;
+    router.push(`/courses?search=${encodeURIComponent(query)}`);
+    setSidebarSearch("");
+    if (window.innerWidth < 1024) onToggle();
+  };
 
   const NavItem = ({
     href, label, icon, accent = false,
@@ -143,6 +171,9 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
             (e.currentTarget as HTMLElement).style.color = "#9ca3af";
           }
         }}
+        onClick={() => {
+          if (window.innerWidth < 1024) onToggle();
+        }}
       >
         <span style={{ color: isActive ? (accent ? "#f59e0b" : "var(--brand)") : "inherit", display: "flex" }}>
           {icon}
@@ -177,6 +208,19 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
 
       {/* Nav links */}
       <nav style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "6px 0" }}>
+        {isOpen && (
+          <form onSubmit={handleSidebarSearch} style={{ display: "flex", gap: 6, padding: "4px 14px 10px" }}>
+            <input
+              type="search"
+              value={sidebarSearch}
+              onChange={(event) => setSidebarSearch(event.target.value)}
+              placeholder="Search courses"
+              aria-label="Search courses"
+              style={{ minWidth: 0, flex: 1, border: "1px solid rgba(255,255,255,.16)", borderRadius: 5, background: "rgba(255,255,255,.06)", color: "#fff", padding: "8px 9px", fontSize: 12, outline: "none" }}
+            />
+            <button type="submit" style={{ border: "none", borderRadius: 5, background: "var(--brand)", color: "#fff", padding: "0 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Search</button>
+          </form>
+        )}
 
         {links.map((link) => (
           <NavItem key={link.href} {...link} />
@@ -225,6 +269,58 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
             </div>
           )}
         </div>
+        {isOpen && (
+          <>
+            {switchableRoles.length > 1 && (
+              <div style={{ margin: "0 0 12px", padding: "0 2px 12px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#9ca3af" }}>
+                  {Icons.arrows} Switch mode
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {switchableRoles.map((role) => {
+                    const active = user?.primaryRole === role;
+                    const isStudent = role === "student";
+                    return (
+                      <button
+                        key={role}
+                        type="button"
+                        aria-pressed={active}
+                        disabled={active || switchingRole !== null}
+                        onClick={() => handleRoleSwitch(role)}
+                        style={{
+                          flex: 1, padding: "7px 8px", borderRadius: 5,
+                          border: active ? `1px solid ${isStudent ? "rgba(96,165,250,.5)" : "rgba(45,212,191,.5)"}` : "1px solid rgba(255,255,255,.1)",
+                          background: active ? (isStudent ? "rgba(37,99,235,.22)" : "rgba(13,148,136,.24)") : "transparent",
+                          color: active ? "#fff" : "#d1d5db", fontSize: 12, fontWeight: active ? 700 : 500,
+                          cursor: active || switchingRole !== null ? "default" : "pointer",
+                        }}
+                      >
+                        {switchingRole === role ? "Switching…" : `${active ? "✓ " : ""}${role[0].toUpperCase()}${role.slice(1)}`}
+                      </button>
+                    );
+                  })}
+                </div>
+                {switchError && <p role="alert" style={{ margin: "7px 0 0", color: "#fca5a5", fontSize: 11 }}>{switchError}</p>}
+              </div>
+            )}
+            {user?.primaryRole === "student" && !user.roles.includes("tutor") && (
+              <Link
+                href="/student/become-tutor"
+                style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, padding: "8px", borderRadius: 5, background: "rgba(13,148,136,.18)", color: "#ccfbf1", fontSize: 12, fontWeight: 700, textDecoration: "none" }}
+                onClick={() => { if (window.innerWidth < 1024) onToggle(); }}
+              >
+                {Icons.plusCircle} Apply to become a tutor
+              </Link>
+            )}
+            <Link
+              href="/student/dashboard?section=settings&setting=profile"
+              style={{ display: "flex", alignItems: "center", gap: 8, color: "#d1d5db", fontSize: 12, textDecoration: "none", padding: "0 2px" }}
+              onClick={() => { if (window.innerWidth < 1024) onToggle(); }}
+            >
+              {Icons.cog} Account settings
+            </Link>
+          </>
+        )}
         {isOpen && (
           <button
             onClick={() => { logout(); router.push("/"); }}
