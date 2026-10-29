@@ -69,6 +69,7 @@ export default function ConditionalLayout({
           <Sidebar
             isOpen={sidebarOpen}
             onToggle={toggle}
+            isMobile={isMobile}
             userType={user?.primaryRole as "student" | "tutor" | "admin" | undefined}
           />
         </div>

@@ -10,6 +10,7 @@ import { isVerifiedStudent } from "@/lib/studentVerification";
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  isMobile?: boolean;
   userType?: "student" | "tutor" | "admin";
 }
 
@@ -89,7 +90,7 @@ const bottomLinks = [
 ];
 
 // ── Component ────────────────────────────────────────────────────────────────
-export default function Sidebar({ isOpen, onToggle, userType = "student" }: SidebarProps) {
+export default function Sidebar({ isOpen, onToggle, isMobile = false, userType = "student" }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, switchRole } = useAuth();
@@ -208,7 +209,7 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
 
       {/* Nav links */}
       <nav style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "6px 0" }}>
-        {isOpen && (
+        {isOpen && isMobile && (
           <form onSubmit={handleSidebarSearch} style={{ display: "flex", gap: 6, padding: "4px 14px 10px" }}>
             <input
               type="search"
@@ -269,7 +270,7 @@ export default function Sidebar({ isOpen, onToggle, userType = "student" }: Side
             </div>
           )}
         </div>
-        {isOpen && (
+        {isOpen && isMobile && (
           <>
             {switchableRoles.length > 1 && (
               <div style={{ margin: "0 0 12px", padding: "0 2px 12px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
