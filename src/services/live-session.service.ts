@@ -126,12 +126,12 @@ export const liveSessionService = {
     );
   },
 
-  async getMeetingIdentity(token: string): Promise<{ success: boolean; data: { identity: MeetingIdentity | null } }> {
-    return apiClient.get("/live-sessions/meeting-identity", { token });
+  async getMeetingIdentity(token: string, audience: "student" | "tutor" = "tutor"): Promise<{ success: boolean; data: { identity: MeetingIdentity | null } }> {
+    return apiClient.get(`/live-sessions/meeting-identity?audience=${audience}`, { token });
   },
 
-  async setMeetingIdentity(teamsEmail: string, token: string, resend = false): Promise<{ success: boolean; data: { identity: MeetingIdentity } }> {
-    return apiClient.post("/live-sessions/meeting-identity", { teamsEmail, resend }, { token });
+  async setMeetingIdentity(teamsEmail: string, token: string, resend = false, audience: "student" | "tutor" = "tutor"): Promise<{ success: boolean; data: { identity: MeetingIdentity } }> {
+    return apiClient.post("/live-sessions/meeting-identity", { teamsEmail, resend, audience }, { token });
   },
 
   // Get session by ID

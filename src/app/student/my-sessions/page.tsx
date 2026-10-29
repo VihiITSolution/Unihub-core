@@ -45,7 +45,7 @@ export default function MySessionsPage() {
       const filters = filter === "upcoming" ? { upcoming: true } : undefined;
       const [response, identityResponse] = await Promise.all([
         liveSessionService.getMyEnrollments(filters, token),
-        liveSessionService.getMeetingIdentity(token),
+        liveSessionService.getMeetingIdentity(token, "student"),
       ]);
       const enrollmentData = Array.isArray(response.data)
         ? response.data

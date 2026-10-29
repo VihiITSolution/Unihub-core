@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CalendarDays, CircleAlert, Mail, Play, Users, Video } from "lucide-react";
 import { liveSessionService } from "@/services/live-session.service";
+import type { MeetingIdentity } from "@/services/live-session.service";
 import type { LiveSession } from "@/types";
 import { TOKEN_KEY } from "@/lib/constants";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Filter = "all" | "upcoming" | "free" | "recordings";
 
@@ -35,12 +37,17 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function StudentLiveSessionsPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [needsInvitation, setNeedsInvitation] = useState(false);
+  const [identity, setIdentity] = useState<MeetingIdentity | null>(null);
   const [enrollingSessionId, setEnrollingSessionId] = useState<string | null>(null);
+  const [teamsEmailSessionId, setTeamsEmailSessionId] = useState<string | null>(null);
+  const [teamsEmail, setTeamsEmail] = useState("");
+  const [settingTeamsEmail, setSettingTeamsEmail] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {
@@ -61,14 +68,15 @@ export default function StudentLiveSessionsPage() {
         filters.status = "recorded";
       }
 
-      const response = await liveSessionService.getSessions(
-        filters,
-        token || undefined,
-      );
+      const [response, identityResponse] = await Promise.all([
+        liveSessionService.getSessions(filters, token || undefined),
+        token ? liveSessionService.getMeetingIdentity(token, "student") : Promise.resolve(null),
+      ]);
       const sessionsData = Array.isArray(response.data)
         ? response.data
         : (response.data as any)?.sessions || [];
       setSessions(sessionsData);
+      if (identityResponse?.success) setIdentity(identityResponse.data.identity);
     } catch (err: any) {
       setError(err.message || "We couldn't load the sessions. Try again in a moment.");
     } finally {
@@ -76,21 +84,18 @@ export default function StudentLiveSessionsPage() {
     }
   };
 
-  const handleEnroll = async (sessionId: string) => {
+  const defaultTeamsEmail = () => user?.studentProfile?.studentEmail || user?.email || "";
+
+  const enroll = async (sessionId: string, token: string) => {
     setNotice(null);
     setError(null);
     setNeedsInvitation(false);
     setEnrollingSessionId(sessionId);
     try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) {
-        router.push("/auth/login");
-        return;
-      }
-
       const response = await liveSessionService.enrollInSession(sessionId, {}, token);
-      const identity = (response.data as any)?.identity;
-      if (identity?.invitationStatus === "accepted") {
+      const nextIdentity = (response.data as any)?.identity as MeetingIdentity | null;
+      if (nextIdentity) setIdentity(nextIdentity);
+      if (nextIdentity?.invitationStatus === "accepted") {
         setNotice("You're enrolled. The session will appear in My sessions.");
       } else {
         setNeedsInvitation(true);
@@ -101,6 +106,53 @@ export default function StudentLiveSessionsPage() {
       setError(err.message || "We couldn't complete your enrolment. Try again.");
     } finally {
       setEnrollingSessionId(null);
+    }
+  };
+
+  const handleEnroll = async (sessionId: string) => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      router.push("/auth/login");
+      return;
+    }
+    if (!identity) {
+      setTeamsEmail(defaultTeamsEmail());
+      setTeamsEmailSessionId(sessionId);
+      return;
+    }
+    await enroll(sessionId, token);
+  };
+
+  const openTeamsEmailForm = (sessionId: string | null = null) => {
+    setError(null);
+    setTeamsEmail(identity?.email || defaultTeamsEmail());
+    setTeamsEmailSessionId(sessionId || "");
+  };
+
+  const saveTeamsEmail = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const token = localStorage.getItem(TOKEN_KEY);
+    const email = teamsEmail.trim().toLowerCase();
+    if (!token) return router.push("/auth/login");
+    if (!/^\S+@\S+\.\S+$/.test(email)) return setError("Enter a valid email address for Microsoft Teams.");
+    setSettingTeamsEmail(true);
+    setError(null);
+    try {
+      const response = await liveSessionService.setMeetingIdentity(email, token, false, "student");
+      const nextIdentity = response.data?.identity;
+      if (!nextIdentity) throw new Error("Unable to set up your Teams email.");
+      setIdentity(nextIdentity);
+      const sessionId = teamsEmailSessionId;
+      setTeamsEmailSessionId(null);
+      if (sessionId) await enroll(sessionId, token);
+      else {
+        setNeedsInvitation(true);
+        setNotice("Your Microsoft Teams invitation has been sent. Accept it before joining a session.");
+      }
+    } catch (err: any) {
+      setError(err.message || "We couldn't set up that Teams email. Try a different email address.");
+    } finally {
+      setSettingTeamsEmail(false);
     }
   };
 
@@ -186,10 +238,24 @@ export default function StudentLiveSessionsPage() {
             <p className="font-medium">One more step before you can join</p>
             <p className="mt-1 text-sm">
               We've emailed you a Microsoft Teams invitation. Open it and accept, using the same
-              email address as your UniHub account. Until you do, the join button won't work.
+              Teams email you selected. Until you do, the join button won't work.
             </p>
+            <button type="button" onClick={() => openTeamsEmailForm()} className="mt-3 text-sm font-semibold underline underline-offset-2">Use a different Teams email</button>
           </div>
         </div>
+      )}
+
+      {teamsEmailSessionId !== null && (
+        <form onSubmit={saveTeamsEmail} className="mb-6 rounded-md border border-blue-200 bg-blue-50 p-4 text-blue-950">
+          <h2 className="font-semibold">Set up Microsoft Teams</h2>
+          <p className="mt-1 text-sm">Use the email address you sign in to Microsoft Teams with. We suggested the confirmed email in your UniHub profile; you can change it.</p>
+          <label className="mt-4 block text-sm font-medium" htmlFor="student-teams-email">Teams email</label>
+          <div className="mt-1 flex flex-col gap-2 sm:flex-row">
+            <input id="student-teams-email" type="email" required value={teamsEmail} onChange={(event) => setTeamsEmail(event.target.value)} className="min-w-0 flex-1 rounded-md border border-blue-300 bg-white px-3 py-2 text-gray-900" placeholder="you@example.com" />
+            <button type="submit" disabled={settingTeamsEmail} className="rounded-md bg-blue-700 px-4 py-2 font-medium text-white disabled:opacity-60">{settingTeamsEmail ? "Sending invitation…" : "Use this email"}</button>
+            <button type="button" disabled={settingTeamsEmail} onClick={() => setTeamsEmailSessionId(null)} className="rounded-md border border-blue-300 bg-white px-4 py-2 font-medium">Cancel</button>
+          </div>
+        </form>
       )}
 
       <div className="mb-6 flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm" role="group" aria-label="Filter sessions">
