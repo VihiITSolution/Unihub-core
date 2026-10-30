@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CalendarDays, CircleAlert, Mail, Play, Users, Video } from "lucide-react";
+import { CalendarDays, CircleAlert, CircleCheck, Mail, Play, Users, Video } from "lucide-react";
 import { liveSessionService } from "@/services/live-session.service";
 import type { MeetingIdentity } from "@/services/live-session.service";
 import type { LiveSession } from "@/types";
@@ -48,6 +48,7 @@ export default function StudentLiveSessionsPage() {
   const [teamsEmailSessionId, setTeamsEmailSessionId] = useState<string | null>(null);
   const [teamsEmail, setTeamsEmail] = useState("");
   const [settingTeamsEmail, setSettingTeamsEmail] = useState(false);
+  const [enrolledSessionIds, setEnrolledSessionIds] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {
@@ -68,15 +69,31 @@ export default function StudentLiveSessionsPage() {
         filters.status = "recorded";
       }
 
-      const [response, identityResponse] = await Promise.all([
+      const [response, identityResponse, enrollmentResponse] = await Promise.all([
         liveSessionService.getSessions(filters, token || undefined),
         token ? liveSessionService.getMeetingIdentity(token, "student") : Promise.resolve(null),
+        // The sessions endpoint is public and carries no per-viewer state, so
+        // enrolment has to be read separately and matched by session id.
+        token
+          ? liveSessionService.getMyEnrollments(undefined, token).catch(() => null)
+          : Promise.resolve(null),
       ]);
       const sessionsData = Array.isArray(response.data)
         ? response.data
         : (response.data as any)?.sessions || [];
       setSessions(sessionsData);
       if (identityResponse?.success) setIdentity(identityResponse.data.identity);
+
+      const enrollmentData = Array.isArray(enrollmentResponse?.data)
+        ? enrollmentResponse?.data
+        : (enrollmentResponse?.data as any)?.enrollments || [];
+      setEnrolledSessionIds(
+        new Set(
+          (enrollmentData as any[])
+            .map((item) => String(item.sessionId ?? item.session?.id ?? ""))
+            .filter(Boolean),
+        ),
+      );
     } catch (err: any) {
       setError(err.message || "We couldn't load the sessions. Try again in a moment.");
     } finally {
@@ -95,6 +112,7 @@ export default function StudentLiveSessionsPage() {
       const response = await liveSessionService.enrollInSession(sessionId, {}, token);
       const nextIdentity = (response.data as any)?.identity as MeetingIdentity | null;
       if (nextIdentity) setIdentity(nextIdentity);
+      setEnrolledSessionIds((previous) => new Set(previous).add(String(sessionId)));
       if (nextIdentity?.invitationStatus === "accepted") {
         setNotice("You're enrolled. The session will appear in My sessions.");
       } else {
@@ -293,6 +311,7 @@ export default function StudentLiveSessionsPage() {
           {sessions.map((session) => {
             const countdown =
               session.status === "scheduled" ? relativeStart(session.scheduledStartTime) : null;
+            const isEnrolled = enrolledSessionIds.has(String(session.id));
 
             return (
               <li
@@ -358,7 +377,14 @@ export default function StudentLiveSessionsPage() {
                 <div className="mt-5 flex items-center justify-between gap-3 border-t border-gray-100 pt-4">
                   <span className="font-semibold text-gray-900">{price(session)}</span>
 
-                  {session.status === "scheduled" && (
+                  {session.status === "scheduled" && isEnrolled && (
+                    <span className="inline-flex items-center gap-1.5 rounded-md bg-green-50 px-3 py-2 text-sm font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                      <CircleCheck className="h-4 w-4" aria-hidden="true" />
+                      Enrolled
+                    </span>
+                  )}
+
+                  {session.status === "scheduled" && !isEnrolled && (
                     <button
                       type="button"
                       onClick={() => handleEnroll(session.id)}
