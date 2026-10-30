@@ -1,0 +1,3 @@
+## 2025-03-09 - Message Thread Re-renders
+**Learning:** Chat interfaces with typing indicators (`otherUserTyping` state) cause the entire list of messages to re-render constantly. Because messages list grows linearly over time, not memoizing individual message bubbles creates an O(N) rendering bottleneck with typing toggles.
+**Action:** When working on chat UI components, ensure that list items (like `MessageBubble`) are wrapped in `React.memo()`, particularly if parent components frequently update state (such as typing indicators or new message arrivals) to avoid re-rendering the whole history.
