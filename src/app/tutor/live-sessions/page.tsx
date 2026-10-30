@@ -74,7 +74,7 @@ export default function TutorLiveSessionsPage() {
   };
   useEffect(() => { load(); }, []);
 
-  const act = async (session: LiveSession, action: "start" | "end" | "cancel") => {
+  const act = async (session: LiveSession, action: "start" | "rejoin" | "end" | "cancel") => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
     try {
@@ -83,6 +83,8 @@ export default function TutorLiveSessionsPage() {
       setActingOnSessionId(session.id);
       const response = action === "start"
         ? await liveSessionService.startSession(session.id, token)
+        : action === "rejoin"
+          ? await liveSessionService.rejoinSession(session.id, token)
         : action === "end"
           ? await liveSessionService.endSession(session.id, token)
           : await liveSessionService.cancelSession(session.id, token);
@@ -148,6 +150,7 @@ export default function TutorLiveSessionsPage() {
               </div>
               <div className="flex flex-wrap items-start gap-2">
                 {session.status === "scheduled" && session.approvalStatus === "approved" && session.providerStatus === "ready" && <button type="button" onClick={() => act(session, "start")} disabled={actingOnSessionId === session.id} className="rounded bg-green-600 px-4 py-2 text-white disabled:opacity-60">{actingOnSessionId === session.id ? "Starting…" : "Start in Teams"}</button>}
+                {session.status === "live" && session.provider === "teams" && <button type="button" onClick={() => act(session, "rejoin")} disabled={actingOnSessionId === session.id} className="rounded bg-green-600 px-4 py-2 text-white disabled:opacity-60">{actingOnSessionId === session.id ? "Opening Teams…" : "Rejoin Teams"}</button>}
                 {session.status === "scheduled" && <Link href={`/tutor/live-sessions/${session.id}/edit`} className="rounded border px-4 py-2">Reschedule</Link>}
                 {session.status === "scheduled" && <button type="button" disabled={copyingSessionId === session.id} onClick={() => copyReferralInvite(session)} className="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-60">{copyingSessionId === session.id ? "Preparing invite…" : "Copy referral invite"}</button>}
                 {session.status === "live" && <button type="button" onClick={() => setPendingAction({ session, action: "end" })} disabled={actingOnSessionId === session.id} className="rounded bg-red-600 px-4 py-2 text-white disabled:opacity-60">End</button>}

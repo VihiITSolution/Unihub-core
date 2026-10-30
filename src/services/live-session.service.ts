@@ -190,6 +190,19 @@ export const liveSessionService = {
     );
   },
 
+  // Does not alter the live-session state. Tutors can use this after they
+  // accidentally leave Microsoft Teams and before they end the session.
+  async rejoinSession(
+    id: string,
+    token: string
+  ): Promise<ApiResponse<LiveSession>> {
+    return apiClient.post<ApiResponse<LiveSession>>(
+      `/live-sessions/${id}/rejoin`,
+      {},
+      { token }
+    );
+  },
+
   // End live session (tutor only)
   async endSession(
     id: string,
