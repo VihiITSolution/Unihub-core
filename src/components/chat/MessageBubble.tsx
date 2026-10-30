@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { FileText } from "lucide-react";
 import type { ChatMessage } from "@/types/chat";
 
@@ -11,7 +12,9 @@ interface MessageBubbleProps {
 const formatTime = (dateString: string) =>
   new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) => {
+// Memoize MessageBubble to prevent O(N) re-renders of all previous messages
+// when the parent MessageThread re-renders (e.g., when otherUserTyping toggles).
+export const MessageBubble: React.FC<MessageBubbleProps> = memo(({ message, isOwn }) => {
   return (
     <div
       className="flex"
@@ -82,4 +85,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
       </div>
     </div>
   );
-};
+});
+
+MessageBubble.displayName = "MessageBubble";
