@@ -113,12 +113,8 @@ export default function StudentLiveSessionsPage() {
       const nextIdentity = (response.data as any)?.identity as MeetingIdentity | null;
       if (nextIdentity) setIdentity(nextIdentity);
       setEnrolledSessionIds((previous) => new Set(previous).add(String(sessionId)));
-      if (nextIdentity?.invitationStatus === "accepted") {
-        setNotice("You're enrolled. The session will appear in My sessions.");
-      } else {
-        setNeedsInvitation(true);
-        setNotice("You're enrolled. Accept the Microsoft Teams invitation before joining the session.");
-      }
+      setNotice("You're enrolled. The session will appear in My sessions.");
+      setNeedsInvitation(nextIdentity ? nextIdentity.invitationStatus !== "accepted" : false);
       await loadSessions();
     } catch (err: any) {
       setError(err.message || "We couldn't complete your enrolment. Try again.");
@@ -133,13 +129,9 @@ export default function StudentLiveSessionsPage() {
       router.push("/auth/login");
       return;
     }
-    if (!identity) {
-      setEnrollingSessionId(sessionId);
-      setNotice("Set up your Teams email to finish enrolling.");
-      setTeamsEmail(defaultTeamsEmail());
-      setTeamsEmailSessionId(sessionId);
-      return;
-    }
+    // Enrolling no longer depends on a Microsoft identity. The backend sets
+    // one up in the background where it can; linking is offered afterwards,
+    // and only because it makes attendance tracking accurate.
     await enroll(sessionId, token);
   };
 
@@ -167,7 +159,7 @@ export default function StudentLiveSessionsPage() {
       if (sessionId) await enroll(sessionId, token);
       else {
         setNeedsInvitation(true);
-        setNotice("Your Microsoft Teams invitation has been sent. Accept it before joining a session.");
+        setNotice("Invitation sent. Accepting it lets your tutor see your attendance.");
       }
     } catch (err: any) {
       setError(err.message || "We couldn't set up that Teams email. Try a different email address.");
@@ -251,14 +243,14 @@ export default function StudentLiveSessionsPage() {
       {needsInvitation && (
         <div
           role="status"
-          className="mb-6 flex gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-4 text-amber-900"
+          className="mb-6 flex gap-3 rounded-md border border-blue-200 bg-blue-50 px-4 py-4 text-blue-900"
         >
           <Mail className="h-5 w-5 shrink-0" aria-hidden="true" />
           <div>
-            <p className="font-medium">One more step before you can join</p>
+            <p className="font-medium">Link your Microsoft account so your attendance is recorded</p>
             <p className="mt-1 text-sm">
-              We've emailed you a Microsoft Teams invitation. Open it and accept, using the same
-              Teams email you selected. Until you do, the join button won't work.
+              You can join your sessions right away without this. Accepting the Microsoft Teams
+              invitation we emailed you lets your tutor see your attendance against your name.
             </p>
             <button type="button" onClick={() => openTeamsEmailForm()} className="mt-3 text-sm font-semibold underline underline-offset-2">Use a different Teams email</button>
           </div>
@@ -391,7 +383,7 @@ export default function StudentLiveSessionsPage() {
                       disabled={enrollingSessionId === session.id}
                       className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                     >
-                      {enrollingSessionId === session.id ? (teamsEmailSessionId === session.id ? "Set up Teams…" : "Enrolling…") : "Enrol"}
+                      {enrollingSessionId === session.id ? "Enrolling…" : "Enrol"}
                     </button>
                   )}
 
@@ -433,14 +425,14 @@ export default function StudentLiveSessionsPage() {
       {teamsEmailSessionId !== null && (
         <div className="fixed inset-0 z-50 flex items-end bg-slate-950/50 p-4 sm:items-center sm:justify-center" role="presentation">
           <form onSubmit={saveTeamsEmail} role="dialog" aria-modal="true" aria-labelledby="student-teams-email-title" className="w-full max-w-lg rounded-xl bg-white p-5 shadow-2xl sm:p-6">
-            <h2 id="student-teams-email-title" className="text-xl font-bold text-gray-900">Set up Microsoft Teams</h2>
-            <p className="mt-2 text-sm leading-6 text-gray-600">Use the email address you sign in to Microsoft Teams with. We suggested the confirmed email in your UniHub profile; you can change it.</p>
+            <h2 id="student-teams-email-title" className="text-xl font-bold text-gray-900">Link your Microsoft account</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">Optional. Use the email you sign in to Microsoft Teams with, and your attendance will be recorded against your name. We suggested the confirmed email in your UniHub profile; you can change it.</p>
             {error && <p role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
             <label className="mt-5 block text-sm font-semibold text-gray-900" htmlFor="student-teams-email">Teams email</label>
             <input id="student-teams-email" type="email" required autoFocus value={teamsEmail} onChange={(event) => setTeamsEmail(event.target.value)} className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2.5 text-gray-900" placeholder="you@example.com" />
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button type="button" disabled={settingTeamsEmail} onClick={() => { setTeamsEmailSessionId(null); setEnrollingSessionId(null); setNotice(null); }} className="rounded-md border border-gray-300 px-4 py-2.5 font-medium text-gray-700 disabled:opacity-60">Cancel</button>
-              <button type="submit" disabled={settingTeamsEmail} className="rounded-md bg-blue-700 px-4 py-2.5 font-medium text-white disabled:opacity-60">{settingTeamsEmail ? "Sending invitation…" : "Continue and enrol"}</button>
+              <button type="submit" disabled={settingTeamsEmail} className="rounded-md bg-blue-700 px-4 py-2.5 font-medium text-white disabled:opacity-60">{settingTeamsEmail ? "Sending invitation…" : "Send invitation"}</button>
             </div>
           </form>
         </div>

@@ -116,7 +116,7 @@ export default function MySessionsPage() {
           className={`mb-6 flex gap-3 rounded-md border px-4 py-4 ${
             invitationAccepted
               ? "border-green-200 bg-green-50 text-green-900"
-              : "border-amber-200 bg-amber-50 text-amber-900"
+              : "border-blue-200 bg-blue-50 text-blue-900"
           }`}
         >
           {invitationAccepted ? (
@@ -127,22 +127,24 @@ export default function MySessionsPage() {
           <div className="min-w-0">
             {invitationAccepted ? (
               <>
-                <p className="font-medium">You're set up to join on Microsoft Teams</p>
-                <p className="mt-1 text-sm break-words">Connected as {identity.email}.</p>
+                <p className="font-medium">Microsoft account linked</p>
+                <p className="mt-1 text-sm break-words">
+                  Connected as {identity.email}. Your attendance is recorded against your name.
+                </p>
               </>
             ) : (
               <>
-                <p className="font-medium">Accept your Teams invitation to join sessions</p>
+                <p className="font-medium">Link your Microsoft account for attendance</p>
                 <p className="mt-1 text-sm break-words">
-                  We've sent an invitation to {identity.email}. Accept it before your first
-                  session — the join button won't work until you do.
+                  You can join your sessions without this. Accepting the invitation we sent to
+                  {" "}{identity.email} lets your tutor see your attendance against your name.
                 </p>
                 {identity.invitationRedeemUrl && (
                   <a
                     href={identity.invitationRedeemUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-2 inline-block font-medium underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
+                    className="mt-2 inline-block font-medium underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
                   >
                     Accept the invitation
                   </a>
