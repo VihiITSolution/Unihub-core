@@ -125,7 +125,13 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/*
+            The JavaScript handler sends credentials as a JSON POST body.  The
+            explicit method is a safe fallback: should JavaScript fail before
+            the handler runs, the browser must never use its default GET form
+            submission (which serialises fields into the address bar).
+          */}
+          <form method="post" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {/* Email */}
             <div>
               <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>

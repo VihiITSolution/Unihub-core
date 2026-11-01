@@ -515,7 +515,10 @@ export default function RegisterPage() {
             </div>
           )}
 
+          {/* Keep the browser's no-JavaScript fallback out of the URL. The
+              submit handlers below always send registration data in POST JSON. */}
           <form
+            method="post"
             onSubmit={(e) => {
               if (step === 3) handleSubmit(e);
               else if (step === 4) handleVerifyPhone(e);

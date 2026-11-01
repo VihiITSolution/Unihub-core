@@ -37,6 +37,10 @@ export default function ForgotPasswordPage() {
     try {
       const response = await authService.forgotPassword(email.trim());
       if (response.success) {
+        // This is intentionally session-scoped rather than a query parameter:
+        // an email address should not be saved in browser history, referrer
+        // headers, analytics, or server access logs.
+        sessionStorage.setItem("passwordResetEmail", email.trim().toLowerCase());
         setSubmitted(true);
       } else {
         setError(response.message || "Something went wrong. Please try again.");
@@ -134,14 +138,14 @@ export default function ForgotPasswordPage() {
                 reset code has been sent.
               </div>
               <Link
-                href={`/auth/reset-password?email=${encodeURIComponent(email.trim())}`}
+                href="/auth/reset-password"
                 style={{ color: "var(--brand)", fontWeight: 700 }}
               >
                 Enter your reset code
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <form method="post" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
                   Email address

@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 
 const inputStyle: React.CSSProperties = {
@@ -19,10 +19,9 @@ const inputStyle: React.CSSProperties = {
   transition: "border-color .15s",
 };
 
-function ResetPasswordForm() {
+export default function ResetPasswordPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
+  const [email, setEmail] = useState("");
 
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -30,6 +29,11 @@ function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    // The reset identity stays in tab-scoped storage, never in the URL.
+    setEmail(sessionStorage.getItem("passwordResetEmail") || "");
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +61,7 @@ function ResetPasswordForm() {
     try {
       const response = await authService.resetPassword(email, code, newPassword);
       if (response.success) {
+        sessionStorage.removeItem("passwordResetEmail");
         setSuccess(true);
         setTimeout(() => router.push("/auth/login"), 2000);
       } else {
@@ -152,7 +157,7 @@ function ResetPasswordForm() {
               Password reset successfully. Redirecting you to log in…
             </div>
           ) : (
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <form method="post" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
                   Email reset code
@@ -246,13 +251,5 @@ function ResetPasswordForm() {
         }
       `}</style>
     </div>
-  );
-}
-
-export default function ResetPasswordPage() {
-  return (
-    <Suspense fallback={null}>
-      <ResetPasswordForm />
-    </Suspense>
   );
 }
