@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { postService } from "@/services/social.service";
@@ -25,7 +25,8 @@ function timeAgo(dateString: string) {
   return new Date(dateString).toLocaleDateString();
 }
 
-export function PostCard({ post, onDeleted }: PostCardProps) {
+// Memoized to prevent O(N) re-renders when parent lists update
+export const PostCard = memo(function PostCard({ post, onDeleted }: PostCardProps) {
   const { user, token } = useAuth();
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [liked, setLiked] = useState(post.likedByMe);
@@ -126,4 +127,4 @@ export function PostCard({ post, onDeleted }: PostCardProps) {
       )}
     </div>
   );
-}
+});
