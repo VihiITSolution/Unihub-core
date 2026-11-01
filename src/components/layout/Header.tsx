@@ -187,7 +187,7 @@ export default function Header() {
 
         {/* Search bar — desktop, after nav links */}
         <div className="hidden lg:flex" style={{ flex: 1, minWidth: 0, flexDirection: "column" }}>
-          <form onSubmit={handleSearch} style={{ display: "flex" }}>
+          <form method="post" onSubmit={handleSearch} style={{ display: "flex" }}>
             <div
               style={{
                 display: "flex", alignItems: "center", gap: 10,
@@ -442,7 +442,7 @@ export default function Header() {
       {isMenuOpen && (
         <div style={{ background: "var(--white)", borderTop: "1px solid var(--line)" }} className="lg:hidden">
           {/* Mobile search */}
-          <form onSubmit={handleSearch} style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)" }}>
+          <form method="post" onSubmit={handleSearch} style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)" }}>
             <div
               style={{
                 display: "flex", alignItems: "center", gap: 8,

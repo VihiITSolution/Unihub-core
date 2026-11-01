@@ -81,7 +81,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ borderTop: "1px solid var(--line)", padding: 12 }}>
+    <form method="post" onSubmit={handleSubmit} style={{ borderTop: "1px solid var(--line)", padding: 12 }}>
       {warning && (
         <div
           style={{

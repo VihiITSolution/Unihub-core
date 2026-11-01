@@ -108,7 +108,7 @@ function NewsletterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form method="post" onSubmit={handleSubmit}>
       <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
         <input
           type="email"

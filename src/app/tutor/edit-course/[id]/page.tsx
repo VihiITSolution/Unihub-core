@@ -990,7 +990,7 @@ export default function EditCoursePage() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form method="post" onSubmit={handleSubmit} className="space-y-6">
         {/* Course Details Tab */}
         {activeTab === "details" && (
           <>

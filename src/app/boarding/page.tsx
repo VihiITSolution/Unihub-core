@@ -307,7 +307,7 @@ export default function BoardingPage() {
                 <option value="__custom__">Search manually…</option>
               </select>
             ) : (
-              <form onSubmit={handleSearch} style={{ display: "flex", gap: 6 }}>
+              <form method="post" onSubmit={handleSearch} style={{ display: "flex", gap: 6 }}>
                 <input
                   type="search"
                   placeholder="Search area or university..."

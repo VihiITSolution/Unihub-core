@@ -260,7 +260,7 @@ export default function MarketplacePage() {
           </p>
 
           {/* Search */}
-          <form onSubmit={handleSearch} style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+          <form method="post" onSubmit={handleSearch} style={{ display: "flex", gap: 10, marginBottom: 14 }}>
             <div
               style={{
                 flex: 1, display: "flex", alignItems: "center", gap: 10,

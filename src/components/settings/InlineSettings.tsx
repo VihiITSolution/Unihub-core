@@ -330,7 +330,7 @@ function EditProfile() {
       </div>
 
       {msg && <Msg {...msg} />}
-      <form onSubmit={save}>
+      <form method="post" onSubmit={save}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="First Name *">
             <Input value={form.firstName} onChange={e => setForm(p => ({ ...p, firstName: e.target.value }))} required />
@@ -427,7 +427,7 @@ function ChangePassword() {
   };
 
   return (
-    <form onSubmit={save} style={{ maxWidth: 400 }}>
+    <form method="post" onSubmit={save} style={{ maxWidth: 400 }}>
       {msg && <Msg {...msg} />}
       {[
         { id: "currentPassword" as const, label: "Current Password" },
@@ -612,7 +612,7 @@ function DeleteAccount() {
           I want to delete my account
         </button>
       ) : (
-        <form onSubmit={doDelete} style={{ maxWidth: 380 }}>
+        <form method="post" onSubmit={doDelete} style={{ maxWidth: 380 }}>
           {error && <Msg type="error" text={error} />}
           <Field label="Your current password">
             <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Enter password" />

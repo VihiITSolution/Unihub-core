@@ -170,7 +170,7 @@ export default function CreateListingPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="card">
+      <form method="post" onSubmit={handleSubmit} className="card">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
             {error}

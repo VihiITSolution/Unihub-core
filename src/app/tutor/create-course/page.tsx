@@ -659,7 +659,7 @@ export default function CreateCoursePage() {
         )}
 
         {step === 1 && (
-          <form onSubmit={handleBasicInfoSubmit} className="space-y-6">
+          <form method="post" onSubmit={handleBasicInfoSubmit} className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm p-4 sm:p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Course Details

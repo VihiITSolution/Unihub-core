@@ -135,13 +135,13 @@ export default function AffiliatePage() {
             <p>Redeem from <strong>{lkr(redemptionMinimum)}</strong>. Your request is checked manually before bank transfer.</p>
             <div className="payout-meter"><div style={{ width: `${Math.min(100, (data.balances.available / redemptionMinimum) * 100)}%` }} /></div>
             <small>{lkr(data.balances.available)} of {lkr(redemptionMinimum)} available</small>
-            <form onSubmit={redeem} className="redeem-form"><label>How much would you like to redeem?</label><div><span>LKR</span><input required min={redemptionMinimum} step={1} type="number" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={redemptionMinimum.toLocaleString("en-LK")} /><button disabled={!hasAvailableBalance}>Request</button></div></form>
+            <form method="post" onSubmit={redeem} className="redeem-form"><label>How much would you like to redeem?</label><div><span>LKR</span><input required min={redemptionMinimum} step={1} type="number" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={redemptionMinimum.toLocaleString("en-LK")} /><button disabled={!hasAvailableBalance}>Request</button></div></form>
           </article>
 
           <article className="affiliate-card bank-card">
             <div className="section-heading compact"><div><span className="section-kicker">Payout setup</span><h2>Your bank details</h2></div><ShieldCheck size={20} /></div>
             {data.payoutProfile && <p className="saved-account"><Check size={14} /> Saved account · {data.payoutProfile.accountMask}</p>}
-            <form onSubmit={saveBank} className="bank-form">
+            <form method="post" onSubmit={saveBank} className="bank-form">
               <label>Account holder name<input required value={bank.accountHolderName} onChange={(event) => setBank({ ...bank, accountHolderName: event.target.value })} placeholder="Name on the account" /></label>
               <div className="bank-form-grid"><label>Bank name<input required value={bank.bankName} onChange={(event) => setBank({ ...bank, bankName: event.target.value })} placeholder="e.g. BOC" /></label><label>Branch<input required value={bank.branch} onChange={(event) => setBank({ ...bank, branch: event.target.value })} placeholder="Branch" /></label></div>
               <label>Account number<input required value={bank.accountNumber} onChange={(event) => setBank({ ...bank, accountNumber: event.target.value })} placeholder="Your account number" /></label>

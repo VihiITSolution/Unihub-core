@@ -102,7 +102,7 @@ export default function BecomeVendorPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="card">
+      <form method="post" onSubmit={handleSubmit} className="card">
         <div className="space-y-6">
           {/* Shop Information */}
           <div>

@@ -289,7 +289,7 @@ export default function PaymentPage() {
           </p>
 
           {/* Bank Transfer Proof Form */}
-          <form onSubmit={handlePaymentSubmit} className="space-y-4">
+          <form method="post" onSubmit={handlePaymentSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">
                 Upload Proof of Payment <span className="text-red-500">*</span>

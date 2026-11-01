@@ -292,7 +292,7 @@ export default function CreateBoardingListing() {
         </div>
       </div>
 
-      <form
+      <form method="post"
         onSubmit={handleSubmit}
         className="space-y-6 bg-white rounded-lg shadow-md p-6"
       >

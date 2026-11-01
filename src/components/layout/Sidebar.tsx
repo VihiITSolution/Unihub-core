@@ -210,7 +210,7 @@ export default function Sidebar({ isOpen, onToggle, isMobile = false, userType =
       {/* Nav links */}
       <nav style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "6px 0" }}>
         {isOpen && isMobile && (
-          <form onSubmit={handleSidebarSearch} style={{ display: "flex", gap: 6, padding: "4px 14px 10px" }}>
+          <form method="post" onSubmit={handleSidebarSearch} style={{ display: "flex", gap: 6, padding: "4px 14px 10px" }}>
             <input
               type="search"
               value={sidebarSearch}

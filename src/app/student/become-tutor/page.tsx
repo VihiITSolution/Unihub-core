@@ -344,7 +344,7 @@ export default function BecomeTutorPage() {
           </div>
         )}
 
-        <form
+        <form method="post"
           onSubmit={handleSubmit}
           className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-xl shadow-slate-200/60"
         >

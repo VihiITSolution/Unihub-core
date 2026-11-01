@@ -424,7 +424,7 @@ export default function StudentLiveSessionsPage() {
 
       {teamsEmailSessionId !== null && (
         <div className="fixed inset-0 z-50 flex items-end bg-slate-950/50 p-4 sm:items-center sm:justify-center" role="presentation">
-          <form onSubmit={saveTeamsEmail} role="dialog" aria-modal="true" aria-labelledby="student-teams-email-title" className="w-full max-w-lg rounded-xl bg-white p-5 shadow-2xl sm:p-6">
+          <form method="post" onSubmit={saveTeamsEmail} role="dialog" aria-modal="true" aria-labelledby="student-teams-email-title" className="w-full max-w-lg rounded-xl bg-white p-5 shadow-2xl sm:p-6">
             <h2 id="student-teams-email-title" className="text-xl font-bold text-gray-900">Link your Microsoft account</h2>
             <p className="mt-2 text-sm leading-6 text-gray-600">Optional. Use the email you sign in to Microsoft Teams with, and your attendance will be recorded against your name. We suggested the confirmed email in your UniHub profile; you can change it.</p>
             {error && <p role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}

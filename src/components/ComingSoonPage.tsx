@@ -113,7 +113,7 @@ export default function ComingSoonPage({
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="flex gap-2">
+                <form method="post" onSubmit={handleSubmit} className="flex gap-2">
                   <input
                     type="email"
                     placeholder="Enter your email"

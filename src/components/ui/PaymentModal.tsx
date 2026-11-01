@@ -59,7 +59,7 @@ export default function PaymentModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Complete Payment">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form method="post" onSubmit={handleSubmit} className="space-y-6">
         {/* Course Info */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="font-semibold text-lg mb-2">{course.title}</h3>

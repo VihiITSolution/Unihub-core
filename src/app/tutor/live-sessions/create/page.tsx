@@ -78,7 +78,7 @@ export default function CreateLiveSessionPage() {
         <p className="mt-2 text-slate-600">Choose a time in Asia/Colombo. Sessions are free during this rollout and require admin approval.</p>
       </div>
       {error && <div role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
-      <form onSubmit={submit} className="mt-6 space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+      <form method="post" onSubmit={submit} className="mt-6 space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <div className="border-b border-slate-200 pb-5">
           <h2 className="text-lg font-bold text-slate-900">Session details</h2>
           <p className="mt-1 text-sm text-slate-600">Please allow a 15-minute buffer between sessions using the shared organiser.</p>
