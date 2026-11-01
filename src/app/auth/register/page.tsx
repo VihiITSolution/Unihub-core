@@ -586,6 +586,7 @@ export default function RegisterPage() {
                     />
                     <button
                       type="button" tabIndex={-1}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                       onClick={() => setShowPassword((p) => !p)}
                       style={{
                         position: "absolute", right: 12, top: "50%",
