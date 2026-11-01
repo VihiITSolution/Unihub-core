@@ -212,12 +212,12 @@ export default function StudentLiveSessionsPage() {
               Reserve a place, join your tutor on Microsoft Teams, and revisit available recordings afterwards.
             </p>
           </div>
-          <Link
+          <div className="flex flex-wrap gap-3"><Link href="/help/live-sessions/student" className="rounded-md border border-slate-400 px-4 py-2.5 font-semibold text-white hover:bg-slate-700">How live sessions work</Link><Link
             href="/student/my-sessions"
             className="rounded-md bg-white px-4 py-2.5 font-semibold text-slate-900 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             My sessions
-          </Link>
+          </Link></div>
         </div>
       </header>
 

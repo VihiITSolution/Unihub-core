@@ -125,7 +125,7 @@ export default function TutorLiveSessionsPage() {
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><h1 className="text-3xl font-bold">My live sessions</h1><p className="mt-1 text-gray-600">Teams requests, approvals, and attendance in one place.</p></div>
-        <Link href="/tutor/live-sessions/create" className="rounded-lg bg-blue-600 px-5 py-2.5 text-white">Request session</Link>
+        <div className="flex flex-wrap gap-3"><Link href="/help/live-sessions/tutor" className="rounded-lg border border-gray-300 px-5 py-2.5 text-gray-700 hover:bg-gray-50">Live session help</Link><Link href="/tutor/live-sessions/create" className="rounded-lg bg-blue-600 px-5 py-2.5 text-white">Request session</Link></div>
       </div>
       {identity && <div className={`mt-5 rounded-lg border p-4 ${identity.invitationStatus === "accepted" ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>Microsoft identity: <strong>{identity.email}</strong> · {identity.invitationStatus}{identity.invitationRedeemUrl && identity.invitationStatus !== "accepted" && <a className="ml-3 underline" href={identity.invitationRedeemUrl} target="_blank" rel="noreferrer">Accept invitation</a>}</div>}
       {error && <div role="alert" className="mt-5 rounded-lg bg-red-50 p-4 text-red-700">{error}</div>}

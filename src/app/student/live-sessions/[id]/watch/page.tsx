@@ -40,7 +40,7 @@ export default function WatchLiveSessionPage({ params }: { params: Promise<{ id:
       <div className="max-w-xl rounded-2xl bg-slate-900 p-8 text-center shadow-xl">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600 text-2xl font-bold">T</div>
         <h1 className="mt-5 text-2xl font-bold">{session.title}</h1>
-        <p className="mt-3 text-slate-300">Microsoft Teams opened in a new tab. Sign in with the same verified email used for your UniHub account.</p>
+        <p className="mt-3 text-slate-300">Microsoft Teams opened in a new tab. If you linked a Microsoft account for attendance, use that account when joining.</p>
         <button onClick={() => router.push("/student/my-sessions")} className="mt-6 rounded-lg bg-indigo-600 px-5 py-2.5">Return to my sessions</button>
       </div>
     </div>

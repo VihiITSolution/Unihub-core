@@ -93,12 +93,12 @@ export default function MySessionsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">My sessions</h1>
           <p className="mt-1 text-gray-600">Sessions you've enrolled in, and your attendance.</p>
         </div>
-        <Link
+        <div className="flex flex-wrap gap-3"><Link href="/help/live-sessions/student" className="rounded-md border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50">Live session help</Link><Link
           href="/student/live-sessions"
           className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
         >
           Browse sessions
-        </Link>
+        </Link></div>
       </header>
 
       {error && (

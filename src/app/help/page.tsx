@@ -274,8 +274,16 @@ export default function HelpCenterPage() {
           </Link>
         </div> */}
 
+        <section aria-labelledby="live-session-guides" className="mb-10">
+          <h2 id="live-session-guides" className="text-2xl font-bold text-gray-900">Live session guides</h2>
+          <p className="mt-2 text-gray-600">Learn how live sessions work for students and tutors.</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Link href="/help/live-sessions/student" className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:border-primary-400"><span className="font-bold text-gray-900">Student guide →</span><p className="mt-2 text-sm text-gray-600">Enrol, join Teams, and find recordings.</p></Link>
+            <Link href="/help/live-sessions/tutor" className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:border-primary-400"><span className="font-bold text-gray-900">Tutor guide →</span><p className="mt-2 text-sm text-gray-600">Request, host, and manage sessions.</p></Link>
+          </div>
+        </section>
         {/* Support Ticket Form */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+        <div id="support-ticket" className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Create Support Ticket
