@@ -92,11 +92,89 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               YouTube Integration
             </h2>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              UniHub uses YouTube API Services to host lesson videos. When a tutor
+              uploads a lesson, we send it to YouTube as an unlisted video on a
+              channel UniHub owns, using the YouTube Data API. We store only the
+              resulting video ID, which lets us show the lesson to students
+              enrolled in that course. We do not search YouTube, read your YouTube
+              account, or access any channel other than our own.
+            </p>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              Lesson videos are shown through YouTube&apos;s privacy-enhanced player
+              (youtube-nocookie.com), which does not set tracking cookies for
+              advertising before you choose to play a video. Once you play a video,
+              YouTube may collect data about that playback as described in
+              Google&apos;s policy.
+            </p>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              By using the parts of UniHub that show lesson videos, you agree to the{" "}
+              <a
+                href="https://www.youtube.com/t/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+              >
+                YouTube Terms of Service
+              </a>
+              . Information Google collects through the embedded player is handled
+              under the{" "}
+              <a
+                href="https://policies.google.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+              >
+                Google Privacy Policy
+              </a>
+              .
+            </p>
             <p className="text-gray-700 leading-relaxed">
-              UniHub integrates with YouTube Data API to host educational videos.
-              When tutors upload videos, they are uploaded to YouTube as unlisted
-              content. We store the YouTube video ID for access control. Your use
-              of YouTube videos is also subject to Google's Privacy Policy.
+              You can review and withdraw UniHub&apos;s access to your data through
+              the{" "}
+              <a
+                href="https://myaccount.google.com/permissions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+              >
+                Google security settings page
+              </a>
+              .
+            </p>
+          </section>
+
+          {/* Deleting your data */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              Deleting Your Data
+            </h2>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              You can delete your UniHub account at any time from Settings, which
+              removes your profile, enrolments and messages. You can also email{" "}
+              <a
+                href="mailto:support@unihub.lk"
+                className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+              >
+                support@unihub.lk
+              </a>{" "}
+              and we will action the request.
+            </p>
+            <p className="text-gray-700 leading-relaxed">
+              Where a lesson video you uploaded is hosted on YouTube, deleting the
+              lesson in UniHub removes it from the platform and we delete the
+              corresponding video from our YouTube channel. Data Google holds about
+              your own YouTube or Google account is not ours to delete; you can
+              manage that through your{" "}
+              <a
+                href="https://myaccount.google.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+              >
+                Google Account
+              </a>
+              .
             </p>
           </section>
 

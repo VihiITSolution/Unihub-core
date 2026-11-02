@@ -161,10 +161,51 @@ export default function TermsOfService() {
             </p>
           </section>
 
+          {/* YouTube API Services */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              10. YouTube API Services
+            </h2>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              UniHub hosts lesson videos using YouTube API Services. Lessons are
+              uploaded as unlisted videos to a channel UniHub owns and are shown
+              inside course pages through YouTube&apos;s privacy-enhanced player.
+            </p>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              By using UniHub you also agree to be bound by the{" "}
+              <a
+                href="https://www.youtube.com/t/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+              >
+                YouTube Terms of Service
+              </a>
+              . Data Google collects through the embedded player is handled under
+              the{" "}
+              <a
+                href="https://policies.google.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+              >
+                Google Privacy Policy
+              </a>
+              .
+            </p>
+            <p className="text-gray-700 leading-relaxed">
+              Tutors must sign a one-time rights declaration before their first
+              video upload, confirming they own or are licensed to distribute the
+              material. Uploading content you do not have the right to distribute
+              is a breach of these terms and of the YouTube Terms of Service, and
+              we will remove it and may suspend the account responsible.
+            </p>
+          </section>
+
           {/* Contact Information */}
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              10. Contact Information
+              11. Contact Information
             </h2>
             <p className="text-gray-700 mb-4">
               If you have any questions about these Terms of Service, please
