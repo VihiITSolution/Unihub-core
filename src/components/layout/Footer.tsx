@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Facebook, Instagram } from "lucide-react";
+import { Facebook, Instagram, Youtube } from "lucide-react";
 
 const SOCIAL_LINKS = [
   {
@@ -22,6 +22,11 @@ const SOCIAL_LINKS = [
     name: "Facebook",
     href: "https://www.facebook.com/profile.php?id=61593843214755",
     icon: <Facebook size={20} aria-hidden="true" />,
+  },
+  {
+    name: "YouTube",
+    href: "https://www.youtube.com/@Unihub.lk_sl",
+    icon: <Youtube size={20} aria-hidden="true" />,
   },
 ];
 
@@ -141,9 +146,38 @@ export default function Footer() {
           gap: 12,
         }}
       >
-        <p style={{ margin: 0, color: "#d7d7d7", fontSize: 13 }}>
-          &copy; {currentYear} UniHub. All rights reserved.
-        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <p style={{ margin: 0, color: "#d7d7d7", fontSize: 13 }}>
+            &copy; {currentYear} UniHub. All rights reserved.
+          </p>
+          {/* Attribution required of clients of the YouTube API Services, and
+              the branding Google's compliance audit looks for on the homepage. */}
+          <p style={{ margin: 0, color: "#9a9a9a", fontSize: 12, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <Youtube size={15} aria-hidden="true" />
+            <span>
+              Lesson videos are hosted with YouTube API Services. By watching them you
+              agree to the{" "}
+              <a
+                href="https://www.youtube.com/t/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#d7d7d7", textDecoration: "underline" }}
+              >
+                YouTube Terms of Service
+              </a>
+              {" "}and the{" "}
+              <a
+                href="https://policies.google.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#d7d7d7", textDecoration: "underline" }}
+              >
+                Google Privacy Policy
+              </a>
+              .
+            </span>
+          </p>
+        </div>
         <div style={{ display: "flex", gap: 16 }}>
           <select
             style={{
