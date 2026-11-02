@@ -60,9 +60,18 @@ function CoursesInner() {
   const [selectedDept,    setSelectedDept]    = useState(searchParams?.get("departmentId") || "all");
   const [selectedYear,    setSelectedYear]    = useState(searchParams?.get("year") || "all");
   const [searchQuery,     setSearchQuery]     = useState(searchParams?.get("search") || "");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [sortBy,          setSortBy]          = useState(searchParams?.get("sortBy") || "");
   const [minPrice,        setMinPrice]        = useState(searchParams?.get("minPrice") || "");
   const [maxPrice,        setMaxPrice]        = useState(searchParams?.get("maxPrice") || "");
+
+  // Debounce search query to prevent excessive API calls
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   // Courses + UI state
   const [courses, setCourses] = useState<Course[]>([]);
@@ -113,7 +122,7 @@ function CoursesInner() {
       if (selectedFaculty !== "all") params.set("facultyId",    selectedFaculty);
       if (selectedDept    !== "all") params.set("departmentId", selectedDept);
       if (selectedYear    !== "all") params.set("year",         selectedYear);
-      if (searchQuery.trim())        params.set("search",       searchQuery.trim());
+      if (debouncedSearchQuery.trim()) params.set("search",     debouncedSearchQuery.trim());
       if (sortBy)                    params.set("sortBy",       sortBy);
       if (minPrice.trim())           params.set("minPrice",     minPrice.trim());
       if (maxPrice.trim())           params.set("maxPrice",     maxPrice.trim());
@@ -139,7 +148,7 @@ function CoursesInner() {
     } finally {
       setLoading(false);
     }
-  }, [selectedFaculty, selectedDept, selectedYear, searchQuery, sortBy, minPrice, maxPrice, token]);
+  }, [selectedFaculty, selectedDept, selectedYear, debouncedSearchQuery, sortBy, minPrice, maxPrice, token]);
 
   useEffect(() => { loadCourses(); }, [loadCourses]);
 
