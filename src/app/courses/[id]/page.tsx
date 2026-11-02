@@ -9,7 +9,7 @@ import { StartConversationButton } from "@/components/chat";
 import YouTubePlayer from "@/components/ui/YouTubePlayer";
 import { Avatar } from "@/components/ui";
 import type { Course, CourseContent } from "@/types";
-import { ClipboardList, FileText, Lock, Play, Star, Video } from "lucide-react";
+import { ClipboardList, FileText, Folder, Lock, Play, Star, Video } from "lucide-react";
 
 function getEmbedUrl(url?: string, youtubeVideoId?: string) {
   let videoId = youtubeVideoId || "";
@@ -58,6 +58,7 @@ export default function CourseDetailsPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [expandedPreviewId, setExpandedPreviewId] = useState<string | number | null>(null);
+  const [supportMaterialsOpen, setSupportMaterialsOpen] = useState(false);
   const [notifySubscribed, setNotifySubscribed] = useState(false);
   const [notifyLoading, setNotifyLoading] = useState(false);
 
@@ -272,6 +273,12 @@ export default function CourseDetailsPage() {
     const duration = Number(content.duration);
     return total + (Number.isFinite(duration) && duration > 0 ? duration : 0);
   }, 0);
+  const lessonContents = contents
+    .filter((content) => content.type !== "link")
+    .sort((a, b) => a.order - b.order);
+  const supportMaterials = contents
+    .filter((content) => content.type === "link")
+    .sort((a, b) => a.order - b.order);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -437,9 +444,7 @@ export default function CourseDetailsPage() {
                   Course Content
                 </h2>
                 <div className="border border-gray-200 rounded-lg divide-y divide-gray-200 overflow-hidden">
-                  {[...contents]
-                    .sort((a, b) => a.order - b.order)
-                    .map((content, index) => {
+                  {lessonContents.map((content, index) => {
                       const isLocked = content.locked || (!content.isPreview && !isEnrolled);
                       const isExpanded = expandedPreviewId === content.id;
                       const canPreviewInline =
@@ -524,6 +529,91 @@ export default function CourseDetailsPage() {
                         </div>
                       );
                     })}
+
+                  {supportMaterials.length > 0 && (
+                    <div className="bg-white">
+                      <button
+                        type="button"
+                        onClick={() => setSupportMaterialsOpen((isOpen) => !isOpen)}
+                        aria-expanded={supportMaterialsOpen}
+                        className="flex w-full items-center gap-3 p-4 text-left hover:bg-gray-50"
+                      >
+                        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-700">
+                          <Folder className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium text-gray-900">Support materials</span>
+                          <span className="block text-xs text-gray-500">
+                            {supportMaterials.length} resource{supportMaterials.length === 1 ? "" : "s"}
+                          </span>
+                        </span>
+                        <span className="text-sm font-medium text-primary-600">
+                          {supportMaterialsOpen ? "Close" : "Open folder"}
+                        </span>
+                      </button>
+
+                      {supportMaterialsOpen && (
+                        <div className="border-t border-gray-200 bg-gray-50 p-3 sm:p-4">
+                          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white divide-y divide-gray-200">
+                            {supportMaterials.map((content) => {
+                              const isLocked = content.locked || (!content.isPreview && !isEnrolled);
+                              const isExpanded = expandedPreviewId === content.id;
+                              const canPreviewInline = !isLocked && Boolean(content.url);
+
+                              return (
+                                <div key={content.id}>
+                                  <div className="flex items-center gap-3 p-3">
+                                    <ClipboardList className="h-5 w-5 flex-shrink-0 text-gray-500" aria-hidden="true" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate text-sm font-medium text-gray-900">{content.title}</p>
+                                      <p className="text-xs text-gray-500">
+                                        Support material{content.duration ? ` · ${content.duration} min` : ""}
+                                        {content.isPreview ? " · Preview" : ""}
+                                      </p>
+                                    </div>
+                                    {isLocked ? (
+                                      <span className="flex-shrink-0 text-gray-400" title="Enroll to unlock this material">
+                                        <Lock size={18} aria-label="Enroll to unlock this material" />
+                                      </span>
+                                    ) : canPreviewInline ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => setExpandedPreviewId(isExpanded ? null : content.id)}
+                                        className="inline-flex flex-shrink-0 items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
+                                      >
+                                        {isExpanded ? "Close" : <><Play size={14} aria-hidden="true" /> Preview</>}
+                                      </button>
+                                    ) : null}
+                                  </div>
+                                  {isExpanded && content.url && (
+                                    <>
+                                      <div className="aspect-video bg-black">
+                                        {isYouTubeResource(content.url) ? (
+                                          <YouTubePlayer embedUrl={getEmbedUrl(content.url, content.youtubeVideoId)} title={content.title} />
+                                        ) : (
+                                          <iframe
+                                            src={content.url}
+                                            title={content.title}
+                                            className="h-full w-full bg-white"
+                                            sandbox="allow-forms allow-popups allow-same-origin allow-scripts"
+                                          />
+                                        )}
+                                      </div>
+                                      <div className="flex justify-end bg-gray-50 px-3 py-2 text-sm">
+                                        <a href={content.url} target="_blank" rel="noopener noreferrer" className="font-medium text-primary-700 hover:underline">
+                                          Open resource in new tab ↗
+                                        </a>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
