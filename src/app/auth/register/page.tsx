@@ -41,7 +41,7 @@ interface FormData {
   confirmPassword: string;
   phoneNumber: string;
   studentEmail: string;
-  accountType: "student" | "vendor";
+  accountType: "student" | "tutor" | "vendor";
   referralCode: string;
   universityName: string;
   department: string;
@@ -326,9 +326,14 @@ export default function RegisterPage() {
         setError(result.message || "The verification code is invalid or expired.");
         return;
       }
+      // Registration already enrolls an invited user on the server. Avoid the
+      // invitation effect redirecting a new tutor away from their application.
+      if (formData.accountType === "tutor") referralEnrollmentStarted.current = true;
       completeRegistration(result.data);
       if (formData.accountType === "vendor") {
         router.push("/student/become-vendor");
+      } else if (formData.accountType === "tutor") {
+        router.push("/student/become-tutor");
       } else if (liveSessionInviteId) {
         router.push("/student/my-sessions?invite=joined");
       } else if (formData.accountType === "student") {
@@ -464,13 +469,15 @@ export default function RegisterPage() {
             {step === 1 && "Create your account"}
             {step === 2 && "Choose account type"}
             {step === 3 && formData.accountType === "student" && "Complete student profile"}
+            {step === 3 && formData.accountType === "tutor" && "Review & create account"}
             {step === 3 && formData.accountType === "vendor" && "Review & create account"}
             {step === 4 && "Verify your mobile"}
           </h1>
           <p style={{ margin: "0 0 24px", fontSize: 14, color: "var(--muted)" }}>
             {step === 1 && "Enter your basic information to get started"}
-            {step === 2 && "Select whether you're a student or vendor"}
+            {step === 2 && "Select whether you're a student, tutor, or vendor"}
             {step === 3 && formData.accountType === "student" && "Tell us about your university studies"}
+            {step === 3 && formData.accountType === "tutor" && "You'll complete your tutor application after registration"}
             {step === 3 && formData.accountType === "vendor" && "You'll set up your shop after registration"}
             {step === 4 && "Enter the six-digit code we sent to your mobile number"}
           </p>
@@ -642,6 +649,16 @@ export default function RegisterPage() {
                       ],
                     },
                     {
+                      type: "tutor" as const,
+                      title: "Tutor",
+                      desc: "I want to share my knowledge and teach students on UniHub",
+                      bullets: [
+                        "Apply to become a tutor after verifying your mobile",
+                        "Create courses and host live sessions after approval",
+                        "Your application will be reviewed by the admin team",
+                      ],
+                    },
+                    {
                       type: "vendor" as const,
                       title: "Vendor",
                       desc: "I want to sell products on the UniHub marketplace",
@@ -658,6 +675,7 @@ export default function RegisterPage() {
                     <button
                       key={type}
                       type="button"
+                      aria-pressed={selected}
                       onClick={() => { setFormData((p) => ({ ...p, accountType: type })); setError(null); }}
                       style={{
                         width: "100%", textAlign: "left",
@@ -876,7 +894,9 @@ export default function RegisterPage() {
                       textAlign: "center", fontSize: 14, color: "var(--muted)", lineHeight: 1.6,
                     }}
                   >
-                    Complete your registration and we&apos;ll guide you through shop setup.
+                    {formData.accountType === "tutor"
+                      ? "After mobile verification, complete your tutor application. You can start teaching once an administrator approves it."
+                      : "Complete your registration and we'll guide you through shop setup."}
                   </div>
                 )}
 
