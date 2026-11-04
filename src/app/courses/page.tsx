@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { HoverCard } from "@/components/ui";
@@ -60,18 +61,14 @@ function CoursesInner() {
   const [selectedDept,    setSelectedDept]    = useState(searchParams?.get("departmentId") || "all");
   const [selectedYear,    setSelectedYear]    = useState(searchParams?.get("year") || "all");
   const [searchQuery,     setSearchQuery]     = useState(searchParams?.get("search") || "");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [sortBy,          setSortBy]          = useState(searchParams?.get("sortBy") || "");
   const [minPrice,        setMinPrice]        = useState(searchParams?.get("minPrice") || "");
   const [maxPrice,        setMaxPrice]        = useState(searchParams?.get("maxPrice") || "");
 
-  // Debounce search query to prevent excessive API calls
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
+  // Debounced filter values
+  const debouncedSearchQuery = useDebounce(searchQuery, 400);
+  const debouncedMinPrice = useDebounce(minPrice, 400);
+  const debouncedMaxPrice = useDebounce(maxPrice, 400);
 
   // Courses + UI state
   const [courses, setCourses] = useState<Course[]>([]);
@@ -122,10 +119,10 @@ function CoursesInner() {
       if (selectedFaculty !== "all") params.set("facultyId",    selectedFaculty);
       if (selectedDept    !== "all") params.set("departmentId", selectedDept);
       if (selectedYear    !== "all") params.set("year",         selectedYear);
-      if (debouncedSearchQuery.trim()) params.set("search",     debouncedSearchQuery.trim());
+      if (debouncedSearchQuery.trim())        params.set("search",       debouncedSearchQuery.trim());
       if (sortBy)                    params.set("sortBy",       sortBy);
-      if (minPrice.trim())           params.set("minPrice",     minPrice.trim());
-      if (maxPrice.trim())           params.set("maxPrice",     maxPrice.trim());
+      if (debouncedMinPrice.trim())           params.set("minPrice",     debouncedMinPrice.trim());
+      if (debouncedMaxPrice.trim())           params.set("maxPrice",     debouncedMaxPrice.trim());
 
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -148,7 +145,7 @@ function CoursesInner() {
     } finally {
       setLoading(false);
     }
-  }, [selectedFaculty, selectedDept, selectedYear, debouncedSearchQuery, sortBy, minPrice, maxPrice, token]);
+  }, [selectedFaculty, selectedDept, selectedYear, debouncedSearchQuery, sortBy, debouncedMinPrice, debouncedMaxPrice, token]);
 
   useEffect(() => { loadCourses(); }, [loadCourses]);
 
