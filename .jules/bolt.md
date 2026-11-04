@@ -1,3 +1,6 @@
 ## 2025-03-09 - Message Thread Re-renders
 **Learning:** Chat interfaces with typing indicators (`otherUserTyping` state) cause the entire list of messages to re-render constantly. Because messages list grows linearly over time, not memoizing individual message bubbles creates an O(N) rendering bottleneck with typing toggles.
 **Action:** When working on chat UI components, ensure that list items (like `MessageBubble`) are wrapped in `React.memo()`, particularly if parent components frequently update state (such as typing indicators or new message arrivals) to avoid re-rendering the whole history.
+## 2025-03-09 - List Re-renders in Wall Feed
+**Learning:** Feed interfaces (like `WallPage`) with lists of complex cards (`PostCard`) cause the entire feed to re-render when new items are added to the list or when parent states change. Not memoizing individual post cards creates an O(N) rendering bottleneck as the feed grows.
+**Action:** When working on feed UI components, ensure that complex list items (like `PostCard`) are wrapped in `React.memo()`, particularly if parent components frequently update state (such as fetching more posts or creating new posts).
