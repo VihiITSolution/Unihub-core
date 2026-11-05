@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { facultyService, FALLBACK_FACULTIES, type Faculty } from "@/services/faculty.service";
@@ -77,7 +77,10 @@ function DeptDropdown({
 }
 
 // ── Single faculty tab ────────────────────────────────────────────────────────
-function FacultyItem({ faculty }: { faculty: Faculty }) {
+// ⚡ Bolt: Wrapped FacultyItem in React.memo() to prevent unnecessary re-renders
+// during parent (FacultyNav) state updates, like scroll position changes.
+// Expected Impact: Reduces unnecessary component re-renders during interactions.
+const FacultyItem = memo(function FacultyItem({ faculty }: { faculty: Faculty }) {
   const [open, setOpen] = useState(false);
   const showTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -135,7 +138,7 @@ function FacultyItem({ faculty }: { faculty: Faculty }) {
       )}
     </div>
   );
-}
+});
 
 // ── Faculty nav bar ───────────────────────────────────────────────────────────
 export default function FacultyNav() {
