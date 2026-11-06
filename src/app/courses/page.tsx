@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense, memo } from "react";
 import Link from "next/link";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -469,7 +469,10 @@ function CoursesInner() {
 }
 
 // ── Course card ───────────────────────────────────────────────────────────────
-function CourseCard({
+// ⚡ Bolt: Wrapped CourseCard in React.memo() to prevent O(N) unnecessary re-renders
+// when the parent list updates (e.g., when a user interacts with a single card like clicking 'Notify Me').
+// Expected Impact: Significantly reduces rendering time on the courses page when interacting with large lists.
+const CourseCard = memo(function CourseCard({
   course, user, notifyingId, notifiedCourses, handleNotify,
 }: {
   course: Course;
@@ -671,7 +674,7 @@ function CourseCard({
   );
 
   return <HoverCard trigger={cardTrigger} popup={popup} />;
-}
+});
 
 // ── Default export wrapped in Suspense for useSearchParams ────────────────────
 export default function CoursesPage() {
