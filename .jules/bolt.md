@@ -7,3 +7,7 @@
 ## 2025-03-09 - Scroll Events Triggering Re-renders
 **Learning:** In scrollable list components (like `FacultyNav`), attaching onScroll event listeners that update state (e.g., `canScrollLeft`, `canScrollRight`) triggers re-renders of the parent component. This causes all children (like `FacultyItem`) to unnecessarily re-render on every scroll tick.
 **Action:** Wrap children of heavily updated parent components in `React.memo()` when the children's props are stable (like static data objects), to prevent expensive cascading re-renders during rapid state updates such as scrolling.
+
+## 2025-03-09 - List Re-renders in ConversationList
+**Learning:** List components like `ConversationList` containing complex interactive items that update on state changes (e.g., active conversation id changes) can cause the entire list to re-render, leading to an O(N) rendering bottleneck.
+**Action:** Extract list items (like `ConversationListItem`) and wrap them in `React.memo()` so only the items whose state actually changes (active/inactive) will re-render during state updates.
