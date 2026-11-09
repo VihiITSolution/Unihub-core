@@ -83,7 +83,8 @@ export const PostCard = memo(function PostCard({ post, onDeleted }: PostCardProp
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="text-gray-400 hover:text-red-500 text-sm"
+            aria-label="Delete post"
+            className="text-gray-400 hover:text-red-500 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
           >
             Delete
           </button>
@@ -109,14 +110,16 @@ export const PostCard = memo(function PostCard({ post, onDeleted }: PostCardProp
           type="button"
           onClick={toggleLike}
           disabled={!token}
-          className={`flex items-center gap-1 ${liked ? "text-primary-600" : "text-gray-600"} hover:text-primary-600`}
+          aria-label={liked ? "Unlike post" : "Like post"}
+          className={`flex items-center gap-1 ${liked ? "text-primary-600" : "text-gray-600"} hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded`}
         >
           {liked ? "❤️" : "🤍"} {likeCount > 0 && likeCount}
         </button>
         <button
           type="button"
           onClick={() => setShowComments((s) => !s)}
-          className="flex items-center gap-1 text-gray-600 hover:text-primary-600"
+          aria-label="Toggle comments"
+          className="flex items-center gap-1 text-gray-600 hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
         >
           💬 {commentCount > 0 && commentCount}
         </button>

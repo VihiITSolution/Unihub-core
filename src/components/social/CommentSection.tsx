@@ -82,7 +82,8 @@ export function CommentSection({ postId, onCommentAdded }: CommentSectionProps) 
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !newComment.trim()}
-            className="text-sm text-primary-600 font-medium disabled:opacity-40"
+            aria-label="Send comment"
+            className="text-sm text-primary-600 font-medium disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
           >
             Send
           </button>
