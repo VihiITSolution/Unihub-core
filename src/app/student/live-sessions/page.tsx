@@ -376,7 +376,7 @@ export default function StudentLiveSessionsPage() {
                     </span>
                   )}
 
-                  {session.status === "scheduled" && !isEnrolled && (
+                  {(session.status === "scheduled" || session.status === "live") && !isEnrolled && (
                     <button
                       type="button"
                       onClick={() => handleEnroll(session.id)}
@@ -387,7 +387,7 @@ export default function StudentLiveSessionsPage() {
                     </button>
                   )}
 
-                  {session.status === "live" && (
+                  {session.status === "live" && isEnrolled && (
                     <Link
                       href={`/student/live-sessions/${session.id}/watch`}
                       className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
