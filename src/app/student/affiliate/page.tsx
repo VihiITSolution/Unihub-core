@@ -112,7 +112,7 @@ export default function AffiliatePage() {
           <article className="affiliate-card how-card">
             <div className="section-heading"><div><span className="section-kicker">How it works</span><h2>Three small steps</h2></div></div>
             <div className="how-steps">
-              {[['01', 'Share your link', 'Send your personal invite to student or vendor friends.'], ['02', 'They complete one activity', 'Attend a live session, list a marketplace item or boarding place, create a vendor shop, or upload a course video longer than 20 minutes.'], ['03', 'You earn rewards', 'After the activity is confirmed and any required review is complete, we add the reward to your balance. Teams attendance is confirmed after the session.']].map(([number, title, copy]) => <div className="how-step" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></div>)}
+              {[['01', 'Share your link', 'Send your personal invite to student or vendor friends.'], ['02', 'They complete one activity', 'Enrol and join a live session through UniHub, list a marketplace item or boarding place, create a vendor shop, or upload a course video longer than 20 minutes.'], ['03', 'You earn rewards', 'After the activity is recorded and any required review is complete, we add the reward to your balance.']].map(([number, title, copy]) => <div className="how-step" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></div>)}
             </div>
           </article>
 
@@ -122,7 +122,7 @@ export default function AffiliatePage() {
               const referred = referral.referred;
               const initials = `${referred?.firstName?.charAt(0) || ""}${referred?.lastName?.charAt(0) || ""}` || "S";
               const name = referred ? `${referred.firstName} ${referred.lastName}` : "Referred user";
-              const activityLabel = referral.activityType === "vendor" ? "vendor shop created" : referral.activityType === "live_session" ? "live session attended" : referral.activityType ? `${referral.activityType} activity` : "Invite accepted";
+              const activityLabel = referral.activityType === "vendor" ? "vendor shop created" : referral.activityType === "live_session" ? "live session join launched" : referral.activityType ? `${referral.activityType} activity` : "Invite accepted";
               return <div className="referral-row" key={referral.id}><div className="referral-avatar">{initials}</div><div><strong>{name}</strong><p>{activityLabel} · {new Date(referral.createdAt).toLocaleDateString("en-LK")}</p></div><div className="referral-reward"><span className={`status-${referral.status}`}>{referral.status.replace("_", " ")}</span>{referral.rewardAmount && <strong>+{lkr(referral.rewardAmount)}</strong>}</div></div>;
             })}</div> : <div className="affiliate-empty"><Users size={25} /><h3>Your first reward is one invite away</h3><p>Share your link above with a student or vendor friend to get started.</p></div>}
           </article>
