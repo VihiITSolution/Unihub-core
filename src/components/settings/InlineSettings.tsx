@@ -15,12 +15,13 @@ const BIO_MAX = 500;
 const NOTIF_KEY = "unihub_notif_prefs";
 const PRIV_KEY = "unihub_privacy_prefs";
 
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ on, onChange, 'aria-label': ariaLabel }: { on: boolean; onChange: (v: boolean) => void; 'aria-label'?: string }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
+      aria-label={ariaLabel}
       onClick={() => onChange(!on)}
       style={{
         position: "relative", display: "inline-flex", flexShrink: 0,
@@ -476,7 +477,7 @@ function NotificationPrefs() {
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{label}</div>
             <div style={{ fontSize: 11, color: "var(--muted)" }}>{desc}</div>
           </div>
-          <Toggle on={get(key)} onChange={v => toggle(key, v)} />
+          <Toggle on={get(key)} onChange={v => toggle(key, v)} aria-label={label} />
         </div>
       ))}
       <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
@@ -518,7 +519,7 @@ function PrivacySettings() {
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{label}</div>
             <div style={{ fontSize: 11, color: "var(--muted)" }}>{desc}</div>
           </div>
-          <Toggle on={get(key)} onChange={v => toggle(key, v)} />
+          <Toggle on={get(key)} onChange={v => toggle(key, v)} aria-label={label} />
         </div>
       ))}
       <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
