@@ -122,7 +122,7 @@ export default function AffiliatePage() {
               const referred = referral.referred;
               const initials = `${referred?.firstName?.charAt(0) || ""}${referred?.lastName?.charAt(0) || ""}` || "S";
               const name = referred ? `${referred.firstName} ${referred.lastName}` : "Referred user";
-              const activityLabel = referral.activityType === "vendor" ? "vendor shop created" : referral.activityType === "live_session" ? "live session join launched" : referral.activityType ? `${referral.activityType} activity` : "Invite accepted";
+              const activityLabel = referral.activityType === "vendor" ? "vendor shop created" : referral.activityType === "live_session" ? "live session join launched" : referral.activityType === "manual" ? "manually approved" : referral.activityType ? `${referral.activityType} activity` : "Invite accepted";
               return <div className="referral-row" key={referral.id}><div className="referral-avatar">{initials}</div><div><strong>{name}</strong><p>{activityLabel} · {new Date(referral.createdAt).toLocaleDateString("en-LK")}</p></div><div className="referral-reward"><span className={`status-${referral.status}`}>{referral.status.replace("_", " ")}</span>{referral.rewardAmount && <strong>+{lkr(referral.rewardAmount)}</strong>}</div></div>;
             })}</div> : <div className="affiliate-empty"><Users size={25} /><h3>Your first reward is one invite away</h3><p>Share your link above with a student or vendor friend to get started.</p></div>}
           </article>
