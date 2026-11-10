@@ -80,7 +80,8 @@ export function PostComposer({ onPosted }: PostComposerProps) {
               <button
                 type="button"
                 onClick={() => removeFile(i)}
-                className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                aria-label="Remove photo"
+                className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               >
                 ×
               </button>
@@ -96,7 +97,8 @@ export function PostComposer({ onPosted }: PostComposerProps) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={files.length >= MAX_FILES}
-          className="text-sm text-gray-600 hover:text-gray-900 disabled:opacity-40 flex items-center gap-1"
+          aria-label="Add photos"
+          className="text-sm text-gray-600 hover:text-gray-900 disabled:opacity-40 flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
         >
           📷 Add photos
         </button>

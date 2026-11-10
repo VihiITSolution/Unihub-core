@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { postService } from "@/services/social.service";
@@ -25,7 +25,8 @@ function timeAgo(dateString: string) {
   return new Date(dateString).toLocaleDateString();
 }
 
-export function PostCard({ post, onDeleted }: PostCardProps) {
+// Memoized to prevent O(N) re-renders when parent lists update
+export const PostCard = memo(function PostCard({ post, onDeleted }: PostCardProps) {
   const { user, token } = useAuth();
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [liked, setLiked] = useState(post.likedByMe);
@@ -82,7 +83,8 @@ export function PostCard({ post, onDeleted }: PostCardProps) {
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="text-gray-400 hover:text-red-500 text-sm"
+            aria-label="Delete post"
+            className="text-gray-400 hover:text-red-500 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
           >
             Delete
           </button>
@@ -108,14 +110,16 @@ export function PostCard({ post, onDeleted }: PostCardProps) {
           type="button"
           onClick={toggleLike}
           disabled={!token}
-          className={`flex items-center gap-1 ${liked ? "text-primary-600" : "text-gray-600"} hover:text-primary-600`}
+          aria-label={liked ? "Unlike post" : "Like post"}
+          className={`flex items-center gap-1 ${liked ? "text-primary-600" : "text-gray-600"} hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded`}
         >
           {liked ? "❤️" : "🤍"} {likeCount > 0 && likeCount}
         </button>
         <button
           type="button"
           onClick={() => setShowComments((s) => !s)}
-          className="flex items-center gap-1 text-gray-600 hover:text-primary-600"
+          aria-label="Toggle comments"
+          className="flex items-center gap-1 text-gray-600 hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
         >
           💬 {commentCount > 0 && commentCount}
         </button>
@@ -126,4 +130,4 @@ export function PostCard({ post, onDeleted }: PostCardProps) {
       )}
     </div>
   );
-}
+});
