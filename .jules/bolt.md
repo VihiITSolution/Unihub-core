@@ -11,3 +11,7 @@
 ## 2025-03-09 - List Re-renders in ConversationList
 **Learning:** List components like `ConversationList` containing complex interactive items that update on state changes (e.g., active conversation id changes) can cause the entire list to re-render, leading to an O(N) rendering bottleneck.
 **Action:** Extract list items (like `ConversationListItem`) and wrap them in `React.memo()` so only the items whose state actually changes (active/inactive) will re-render during state updates.
+
+## 2026-11-10 - Scroll Event Optimization
+**Learning:** Unthrottled scroll event listeners that update state (e.g., in `Header.tsx` with `window.addEventListener('scroll', ...)`) cause excessive re-renders, potentially multiple times per frame, degrading UI performance during scrolling.
+**Action:** When binding scroll events, use `requestAnimationFrame` to throttle state updates to at most once per frame, and pass `{ passive: true }` to allow browser scroll optimizations.

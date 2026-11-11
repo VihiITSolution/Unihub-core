@@ -26,9 +26,22 @@ export default function Header() {
   const verifiedStudent = isVerifiedStudent(user);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    let frame = 0;
+    // ⚡ Bolt: Throttled scroll event handler with requestAnimationFrame
+    // Expected Impact: Prevents excessive state updates and re-renders during scrolling, improving UI responsiveness.
+    const handleScroll = () => {
+      if (!frame) {
+        frame = requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 10);
+          frame = 0;
+        });
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
   useEffect(() => {
